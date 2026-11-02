@@ -40,6 +40,7 @@ export class Simulation {
   readonly timers: LoadedTimer[];
   private readonly options: SimulationOptions;
   private readonly registry: Registry = { uids: [], ids: [] };
+  private joinTrigger: number | null = null;
   private steps = 0;
   private frames = 0;
   private seed = RANDOM_SEED;
@@ -75,6 +76,10 @@ export class Simulation {
     const index = this.triggers.findIndex((trigger) => trigger.uid === uid);
     if (index === NOT_FOUND) throw new Error(TEXT.noSuchUid(uid));
     this.run(index);
+  }
+
+  playerJoins(): void {
+    if (this.joinTrigger !== null) this.run(this.joinTrigger);
   }
 
   tick(count = 1): void {
@@ -296,6 +301,9 @@ export class Simulation {
         break;
       case OPCODE.playerNameBySlotVariable:
         vars[nameA] = this.playerName(toNumber(vars[nameB]));
+        break;
+      case OPCODE.onPlayerJoin:
+        this.joinTrigger = toIndex(action.targetA);
         break;
       case OPCODE.loadIndirect:
         vars[nameA] = vars[vars[nameB] as string];

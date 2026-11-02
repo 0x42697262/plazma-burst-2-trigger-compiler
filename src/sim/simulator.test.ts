@@ -104,6 +104,16 @@ describe('simulator', () => {
     assert.equal(simulation.variables.n, 1);
   });
 
+  it('runs the join trigger when a player joins', () => {
+    const simulation = new Simulation(program(trigger('#setup', [action(228, '#joined')]), trigger('#joined', [action(102, 'joins', '1')])));
+    simulation.variables.joins = 0;
+    simulation.playerJoins();
+    simulation.run(0);
+    simulation.playerJoins();
+    simulation.playerJoins();
+    assert.equal(simulation.variables.joins, 2);
+  });
+
   it('reports unsupported actions as errors', () => {
     const simulation = new Simulation(program(trigger('#a', [action(0, '1', '2')])));
     simulation.run(0);
