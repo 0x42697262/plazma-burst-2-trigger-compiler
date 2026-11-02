@@ -16,6 +16,7 @@ type Environment = Readonly<Record<string, string | undefined>>;
 
 const PURE_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.floor, BUILTIN.round, BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop,
+  BUILTIN.sin, BUILTIN.cos, BUILTIN.asin, BUILTIN.acos, BUILTIN.atan2,
 ]);
 
 const fail = (location: Location, message: string): never => {

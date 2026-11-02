@@ -36,13 +36,17 @@ const DIRECT: Readonly<Record<string, Condition>> = { '==': 'eq', '!=': 'ne', '<
 const VALUE_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.name, BUILTIN.time,
   BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop, BUILTIN.chatText, BUILTIN.talker, BUILTIN.talkerName, BUILTIN.talkerLogin, BUILTIN.login, BUILTIN.team, BUILTIN.pop,
+  BUILTIN.killer, BUILTIN.multiplayer, BUILTIN.mapId, BUILTIN.sin, BUILTIN.cos, BUILTIN.asin, BUILTIN.acos, BUILTIN.atan2,
 ]);
+const TRIGONOMETRY: Readonly<Record<string, number>> = {
+  [BUILTIN.sin]: OPCODE.sine, [BUILTIN.cos]: OPCODE.cosine, [BUILTIN.asin]: OPCODE.arcSine, [BUILTIN.acos]: OPCODE.arcCosine,
+};
 const SYNC_MODES: Readonly<Record<string, number>> = {
   replace: OPCODE.syncReplace, default: OPCODE.syncDefault, max: OPCODE.syncMax, min: OPCODE.syncMin, longest: OPCODE.syncLongest,
 };
 const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action, BUILTIN.sync, BUILTIN.clear]);
 const BUILTIN_ARITY: Readonly<Record<string, number>> = {
-  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2, chatText: 0, talker: 0, talkerName: 0, talkerLogin: 0, login: 1, team: 1, clear: 1, pop: 1,
+  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2, chatText: 0, talker: 0, talkerName: 0, talkerLogin: 0, login: 1, killer: 0, multiplayer: 0, mapId: 0, sin: 1, cos: 1, asin: 1, acos: 1, atan2: 2, team: 1, clear: 1, pop: 1,
 };
 
 const fail = (location: Location, message: string): never => {
@@ -1238,6 +1242,29 @@ export class Generator {
       case BUILTIN.initiator:
         this.act(OPCODE.initiatorSlot, destination);
         return;
+      case BUILTIN.killer:
+        this.act(OPCODE.killerSlot, destination);
+        return;
+      case BUILTIN.multiplayer:
+        this.act(OPCODE.isMultiplayer, destination);
+        return;
+      case BUILTIN.mapId:
+        this.act(OPCODE.mapId, destination);
+        return;
+      case BUILTIN.sin:
+      case BUILTIN.cos:
+      case BUILTIN.asin:
+      case BUILTIN.acos:
+        this.act(TRIGONOMETRY[name] ?? OPCODE.sine, destination, this.variableValue(first()));
+        return;
+      case BUILTIN.atan2: {
+        const horizontal = this.stableVariable(this.argument(expression, 1), false);
+        const work = this.frame.temp();
+        this.into(first(), work);
+        this.act(OPCODE.arcTangent2, work, horizontal);
+        this.act(OPCODE.copyVariable, destination, work);
+        return;
+      }
       case BUILTIN.time:
         this.act(OPCODE.timeSinceStart, destination);
         return;

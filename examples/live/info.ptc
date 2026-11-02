@@ -1,0 +1,52 @@
+// Math, comparison, session and player-information actions whose start-of-map values do not
+// depend on the player's settings.
+var zero = 0;
+var one = 1;
+var sine = 0;
+var cosine = 0;
+var arcSine = 0;
+var arcCosine = 0;
+var angle = 0;
+var flipped = 3;
+var killerSlot = 0;
+var killerLogin = "";
+var killerName = "";
+var killerDying = 5;
+var isMultiplayer = 5;
+var isSpectator = 5;
+var mode = 5;
+var chatting = 5;
+var day = "2024, 0, 2";
+var dayMilliseconds = 0;
+var stored = 42;
+var loaded = 0;
+var passedLess = 0;
+var passedEqual = 0;
+var passedText = 0;
+
+function less() { action(111, zero, one); passedLess = 1; }
+function equal() { action(112, one, one); passedEqual = 1; }
+function differentText() { action(117, stored, "42"); passedText = 1; }
+
+on start {
+  sine = sin(zero);
+  cosine = cos(zero);
+  arcSine = asin(one);
+  arcCosine = acos(one);
+  angle = atan2(one, one);
+  action(153, flipped);
+  killerSlot = killer();
+  action(182, killerLogin);
+  action(183, killerName);
+  action(316, killerDying);
+  isMultiplayer = multiplayer();
+  action(139, isSpectator);
+  action(177, mode);
+  action(463, chatting);
+  action(394, dayMilliseconds, day);
+  action(162, "~info_session~", stored);
+  action(163, "~info_session~", loaded);
+  less();
+  equal();
+  differentText();
+}

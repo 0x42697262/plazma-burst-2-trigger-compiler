@@ -480,6 +480,19 @@ on start {
   });
 });
 
+describe('language: match and math builtins', () => {
+  it('reads the killer, the match and the map, and computes angles', () => {
+    const { get } = run('var k = 0; var mp = 0; var map = ""; var s = 0; var c = 0; var a = 0;\non start { k = killer(); mp = multiplayer(); map = mapId(); s = sin(0); c = cos(0); a = atan2(1, 1); }', 1, {}, { killerSlot: 2, multiplayer: true, mapId: 'castle' });
+    assert.deepEqual([get('k'), get('mp'), get('map'), get('s'), get('c'), get('a')], [2, 1, 'castle', 0, 1, Math.PI / 4]);
+  });
+
+  it('works out trigonometry while compiling', () => {
+    const { get, program } = run('const RIGHT = acos(0) * 2;\nvar right = RIGHT;\non start { }');
+    assert.equal(get('right'), String(Math.PI));
+    assert.ok(!program.triggers.some((trigger) => trigger.actions.some((action) => action.opcode === 205)));
+  });
+});
+
 describe('language: errors', () => {
   const error = (source: string, pattern: RegExp) => assert.throws(() => compileSource(source, 't'), pattern);
 
