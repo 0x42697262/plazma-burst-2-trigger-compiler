@@ -10,6 +10,9 @@ export const ELEMENT = Object.freeze({
   numberText: 'number-text',
   directIndex: 'direct-index',
   target: 'target',
+  environment: 'environment',
+  environmentButton: 'environment-button',
+  environmentPanel: 'environment-panel',
   compile: 'compile',
   run: 'run',
   hostMap: 'host-map',
@@ -45,6 +48,9 @@ export const MARKDOWN = Object.freeze({
 });
 export const HTML_ESCAPES: readonly (readonly [string, string])[] = Object.freeze([['&', '&amp;'], ['<', '&lt;'], ['>', '&gt;']]);
 export const TRUE_TEXT = 'true';
+export const ENVIRONMENT_ASSIGN = '=';
+export const ENVIRONMENT_COMMENT = '#';
+export const LINE_BREAK = /\r?\n/;
 export const LEADING_SLASH = /^\//;
 export const HIGHLIGHT = Object.freeze({
   lineComment: '//',

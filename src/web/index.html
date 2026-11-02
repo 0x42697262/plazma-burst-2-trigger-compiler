@@ -22,6 +22,11 @@
     <input id="host-map" type="file" accept=".xml,.txt" hidden>
     <button id="host-map-button" title="A map XML downloaded from the editor: the program is appended to it">map XML…</button>
     <span id="host-map-name" class="muted">no map</span>
+    <button id="environment-button" title="Values for env(&quot;NAME&quot;) in constants, one NAME=value per line. Kept only until the page is closed">env…</button>
+    <div id="environment-panel" hidden>
+      <label for="environment">env() values, one <code>NAME=value</code> per line. Not saved: gone when the page closes.</label>
+      <textarea id="environment" rows="4" spellcheck="false" autocomplete="off" placeholder="MAP_PASSWORD=open sesame"></textarea>
+    </div>
     <a href="https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md" target="_blank" rel="noopener">docs</a>
   </header>
   <main>

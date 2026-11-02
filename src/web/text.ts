@@ -30,5 +30,6 @@ export const TEXT = Object.freeze({
   timerTarget: (uid: string, target: string): string => `${uid} -> ${target}`,
   listSeparator: ', ',
   exampleGroup: (folder: string): string => folder,
+  environmentButton: (count: number): string => (count === 0 ? 'env…' : `env (${count})`),
   exampleName: (folder: string, file: string): string => `${folder}/${file}`,
 });

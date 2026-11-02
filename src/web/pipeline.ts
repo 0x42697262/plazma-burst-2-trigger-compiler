@@ -13,7 +13,7 @@ import { Simulation } from '../sim/simulator.ts';
 import { stringOf } from '../sim/values.ts';
 import { diagnose, diagnoseAssembly } from '../service/service.ts';
 import type { ServiceDiagnostic } from '../service/service.ts';
-import { ASSEMBLY_EXTENSION, DEFAULT_PREFIX, EXTENSION, LEADING_DIGITS, PREFIX_CLEANUP } from './keys.ts';
+import { ASSEMBLY_EXTENSION, DEFAULT_PREFIX, ENVIRONMENT_ASSIGN, ENVIRONMENT_COMMENT, EXTENSION, LEADING_DIGITS, LINE_BREAK, PREFIX_CLEANUP } from './keys.ts';
 import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { TEXT } from './text.ts';
 import type { Workspace } from './workspace.ts';
@@ -36,7 +36,21 @@ export const prefixFor = (file: string): string => {
   return cleaned === '' ? DEFAULT_PREFIX : cleaned;
 };
 
-export const checkOptions = (numberText: boolean, directIndex: boolean, target: Target): Partial<CompileOptions> => ({ protectNumberText: numberText, directIndex, target });
+export type Environment = Readonly<Record<string, string>>;
+
+export const checkOptions = (numberText: boolean, directIndex: boolean, target: Target, environment: Environment = {}): Partial<CompileOptions> =>
+  ({ protectNumberText: numberText, directIndex, target, environment });
+
+export function parseEnvironment(text: string): Environment {
+  const environment: Record<string, string> = {};
+  for (const line of text.split(LINE_BREAK)) {
+    const position = line.indexOf(ENVIRONMENT_ASSIGN);
+    const name = line.slice(0, position).trim();
+    if (position <= 0 || name === '' || name.startsWith(ENVIRONMENT_COMMENT)) continue;
+    environment[name] = line.slice(position + ENVIRONMENT_ASSIGN.length);
+  }
+  return environment;
+}
 
 export function problemsOf(workspace: Workspace, file: string, options: Partial<CompileOptions> = {}): Problem[] {
   const source = workspace.get(file) ?? '';
@@ -44,8 +58,8 @@ export function problemsOf(workspace: Workspace, file: string, options: Partial<
   return found.map((entry) => ({ ...entry, file }));
 }
 
-export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null): Build {
-  const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex, options.target));
+export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null, environment: Environment = {}): Build {
+  const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex, options.target, environment));
   const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [] };
   if (problems.some((entry) => entry.severity === 'error')) return empty;
   const source = workspace.get(file) ?? '';
@@ -53,7 +67,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const compileOptions: Partial<CompileOptions> = {
     loopGuard: options.guard > 0 ? options.guard : null,
     varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : 'add',
-    ...checkOptions(options.numberText, options.directIndex, options.target),
+    ...checkOptions(options.numberText, options.directIndex, options.target, environment),
   };
   let result: CompileResult;
   try {

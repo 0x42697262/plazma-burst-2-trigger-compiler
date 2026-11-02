@@ -1,4 +1,4 @@
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, StateEffect } from '@codemirror/state';
 import type { Extension } from '@codemirror/state';
 import {
   EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, hoverTooltip,
@@ -8,6 +8,8 @@ import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighti
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
 import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import { forceLinting, linter, lintKeymap } from '@codemirror/lint';
+
+const refreshLint = StateEffect.define<null>();
 import type { Diagnostic } from '@codemirror/lint';
 import { vim } from '@replit/codemirror-vim';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -74,6 +76,7 @@ export class CodeEditor {
   }
 
   relint(): void {
+    this.view.dispatch({ effects: refreshLint.of(null) });
     forceLinting(this.view);
   }
 
@@ -95,7 +98,7 @@ export class CodeEditor {
     const lint = linter((view): Diagnostic[] => problemsOf(this.workspace, file, this.hooks.checkOptions()).map((entry) => {
       const line = view.state.doc.line(Math.min(entry.line + 1, view.state.doc.lines));
       return { from: line.from, to: line.to, severity: entry.severity, message: entry.message };
-    }), { delay: LINT_DELAY });
+    }), { delay: LINT_DELAY, needsRefresh: (update) => update.transactions.some((transaction) => transaction.effects.some((effect) => effect.is(refreshLint))) });
     const completions = (context: CompletionContext): CompletionResult | null => {
       const word = context.matchBefore(WORD_BEFORE);
       if (!word || (word.from === word.to && !context.explicit && !/[.("]$/.test(context.state.sliceDoc(word.from - 1, word.from)))) return null;

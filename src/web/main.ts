@@ -1,7 +1,7 @@
 import examples from 'virtual:examples';
 import { CodeEditor } from './editor.ts';
 import { Workspace } from './workspace.ts';
-import { build, checkOptions, simulate } from './pipeline.ts';
+import { build, checkOptions, parseEnvironment, simulate } from './pipeline.ts';
 import type { Build, Options } from './pipeline.ts';
 import { ATTRIBUTE, CLASS, EMPTY_OBJECT, ENTER, FOLDER_POSITION, KEYDOWN, LIBRARY_FOLDER, OUTPUT_BUTTONS, TAB_ACTIVE, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT } from './keys.ts';
 import { DEFAULT_FRAMES, DEFAULT_GUARD, STATUS_TIME } from './constants.ts';
@@ -34,6 +34,10 @@ const vimInput = element<HTMLInputElement>(ELEMENT.vim);
 const numberTextInput = element<HTMLInputElement>(ELEMENT.numberText);
 const directIndexInput = element<HTMLInputElement>(ELEMENT.directIndex);
 const targetSelect = element<HTMLSelectElement>(ELEMENT.target);
+const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
+const environmentButton = element<HTMLButtonElement>(ELEMENT.environmentButton);
+const environmentPanel = element<HTMLDivElement>(ELEMENT.environmentPanel);
+const environment = () => parseEnvironment(environmentInput.value);
 const output = element<HTMLPreElement>(ELEMENT.output);
 const status = element<HTMLDivElement>(ELEMENT.status);
 const tabs = element<HTMLElement>(ELEMENT.tabs);
@@ -118,7 +122,7 @@ const show = (name: OutputName): void => {
 };
 
 const compile = (): Build => {
-  last = build(workspace, editor.activeFile, options(), hostMap);
+  last = build(workspace, editor.activeFile, options(), hostMap, environment());
   status.textContent = summary(last);
   return last;
 };
@@ -181,7 +185,7 @@ const editor = new CodeEditor(element(ELEMENT.editor), workspace, {
     }
     editor.select(location.line, location.column);
   },
-  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target),
+  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target, environment()),
 }, vimInput.checked);
 
 const examplesSelect = element<HTMLSelectElement>(ELEMENT.examples);
@@ -217,6 +221,14 @@ examplesSelect.addEventListener(EVENT.change, () => {
   show(OUTPUT.problems);
 });
 
+environmentButton.addEventListener(EVENT.click, () => {
+  environmentPanel.hidden = !environmentPanel.hidden;
+  if (!environmentPanel.hidden) environmentInput.focus();
+});
+environmentInput.addEventListener(EVENT.input, () => {
+  environmentButton.textContent = TEXT.environmentButton(Object.keys(environment()).length);
+  editor.relint();
+});
 for (const input of [numberTextInput, directIndexInput, targetSelect]) {
   input.addEventListener(EVENT.change, () => {
     options();

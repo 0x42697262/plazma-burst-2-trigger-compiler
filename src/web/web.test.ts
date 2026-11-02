@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { Workspace } from './workspace.ts';
-import { build, prefixFor, simulate } from './pipeline.ts';
+import { build, parseEnvironment, prefixFor, simulate } from './pipeline.ts';
 import { collectExamples } from '../tools/build-web/build.ts';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -48,6 +48,17 @@ describe('web page logic', () => {
     const result = build(workspace, '/work/main.ptc', OPTIONS, null);
     assert.deepEqual(result.problems.filter((problem) => problem.severity === 'error'), []);
     assert.match(simulate(result.result!, 1)[0] ?? '', /^chat: \d+-\d+-\d+$/);
+  });
+
+  it('reads env() values from the environment box', () => {
+    assert.deepEqual(parseEnvironment('MAP_PASSWORD=open sesame\n# a note\n\n EXTRA = a=b\nbroken'), { MAP_PASSWORD: 'open sesame', EXTRA: ' a=b' });
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'secret const PASSWORD = env("MAP_PASSWORD");\nconst SIZE = len(PASSWORD);\non start { say("{SIZE}"); }\n');
+    const missing = build(workspace, '/work/main.ptc', OPTIONS, null);
+    assert.match(missing.problems[0]?.message ?? '', /MAP_PASSWORD is not set/);
+    const given = build(workspace, '/work/main.ptc', OPTIONS, null, parseEnvironment('MAP_PASSWORD=open sesame'));
+    assert.equal(simulate(given.result!, 1)[0], 'chat: 11');
+    assert.doesNotMatch(given.xml, /open sesame/);
   });
 
   it('reports problems instead of output', () => {
