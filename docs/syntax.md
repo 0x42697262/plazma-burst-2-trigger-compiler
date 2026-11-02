@@ -287,6 +287,8 @@ on start {
   `character` (any other character), `gun`, `barrel`, `vehicle`, `decor`, `pusher`, `light`, `water`, `timer`, `trigger`. `at x, y` is where the
   compiler puts it if the map lacks it (with `--into`).
 - `exits[]` is an object array; `exits[which]` picks one, even with a changing index.
+  A range writes many uids at once: `door doors[] = ["#door*{0..9}", "#Bullet*{1..6}"];` is 16
+  doors, and `doors[10]` is `#Bullet*1`.
 - `action(name or number, a, b)` runs any game action; [actions.md](actions.md) lists all 531 and
   what each parameter takes. Passing the wrong kind is a compile error, like a strict cast.
 - `Color.NoirLime`, `Team.RedTeam`, `Behavior.FollowThePlayer` are named values from the editor's

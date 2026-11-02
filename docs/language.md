@@ -87,6 +87,18 @@ action(299, board[row][column], 1);
 - The element kind is checked like a single object, and create-if-missing adds each missing
   element (named `spawns[0]`, `board[1][0]`...).
 - Object arrays work only as `action(...)` arguments and in `len`.
+- A range `{a..b}` in a uid makes one uid per whole number from `a` to `b`, both included (also
+  counting down, `{5..1}`). Ranges can be mixed with other uids, so names can change part way:
+
+  ```
+  door doors[] = ["#door*{0..9}", "#Bullet*{1..6}"];   // 16 doors: doors[10] is #Bullet*1
+  region cells[] = "#cell{1..2}_{0..1}";              // #cell1_0, #cell1_1, #cell2_0, #cell2_1
+  ```
+
+  One string without brackets is a one-dimensional array. Several ranges in one uid give every
+  combination, the first range changing slowest. Ranges are expanded while compiling (at most
+  10000 uids per declaration); a uid cannot be built while the map runs, because the game turns
+  uids into objects only when it loads the map (F18).
 
 ## Named values
 
@@ -365,7 +377,7 @@ declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) 
 object-kind    = "region" | "door" | "player" | "character" | "gun" | "barrel" | "vehicle" | "decor"
                | "pusher" | "light" | "water" | "timer" | "trigger" ;
 signed         = [ "-" ] number ;
-uid-list       = "[" [ ( string | uid-list ) { "," ( string | uid-list ) } ] "]" ;
+uid-list       = string | "[" [ ( string | uid-list ) { "," ( string | uid-list ) } ] "]" ;
 
 block          = "{" { statement } "}" ;
 
