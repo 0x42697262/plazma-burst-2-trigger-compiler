@@ -38,6 +38,8 @@ describe('compile CLI', () => {
     assert.equal(main(['x.pasm', '--guard', '0'], output), 1);
     assert.equal(main(['x.pasm', '--noguard'], output), 1);
     assert.match(lines.err.at(-1) ?? '', /Unknown option --noguard/);
+    assert.equal(main(['a.pasm', 'b.pasm'], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /one input file/);
   });
 
   it('removes an old text file when the new program cannot be written as text', () => {

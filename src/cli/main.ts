@@ -61,6 +61,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     }
     const file = parsed.files[0];
     if (file === undefined) throw new UsageError(TEXT.missingFile);
+    if (parsed.files.length > 1) throw new UsageError(TEXT.oneFile);
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = lastValue(parsed, FLAG.prefix) ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
