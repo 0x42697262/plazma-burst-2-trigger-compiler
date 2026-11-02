@@ -1,0 +1,17 @@
+// Door state that every player shares in multiplayer: "max" keeps the highest value,
+// so once any player opens the door it stays open for everybody.
+var doorOpen = 0;
+var applied = 0;
+
+export function openDoor() {
+  doorOpen = 1;
+  sync(doorOpen, "max");
+}
+
+every 30 {
+  if (doorOpen == 1 && applied == 0) {
+    action(MovableTo, "#door1", "#door1_open");
+    applied = 1;
+    say("the door is open");
+  }
+}

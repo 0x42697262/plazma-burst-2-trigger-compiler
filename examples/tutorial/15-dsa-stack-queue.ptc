@@ -1,0 +1,55 @@
+// Level 2: a stack and a queue. The stack checks brackets and palindromes;
+// the queue is a ring buffer of 4 places that wraps around.
+var stack[];
+var queue[];
+var head = 0;
+var size = 0;
+const CAPACITY = 4;
+
+function balanced(text) {
+  clear(stack);
+  for (let i = 0; i < len(text); i += 1) {
+    let c = charAt(text, i);
+    if (c == "(" || c == "[") { push(stack, c); }
+    if (c == ")" || c == "]") {
+      if (len(stack) == 0) { return 0; }
+      let open = pop(stack);
+      if ((c == ")" && open != "(") || (c == "]" && open != "[")) { return 0; }
+    }
+  }
+  return len(stack) == 0;
+}
+
+function palindrome(text) {
+  clear(stack);
+  for (let i = 0; i < len(text); i += 1) { push(stack, charAt(text, i)); }
+  for (let i = 0; i < len(text); i += 1) {
+    if (pop(stack) != charAt(text, i)) { return 0; }
+  }
+  return 1;
+}
+
+function enqueue(value) {
+  if (size == CAPACITY) { return 0; }
+  queue[(head + size) % CAPACITY] = value;
+  size += 1;
+  return 1;
+}
+
+function dequeue() {
+  let value = queue[head];
+  head = (head + 1) % CAPACITY;
+  size -= 1;
+  return value;
+}
+
+on start {
+  say("([]) balanced: {balanced("([])")}, ([)] balanced: {balanced("([)]")}");
+  say("level: {palindrome("level")}, lever: {palindrome("lever")}");
+  enqueue("a"); enqueue("b"); enqueue("c");
+  let out = dequeue() .. dequeue();
+  enqueue("d"); enqueue("e"); enqueue("f");
+  let full = enqueue("g");
+  while (size > 0) { out ..= dequeue(); }
+  say("queue order: {out}, accepted g: {full}");
+}

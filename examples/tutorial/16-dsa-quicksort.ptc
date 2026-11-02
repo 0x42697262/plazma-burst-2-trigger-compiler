@@ -1,0 +1,47 @@
+// Level 3: quicksort, a recursive divide-and-conquer sort.
+// Each call keeps its own low/high: the compiler saves them around recursive calls.
+var numbers[];
+var calls = 0;
+
+function swap(i, j) {
+  let keep = numbers[i];
+  numbers[i] = numbers[j];
+  numbers[j] = keep;
+}
+
+function partition(low, high) {
+  let pivot = numbers[high];
+  let i = low;
+  for (let j = low; j < high; j += 1) {
+    if (numbers[j] < pivot) {
+      swap(i, j);
+      i += 1;
+    }
+  }
+  swap(i, high);
+  return i;
+}
+
+function quicksort(low, high) {
+  calls += 1;
+  if (low >= high) { return; }
+  let middle = partition(low, high);
+  quicksort(low, middle - 1);
+  quicksort(middle + 1, high);
+}
+
+function listText() {
+  let text = "";
+  for (let i = 0; i < len(numbers); i += 1) {
+    if (i > 0) { text ..= ","; }
+    text ..= numbers[i];
+  }
+  return text;
+}
+
+on start {
+  for (let i = 0; i < 12; i += 1) { push(numbers, (i * 37 + 11) % 50); }
+  say("before: {listText()}");
+  quicksort(0, len(numbers) - 1);
+  say("after: {listText()} ({calls} calls)");
+}

@@ -9,7 +9,7 @@ import { Simulation } from '../../sim/simulator.ts';
 import { frontEndFor } from '../../cli/frontends.ts';
 import { prefixFromFile } from '../../cli/main.ts';
 import { createNames } from '../../compiler/names.ts';
-import { CASES_DIRECTORY, GAME_NAMES_FILE, MAP_FILE, MAP_NAME, SANDBOX } from './paths.ts';
+import { CASES_DIRECTORIES, GAME_NAMES_FILE, REPOSITORY_ROOT, MAP_FILE, MAP_NAME, SANDBOX } from './paths.ts';
 import { prepareSandbox } from './sandbox.ts';
 import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
 import {
@@ -28,16 +28,17 @@ const print = (line: string): void => {
 };
 
 function loadCases(): Case[] {
-  const files = fs.readdirSync(CASES_DIRECTORY).filter((file) => CASE_EXTENSIONS.includes(path.extname(file))).sort();
+  const files = CASES_DIRECTORIES.flatMap((folder) => fs.readdirSync(folder)
+    .filter((file) => CASE_EXTENSIONS.includes(path.extname(file))).sort()
+    .map((file) => path.join(folder, file)));
   return files.map((file) => {
-    const fullPath = path.join(CASES_DIRECTORY, file);
-    const source = fs.readFileSync(fullPath, FILE_ENCODING);
+    const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(file);
     const result = frontEnd.compile(source, prefix, {});
     const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS });
     simulation.tick(SIMULATED_FRAMES);
-    return { name: file, prefix, xml: emitXml(result.program), simulated: encodeVariables(simulation.variables), errors: simulation.errors };
+    return { name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), simulated: encodeVariables(simulation.variables), errors: simulation.errors };
   });
 }
 

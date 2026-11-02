@@ -10,6 +10,9 @@ export const SANDBOX_DATA_COPIES: readonly string[] = Object.freeze([path.join('
 export const SANDBOX_MAPS = path.join(SANDBOX, 'data', 'maps');
 export const SANDBOX_BUILT_MARK = path.join(SANDBOX, 'dist', 'page', 'console.js');
 export const GAME_NAMES_FILE = path.join(GAME_REPOSITORY, 'data', 'names.js');
-export const CASES_DIRECTORY = path.join(REPOSITORY_ROOT, 'examples', 'live');
+export const CASES_DIRECTORIES: readonly string[] = Object.freeze([
+  path.join(REPOSITORY_ROOT, 'examples', 'live'),
+  path.join(REPOSITORY_ROOT, 'examples', 'tutorial'),
+]);
 export const MAP_NAME = 'ptc-live';
 export const MAP_FILE = path.join(SANDBOX_MAPS, `${MAP_NAME}.xml`);

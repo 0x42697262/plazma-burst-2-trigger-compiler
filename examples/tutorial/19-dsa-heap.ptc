@@ -1,0 +1,54 @@
+// Level 3: a binary min-heap (priority queue) and heap sort.
+// The smallest value is always at index 0; children of i are 2i+1 and 2i+2.
+var heap[];
+
+function swap(i, j) {
+  let keep = heap[i];
+  heap[i] = heap[j];
+  heap[j] = keep;
+}
+
+function insert(value) {
+  push(heap, value);
+  let i = len(heap) - 1;
+  while (i > 0) {
+    let parent = floor((i - 1) / 2);
+    if (heap[parent] <= heap[i]) { return; }
+    swap(i, parent);
+    i = parent;
+  }
+}
+
+function removeSmallest() {
+  let smallest = heap[0];
+  let last = pop(heap);
+  if (len(heap) == 0) { return smallest; }
+  heap[0] = last;
+  let i = 0;
+  while (1) {
+    let left = 2 * i + 1;
+    let right = left + 1;
+    let pick = i;
+    if (left < len(heap) && heap[left] < heap[pick]) { pick = left; }
+    if (right < len(heap) && heap[right] < heap[pick]) { pick = right; }
+    if (pick == i) { return smallest; }
+    swap(i, pick);
+    i = pick;
+  }
+}
+
+on start {
+  let input = "31 4 15 9 2 6 53 5";
+  let digits = "";
+  for (let i = 0; i <= len(input); i += 1) {
+    if (i == len(input) || charAt(input, i) == " ") {
+      insert(number(digits));
+      digits = "";
+    } else {
+      digits ..= charAt(input, i);
+    }
+  }
+  let sorted = "";
+  while (len(heap) > 0) { sorted ..= removeSmallest() .. " "; }
+  say("heap sort: {sorted}");
+}

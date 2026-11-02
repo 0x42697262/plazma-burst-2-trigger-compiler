@@ -1,0 +1,40 @@
+// A chat calculator: "= 12 * 3" answers "12 * 3 = 36". One operator, two numbers.
+var lastResult = "";
+
+function isDigit(c) { return contains("0123456789.", c); }
+
+function calculate(text) {
+  let i = 0;
+  let a = "";
+  let b = "";
+  while (i < len(text) && (charAt(text, i) == " " || charAt(text, i) == "=")) { i += 1; }
+  while (i < len(text) && isDigit(charAt(text, i))) { a ..= charAt(text, i); i += 1; }
+  while (i < len(text) && charAt(text, i) == " ") { i += 1; }
+  let operator = charAt(text, i);
+  i += 1;
+  while (i < len(text) && charAt(text, i) == " ") { i += 1; }
+  while (i < len(text) && isDigit(charAt(text, i))) { b ..= charAt(text, i); i += 1; }
+  if (a == "" || b == "") { return "write it like: = 12 * 3"; }
+  let x = number(a);
+  let y = number(b);
+  if (operator == "+") { return x + y; }
+  if (operator == "-") { return x - y; }
+  if (operator == "*") { return x * y; }
+  if (operator == "/") {
+    if (y == 0) { return "cannot divide by zero"; }
+    return x / y;
+  }
+  if (operator == "%") { return x % y; }
+  return "unknown operator {operator}";
+}
+
+on chat {
+  let text = chatText();
+  if (charAt(text, 0) != "=") { return; }
+  lastResult = calculate(text);
+  say("{drop(text, 1)} = {lastResult}");
+}
+
+on start {
+  say("12 * 3 = {calculate("12 * 3")}");
+}

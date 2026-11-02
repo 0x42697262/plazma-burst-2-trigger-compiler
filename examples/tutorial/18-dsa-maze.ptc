@@ -1,0 +1,49 @@
+// Level 3: shortest path through a maze with breadth-first search.
+// The maze is text rows ("x" is a wall); "seen" is a dictionary keyed by "x,y".
+var rows[];
+var queueX[];
+var queueY[];
+var seen[];
+var steps[];
+
+function cell(x, y) {
+  if (y < 0 || y >= len(rows) || x < 0 || x >= len(rows[0])) { return "x"; }
+  return charAt(rows[y], x);
+}
+
+function visit(x, y, distance) {
+  let key = x .. "," .. y;
+  if (cell(x, y) == "x" || seen[key] == 1) { return; }
+  seen[key] = 1;
+  steps[key] = distance;
+  push(queueX, x);
+  push(queueY, y);
+}
+
+function shortestPath(startX, startY) {
+  clear(queueX);
+  clear(queueY);
+  visit(startX, startY, 0);
+  let head = 0;
+  while (head < len(queueX)) {
+    let x = queueX[head];
+    let y = queueY[head];
+    head += 1;
+    let distance = steps[x .. "," .. y];
+    if (cell(x, y) == "E") { return distance; }
+    visit(x + 1, y, distance + 1);
+    visit(x - 1, y, distance + 1);
+    visit(x, y + 1, distance + 1);
+    visit(x, y - 1, distance + 1);
+  }
+  return -1;
+}
+
+on start {
+  push(rows, "S.x...");
+  push(rows, ".xx.x.");
+  push(rows, "...x..");
+  push(rows, ".x...x");
+  push(rows, "...x.E");
+  say("shortest path: {shortestPath(0, 0)} steps");
+}

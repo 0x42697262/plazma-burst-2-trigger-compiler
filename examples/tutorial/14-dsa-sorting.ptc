@@ -1,0 +1,68 @@
+// Level 2: sorting and binary search.
+var numbers[];
+
+function fill() {
+  clear(numbers);
+  push(numbers, 29); push(numbers, 3); push(numbers, 17); push(numbers, 8);
+  push(numbers, 42); push(numbers, 15); push(numbers, 4); push(numbers, 23);
+}
+
+function listText() {
+  let text = "";
+  for (let i = 0; i < len(numbers); i += 1) {
+    if (i > 0) { text ..= ","; }
+    text ..= numbers[i];
+  }
+  return text;
+}
+
+function bubbleSort() {
+  let swapped = 1;
+  while (swapped) {
+    swapped = 0;
+    for (let i = 1; i < len(numbers); i += 1) {
+      if (numbers[i - 1] > numbers[i]) {
+        let keep = numbers[i];
+        numbers[i] = numbers[i - 1];
+        numbers[i - 1] = keep;
+        swapped = 1;
+      }
+    }
+  }
+}
+
+function insertionSort() {
+  for (let i = 1; i < len(numbers); i += 1) {
+    let current = numbers[i];
+    let j = i - 1;
+    while (j >= 0 && numbers[j] > current) {
+      numbers[j + 1] = numbers[j];
+      j -= 1;
+    }
+    numbers[j + 1] = current;
+  }
+}
+
+function binarySearch(wanted) {
+  let low = 0;
+  let high = len(numbers) - 1;
+  let steps = 0;
+  while (low <= high) {
+    steps += 1;
+    let middle = floor((low + high) / 2);
+    if (numbers[middle] == wanted) { return "{wanted} at {middle} in {steps} steps"; }
+    if (numbers[middle] < wanted) { low = middle + 1; } else { high = middle - 1; }
+  }
+  return "{wanted} not found";
+}
+
+on start {
+  fill();
+  bubbleSort();
+  say("bubble sort: {listText()}");
+  fill();
+  insertionSort();
+  say("insertion sort: {listText()}");
+  say(binarySearch(23));
+  say(binarySearch(5));
+}

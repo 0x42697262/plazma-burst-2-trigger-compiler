@@ -1,0 +1,38 @@
+// Arithmetic: whole-number division, remainders, rounding, powers, helpers.
+var quotient = 0;
+var remainder = 0;
+var price = 0;
+var power = 0;
+var average = 0;
+var biggest = 0;
+var distance = 0;
+var parsed = 0;
+var broken = 0;
+
+function abs(x) { if (x < 0) { return -x; } return x; }
+function max(a, b) { if (a > b) { return a; } return b; }
+function min(a, b) { if (a < b) { return a; } return b; }
+function pow(base, exponent) {
+  let result = 1;
+  for (let i = 0; i < exponent; i += 1) { result *= base; }
+  return result;
+}
+function roundTo(x, places) {
+  let scale = pow(10, places);
+  return round(x * scale) / scale;
+}
+
+on start {
+  quotient = floor(17 / 5);
+  remainder = 17 % 5;
+  price = roundTo(19.99 * 3 * 0.85, 2);
+  power = pow(2, 10);
+  average = (4 + 8 + 15 + 16 + 23 + 42) / 6;
+  biggest = max(min(7, 3), 5);
+  distance = abs(3 - 10);
+  parsed = number("12.5kg") + 1;
+  broken = number("kg12") + 1;
+  say("17 / 5 = {quotient} remainder {remainder}");
+  say("price {price}, 2^10 = {power}, average {average}");
+  if (broken == "NaN") { say("kg12 is not a number"); }
+}

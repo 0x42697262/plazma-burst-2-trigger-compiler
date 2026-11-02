@@ -1,0 +1,94 @@
+// Level 1: walking through an array. Sum, average, biggest, search, reverse,
+// FizzBuzz, greatest common divisor, and the primes below 50 (sieve).
+var numbers[];
+var flags[];
+
+function fill() {
+  clear(numbers);
+  push(numbers, 5); push(numbers, 3); push(numbers, 9); push(numbers, 1); push(numbers, 7);
+}
+
+function sum() {
+  let total = 0;
+  for (let i = 0; i < len(numbers); i += 1) { total += numbers[i]; }
+  return total;
+}
+
+function biggest() {
+  let best = numbers[0];
+  for (let i = 1; i < len(numbers); i += 1) {
+    if (numbers[i] > best) { best = numbers[i]; }
+  }
+  return best;
+}
+
+function indexOf(wanted) {
+  for (let i = 0; i < len(numbers); i += 1) {
+    if (numbers[i] == wanted) { return i; }
+  }
+  return -1;
+}
+
+function reverse() {
+  let left = 0;
+  let right = len(numbers) - 1;
+  while (left < right) {
+    let keep = numbers[left];
+    numbers[left] = numbers[right];
+    numbers[right] = keep;
+    left += 1;
+    right -= 1;
+  }
+}
+
+function listText() {
+  let text = "";
+  for (let i = 0; i < len(numbers); i += 1) {
+    if (i > 0) { text ..= ","; }
+    text ..= numbers[i];
+  }
+  return text;
+}
+
+function fizzBuzz(limit) {
+  let text = "";
+  for (let n = 1; n <= limit; n += 1) {
+    if (n % 15 == 0) { text ..= "FizzBuzz "; }
+    else if (n % 3 == 0) { text ..= "Fizz "; }
+    else if (n % 5 == 0) { text ..= "Buzz "; }
+    else { text ..= n .. " "; }
+  }
+  return text;
+}
+
+function gcd(a, b) {
+  while (b != 0) {
+    let rest = a % b;
+    a = b;
+    b = rest;
+  }
+  return a;
+}
+
+function primesBelow(limit) {
+  clear(flags);
+  for (let n = 0; n < limit; n += 1) { push(flags, 1); }
+  let text = "";
+  for (let n = 2; n < limit; n += 1) {
+    if (flags[n] == 1) {
+      text ..= n .. " ";
+      for (let multiple = n * n; multiple < limit; multiple += n) { flags[multiple] = 0; }
+    }
+  }
+  return text;
+}
+
+on start {
+  fill();
+  say("sum {sum()}, average {sum() / len(numbers)}, biggest {biggest()}, 9 is at {indexOf(9)}");
+  reverse();
+  say("reversed: {listText()}");
+  say(fizzBuzz(15));
+  say("gcd(48, 18) = {gcd(48, 18)}");
+  say("primes: {primesBelow(50)}");
+}

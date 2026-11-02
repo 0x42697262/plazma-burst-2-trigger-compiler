@@ -1,0 +1,32 @@
+// Level 3: a dictionary. Array indexes can be text, so counts["cat"] is its own
+// variable: counting words needs no search.
+var counts[];
+var known[];
+var keys[];
+
+function countWords(text) {
+  let word = "";
+  for (let i = 0; i <= len(text); i += 1) {
+    let c = charAt(text, i);
+    if (i == len(text) || c == " ") {
+      if (word != "") {
+        if (known[word] != 1) {
+          known[word] = 1;
+          counts[word] = 0;
+          push(keys, word);
+        }
+        counts[word] += 1;
+      }
+      word = "";
+    } else {
+      word ..= c;
+    }
+  }
+}
+
+on start {
+  countWords("the cat saw the dog and the dog saw the cat");
+  let text = "";
+  for (let i = 0; i < len(keys); i += 1) { text ..= keys[i] .. "=" .. counts[keys[i]] .. " "; }
+  say(text);
+}

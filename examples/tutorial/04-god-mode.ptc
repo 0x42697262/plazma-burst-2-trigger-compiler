@@ -1,0 +1,12 @@
+// A button that makes the player who pressed it a "god" once, and tells everybody.
+var godSlot = -1;
+
+export function becomeGod() {
+  if (godSlot != -1) {
+    say("{name(godSlot)} is already the god");
+    return;
+  }
+  godSlot = initiator();
+  action(498, godSlot, 450);
+  say("{name(godSlot)} has 450 lifepoints", 4);
+}

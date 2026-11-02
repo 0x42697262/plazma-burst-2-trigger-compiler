@@ -1,0 +1,10 @@
+// The smallest useful program: a variable, a loop, a message.
+var count = 0;
+
+on start {
+  while (count < 3) {
+    count += 1;
+    say("count is {count}");
+  }
+  say("done!", 2);
+}

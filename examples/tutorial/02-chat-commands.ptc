@@ -1,0 +1,46 @@
+// Chat commands: "-help", "-skin 2", "-roll".
+// The map's chat receiver runs "on chat" for every chat line.
+var skins[];
+var lastSkin = "";
+
+function startsWith(text, prefix) {
+  for (let i = 0; i < len(prefix); i += 1) {
+    if (charAt(text, i) != charAt(prefix, i)) { return 0; }
+  }
+  return 1;
+}
+
+function after(text, count) {
+  let rest = "";
+  for (let i = count; i < len(text); i += 1) { rest ..= charAt(text, i); }
+  return rest;
+}
+
+on start {
+  push(skins, "c48441");
+  push(skins, "c48386");
+  push(skins, "c47640");
+}
+
+on chat {
+  let text = chatText();
+  let who = talker();
+  if (!startsWith(text, "-")) { return; }
+
+  if (text == "-help") {
+    say("commands: -skin 1-{len(skins)}, -roll");
+  } else if (startsWith(text, "-skin ")) {
+    let choice = floor(number(after(text, 6)));
+    if (choice >= 1 && choice <= len(skins)) {
+      lastSkin = skins[choice - 1];
+      action(347, who, lastSkin);
+      say("{talkerName()} got skin {choice}");
+    } else {
+      say("there is no skin {after(text, 6)}");
+    }
+  } else if (text == "-roll") {
+    say("{talkerName()} rolled {random(6) + 1}");
+  } else {
+    say("unknown command {text}, try -help");
+  }
+}
