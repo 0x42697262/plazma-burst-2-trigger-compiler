@@ -135,7 +135,23 @@ Collections:
 
 `let x = expr;`, `x = expr;`, `x += expr;` (also `-=`, `*=`, `/=`, `%=`, `..=`),
 `if (c) { } else if (c) { } else { }`, `while (c) { }`, `for (let i = 0; i < n; i += 1) { }`,
-`for player p { }`, `break;`, `continue;`, `return expr;`, `wait(frames);`, `{ ... }`.
+`for player p { }`, `break;`, `continue;`, `return expr;`, `wait(frames);`, `{ ... }`, and `match`:
+
+```
+match (command) {
+  "-help", "-h" => say("commands: ...");
+  QUIT => { save(); return; }
+  _ => say("unknown {command}");
+}
+```
+
+- The value is computed once and compared as text, like `==`: `5` matches `"5"`.
+- Each pattern is a fixed value: a literal, a constant, a named value or a never-changing variable.
+  An arm may list several patterns.
+- The first matching arm runs; arms do not fall through. `_` is the default and must be last;
+  without it, an unmatched value does nothing.
+- An arm is one statement or a `{ }` block. `break` and `continue` inside an arm act on the loop
+  around the `match`.
 
 ## Expressions
 
@@ -254,8 +270,10 @@ statement      = block
                | "continue" ";"
                | "return" [ expression ] ";"
                | "wait" "(" expression ")" ";"
+               | "match" "(" expression ")" "{" { match-arm } "}"
                | simple ";" ;
 
+match-arm      = ( "_" | expression { "," expression } ) "=>" statement ;
 if-rest        = "if" "(" expression ")" block [ "else" ( if-rest | block ) ] ;
 for-init       = "let" identifier [ "=" expression ] | simple ;
 simple         = expression [ assign-op expression ] ;
@@ -288,7 +306,7 @@ character      = ? any character except '"', "\", "{", "}" and a line break ? ;
 
 keyword        = "var" | "const" | "let" | "extern" | "function" | "export" | "on" | "every"
                | "if" | "else" | "while" | "for" | "player" | "break" | "continue" | "return"
-               | "true" | "false" | "wait" | "import" ;
+               | "true" | "false" | "wait" | "import" | "match" ;
 ```
 
 Rules the grammar does not show:
