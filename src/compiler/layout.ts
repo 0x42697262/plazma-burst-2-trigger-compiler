@@ -165,6 +165,7 @@ const removeExitBlocks = (blocks: Block[], names: Names): Block[] => {
     if (block.fallsThrough && next && exits.has(next.label)) block.fallsThrough = false;
     block.actions = block.actions.map((action) =>
       (action.opcode === OPCODE.switchToTrigger && action.targetA.kind === 'label' && exits.has(action.targetA.label) ? stop : action));
+    if (isStop(block.actions.at(-1), stop)) block.fallsThrough = false;
     while (isStop(block.actions[block.actions.length - 1], stop) && !SKIPS_NEXT.has(block.actions.at(BEFORE_LAST)?.opcode ?? 0)) {
       block.actions.pop();
     }
@@ -187,6 +188,7 @@ export function layout(items: readonly MachineItem[], names: Names): LayoutResul
     if (block.fallsThrough && next) block.actions.push(jumpAction(next.label));
   });
   const chunks = blocks.flatMap((block) => splitBlock(block, names));
+  for (const chunk of chunks) if (chunk.actions.length === 0) chunk.actions.push(stopAction(names));
   const labels = new Map(chunks.map((chunk) => [chunk.label, names.triggerUid(chunk.label)]));
   for (const [label, target] of aliases) {
     const uid = labels.get(target);

@@ -143,6 +143,60 @@ end:
     assert.ok(program.triggers[1]?.actions.some((action) => action.opcode === 110));
   });
 
+  for (const [name, source] of [
+    ['a call to an entry', '.entry f\nstart:\n    set $i, 0\nloop:\n    add $i, 1\n    call @f\n    jmp @loop\nf:\n    ret\n'],
+    ['a fallthrough into an entry', '.entry e\nstart:\n    set $i, 0\nloop:\n    add $i, 1\ne:\n    jmp @loop\n'],
+    ['a pass-through label before an entry', '.entry e\nstart:\n    set $i, 0\np:\ne:\n    add $i, 1\n    jmp @p\n'],
+  ] as const) {
+    it(`keeps the loop guard through ${name}`, () => {
+      const { vars, simulation } = run(source, { loopGuard: 200 });
+      assert.ok((vars['~t_i~'] as number) <= 201, String(vars['~t_i~']));
+      assert.deepEqual(simulation.errors, []);
+    });
+  }
+
+  it('runs the start code before any other timer on the first frame', () => {
+    const { simulation } = run('.timer tick @onTick 1 -1\nstart:\n    set $n, 5\n    ret\nonTick:\n    say "n={$n}"\n');
+    assert.equal(simulation.chat[0], 'n=5');
+  });
+
+  it('does not fall through after a raw switch to an empty trigger', () => {
+    const { simulation } = run('start:\n    op363 @done, 0\nnext:\n    say "should not run"\n    ret\ndone:\n    ret\nother:\n    jmp @next\n');
+    assert.deepEqual(simulation.chat, []);
+  });
+
+  it('lets a raw skip skip a jump, with and without the loop guard', () => {
+    const source = 'start:\n    set $i, 0\n    set $five, 5\nloop:\n    add $i, 1\n    op361 $i, $five\n    jmp @loop\n    say "done {$i}"\n';
+    for (const loopGuard of [null, 100000]) {
+      const { simulation, warnings } = run(source, { loopGuard });
+      assert.deepEqual(simulation.chat, ['done 5'], String(loopGuard));
+      assert.deepEqual(warnings, []);
+    }
+  });
+
+  it('lets a raw skip skip a return', () => {
+    const { vars } = run('start:\n    set $a, 1\n    op361 $a, $a\n    ret\n    set $after, 1\n');
+    assert.equal(vars['~t_after~'], 1);
+  });
+
+  it('refuses a raw skip right before a label or a conditional jump', () => {
+    assert.throws(() => compileAssembly('start:\n    op361 $a, $a\nnext:\n    set $x, 1\nother:\n    jmp @next\n', 't'), /before the label "next"/);
+    assert.throws(() => compileAssembly('start:\n    op361 $a, $a\n    jeq $a, 1, @start\n', 't'), /line 3: a skip action cannot come right before a conditional jump/);
+  });
+
+  it('reads timer options in any order and checks directive labels', () => {
+    const { program } = compileAssembly('.timer t @go 30 disabled\n.timer u @go 30 -1\nstart:\n    ret\ngo:\n    ret\n', 't');
+    assert.deepEqual(program.timers.slice(1).map((timer) => [timer.enabled, timer.maxCalls]), [[false, 1], [true, -1]]);
+    assert.throws(() => compileAssembly('.entry mian\nmain:\n    ret\n', 't'), /"mian" is used by a directive but never defined/);
+    assert.throws(() => compileAssembly('.timer tick @tick 1\ntick:\n    ret\n', 't'), /same name as a label/);
+    assert.throws(() => compileAssembly('start:\n    op361 $a, $a\n    add $x, $y\n', 't'), /line 3: "add" here becomes several actions/);
+  });
+
+  it('never writes a trigger without actions', () => {
+    const { program } = compileAssembly('start:\n    call @f\n    ret\nf:\n    ret\n', 't');
+    for (const trigger of program.triggers) assert.ok(trigger.actions.length > 0, trigger.uid);
+  });
+
   it('warns about unreachable code and unknown targets', () => {
     const { warnings } = compileAssembly(`
 start:
@@ -182,7 +236,7 @@ end:
   it('adds timers and entry points', () => {
     const { program, entries } = compileAssembly('.timer tick @onTick 30 -1\nstart:\n    ret\nonTick:\n    add $n, 1\n', 't');
     assert.deepEqual(program.timers.map((timer) => [timer.uid, timer.target, timer.delay, timer.maxCalls]), [
-      ['#t_tick', '#t_onTick', 30, -1], ['#t:start-timer', '#t_start', 0, 1],
+      ['#t:start-timer', '#t_start', 0, 1], ['#t_tick', '#t_onTick', 30, -1],
     ]);
     assert.equal(entries.get('onTick'), '#t_onTick');
   });

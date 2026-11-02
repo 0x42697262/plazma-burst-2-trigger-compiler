@@ -27,12 +27,13 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
     if (uid === undefined) throw new CompileError(TEXT.unknownLabel(label));
     return uid;
   };
-  const timers: Timer[] = module.timers.map((spec) => ({
-    uid: names.triggerUid(spec.label), target: uidOf(spec.target), enabled: spec.enabled, maxCalls: spec.maxCalls, delay: spec.delay,
-  }));
+  const timers: Timer[] = [];
   if (options.startTimer && module.start !== null) {
     timers.push({ uid: names.triggerUid(START_TIMER_LABEL), target: uidOf(module.start), enabled: true, maxCalls: START_TIMER.maxCalls, delay: START_TIMER.delay });
   }
+  timers.push(...module.timers.map((spec) => ({
+    uid: names.triggerUid(spec.label), target: uidOf(spec.target), enabled: spec.enabled, maxCalls: spec.maxCalls, delay: spec.delay,
+  })));
   const program: Program = { triggers: laid.triggers, timers };
   checkProgram(program);
   const entries = new Map(module.instructions.flatMap((instruction) =>

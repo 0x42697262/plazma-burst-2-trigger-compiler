@@ -1,5 +1,5 @@
 import { opcodeByName } from '../opcodes/table.ts';
-import { OPCODE } from '../opcodes/constants.ts';
+import { OPCODE, SKIPS_NEXT } from '../opcodes/constants.ts';
 import { labelOperand, literal, textOperand, variable } from '../compiler/ir.ts';
 import type { Instruction, Module, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
 import type { Names } from '../compiler/names.ts';
@@ -11,7 +11,7 @@ import {
   LABEL_SIGIL, LINE_SPLIT, MNEMONIC, OPERAND_SEPARATOR, QUOTE, TIMER_DISABLED, VARIABLE_SIGIL, WHITESPACE,
 } from './keys.ts';
 import {
-  BRANCH_OPERANDS, DEFAULT_COLOR, DEFAULT_TIMER_CALLS, NO_OPERANDS, ONE_OPERAND, TIMER_CALLS_POSITION, TIMER_MIN_OPERANDS, TIMER_STATE_POSITION, TWO_OPERANDS,
+  BRANCH_OPERANDS, DEFAULT_COLOR, DEFAULT_TIMER_CALLS, NO_OPERANDS, ONE_OPERAND, TIMER_CALLS_POSITION, TIMER_MIN_OPERANDS, TWO_OPERANDS,
 } from './constants.ts';
 import { TEXT } from './text.ts';
 
@@ -186,6 +186,12 @@ const parseNumber = (text: string | undefined): number => {
   return text !== undefined && text !== '' && Number.isFinite(value) ? value : fail(TEXT.badNumber(text ?? ''));
 };
 
+const timerCalls = (options: readonly string[]): number => {
+  const counts = options.filter((option) => option !== TIMER_DISABLED);
+  if (counts.length > 1) fail(TEXT.timerOptions);
+  return counts[0] === undefined ? DEFAULT_TIMER_CALLS : parseNumber(counts[0]);
+};
+
 function directive(line: string, state: State): void {
   const words = line.slice(DIRECTIVE_MARK.length).split(WHITESPACE).filter((word) => word !== '');
   const [name, ...rest] = words;
@@ -208,8 +214,8 @@ function directive(line: string, state: State): void {
         label: identifier(rest[0] ?? ''),
         target: identifier(target.startsWith(LABEL_SIGIL) ? target.slice(LABEL_SIGIL.length) : target),
         delay: parseNumber(rest[2]),
-        maxCalls: rest[TIMER_CALLS_POSITION] === undefined ? DEFAULT_TIMER_CALLS : parseNumber(rest[TIMER_CALLS_POSITION]),
-        enabled: rest[TIMER_STATE_POSITION] !== TIMER_DISABLED,
+        maxCalls: timerCalls(rest.slice(TIMER_CALLS_POSITION)),
+        enabled: !rest.slice(TIMER_CALLS_POSITION).includes(TIMER_DISABLED),
       });
       break;
     }
@@ -243,7 +249,10 @@ function parseLine(rawLine: string, lineNumber: number, state: State, names: Nam
   const space = line.search(WHITESPACE);
   const mnemonic = space < 0 ? line : line.slice(0, space);
   const tokens = splitOperands(space < 0 ? '' : line.slice(space)).map((raw) => readToken(raw, names));
-  state.instructions.push(...instructionsOf(mnemonic, tokens, names, location));
+  const produced = instructionsOf(mnemonic, tokens, names, location);
+  const previous = state.instructions.at(-1);
+  if (previous?.kind === 'action' && SKIPS_NEXT.has(previous.opcode) && produced.length > 1) fail(TEXT.skipBeforeMultiple(mnemonic));
+  state.instructions.push(...produced);
 }
 
 export function parseAssembly(source: string, names: Names): Assembly {
@@ -259,6 +268,11 @@ export function parseAssembly(source: string, names: Names): Assembly {
   });
   const start = state.start ?? state.firstLabel;
   if (start === null) throw new CompileError(TEXT.noLabel);
+  const labels = new Set(state.instructions.flatMap((instruction) => (instruction.kind === 'label' ? [instruction.label] : [])));
+  for (const label of [start, ...state.entries, ...state.timers.map((timer) => timer.target)]) {
+    if (!labels.has(label)) throw new CompileError(TEXT.undefinedLabel(label));
+  }
+  for (const timer of state.timers) if (labels.has(timer.label)) throw new CompileError(TEXT.timerNameClash(timer.label));
   state.entries.add(start);
   for (const timer of state.timers) state.entries.add(timer.target);
   const instructions = state.instructions.map((instruction) =>

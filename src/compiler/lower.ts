@@ -1,8 +1,10 @@
-import { OPCODE } from '../opcodes/constants.ts';
+import { OPCODE, SKIPS_NEXT } from '../opcodes/constants.ts';
 import { labelOperand, textOperand } from './ir.ts';
 import type { Condition, Instruction, Operand, SourceLocation, Value } from './ir.ts';
 import { INTERNAL_VARIABLE, LABEL_HINT, ZERO_VALUE } from './keys.ts';
 import type { Names } from './names.ts';
+import { CompileError } from './names.ts';
+import { TEXT } from './text.ts';
 
 export type MachineItem =
   | { kind: 'label'; label: string; entry: boolean }
@@ -69,27 +71,39 @@ const lowerBranch = (emitter: Emitter, instruction: Extract<Instruction, { kind:
   if (inverted !== undefined) skipOverJump(emitter, inverted, leftName, rightName, label, location);
 };
 
+const afterSkip = (emitter: Emitter): boolean => {
+  const last = emitter.items.at(-1);
+  return last?.kind === 'action' && SKIPS_NEXT.has(last.opcode);
+};
+
+const stopOperand = (emitter: Emitter): Operand => textOperand(emitter.names.internalVariable(INTERNAL_VARIABLE.stop));
+
 export function lower(instructions: readonly Instruction[], names: Names): MachineItem[] {
   const emitter: Emitter = { items: [], names };
   for (const instruction of instructions) {
     switch (instruction.kind) {
       case 'label':
+        if (afterSkip(emitter)) throw new CompileError(TEXT.skipBeforeLabel(instruction.label));
         emitter.items.push({ kind: 'label', label: instruction.label, entry: instruction.entry });
         break;
       case 'action':
         emitAction(emitter, instruction.opcode, instruction.targetA, instruction.targetB, instruction.location);
         break;
-      case 'jump':
+      case 'jump': {
+        const conditional = afterSkip(emitter);
         jumpTo(emitter, instruction.label, instruction.location);
-        emitter.items.push({ kind: 'end' });
+        if (!conditional) emitter.items.push({ kind: 'end' });
         break;
+      }
       case 'call':
         emitAction(emitter, OPCODE.executeTrigger, labelOperand(instruction.label), unused(), instruction.location);
         break;
       case 'return':
-        emitter.items.push({ kind: 'end' });
+        if (afterSkip(emitter)) emitAction(emitter, OPCODE.continueIfGreater, stopOperand(emitter), stopOperand(emitter), instruction.location);
+        else emitter.items.push({ kind: 'end' });
         break;
       case 'branch':
+        if (afterSkip(emitter)) throw new CompileError(TEXT.skipBeforeBranch(instruction.location?.line ?? 0));
         lowerBranch(emitter, instruction);
         break;
     }

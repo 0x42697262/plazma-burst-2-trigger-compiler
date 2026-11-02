@@ -12,6 +12,10 @@ export const TEXT = Object.freeze({
   emptyOperand: 'empty operand',
   badNumber: (text: string): string => `"${text}" is not a number`,
   noLabel: 'the program has no label to start at',
+  timerOptions: '.timer takes at most one call count and "disabled"',
+  skipBeforeMultiple: (mnemonic: string): string => `"${mnemonic}" here becomes several actions, but the skip action before it skips only one`,
+  undefinedLabel: (label: string): string => `the label "${label}" is used by a directive but never defined`,
+  timerNameClash: (name: string): string => `the timer "${name}" has the same name as a label; both would get the same uid`,
   zeroToTwo: '0 to 2',
   exactly: (count: number): string => String(count),
 });
