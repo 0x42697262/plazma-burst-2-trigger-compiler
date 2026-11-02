@@ -8,6 +8,7 @@ export type Expression =
   | { kind: 'number'; text: string; location: Location }
   | { kind: 'string'; parts: TemplatePart[]; location: Location }
   | { kind: 'boolean'; value: boolean; location: Location }
+  | { kind: 'named'; group: string; member: string; paramKind: string; text: string; location: Location }
   | { kind: 'name'; name: string; location: Location }
   | { kind: 'index'; array: string; index: Expression; location: Location }
   | { kind: 'call'; callee: string; args: Expression[]; location: Location }

@@ -2,10 +2,11 @@ import vm from 'node:vm';
 import { OPCODES_GLOBAL } from './keys.ts';
 
 export type SnapshotAction = { alias?: string; a: string; b: string; desc: string };
-export type Snapshot = { source: string; fetched: string; actions: Record<string, SnapshotAction> };
+export type ValueTables = Record<string, Record<string, string>>;
+export type Snapshot = { source: string; fetched: string; actions: Record<string, SnapshotAction>; values: ValueTables };
 
 type RawAction = { desc: string; a: string; b: string; alias?: string };
-type RawTable = { source: string; fetched: string; actions: Record<string, RawAction> };
+type RawTable = { source: string; fetched: string; actions: Record<string, RawAction>; values?: ValueTables };
 
 export function readOpcodeTable(code: string): RawTable | null {
   const sandbox: Record<string, unknown> = {};
@@ -24,5 +25,5 @@ export function toSnapshot(table: RawTable): Snapshot {
     if (!raw) continue;
     actions[key] = raw.alias ? { alias: raw.alias, a: raw.a, b: raw.b, desc: raw.desc } : { a: raw.a, b: raw.b, desc: raw.desc };
   }
-  return { source: table.source, fetched: table.fetched, actions };
+  return { source: table.source, fetched: table.fetched, actions, values: table.values ?? {} };
 }

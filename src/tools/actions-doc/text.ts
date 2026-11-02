@@ -64,6 +64,17 @@ export const TEXT = Object.freeze({
   tableHead: '| # | Text name | A | B | Description | Notes |\n|---|---|---|---|---|---|',
   row: (number: number, name: string, kindA: string, kindB: string, description: string, notes: string): string =>
     `| ${number} | \`${name}\` | ${kindA} | ${kindB} | ${description} | ${notes} |`,
+  valuesTitle: [
+    '## Named values',
+    '',
+    'Fixed values from the editor\'s own lists, written `Group.Name`: `say("hi", Color.NoirLime)`,',
+    '`action(SetCharTeam, hero, Team.RedTeam)`. The compiler writes the value into the action and',
+    'refuses a value from another group where a parameter has its own list. The raw value (`2`,',
+    '`12`) works too.',
+  ].join('\n'),
+  valueGroup: (name: string, kind: string, count: number): string => `### ${name} (\`${kind}\`, ${count})`,
+  valueHead: '| Name | Value | Editor label |\n|---|---|---|',
+  valueRow: (name: string, value: string, label: string): string => `| \`${name}\` | \`${value}\` | ${label} |`,
   wrote: (file: string): string => `Wrote ${file}\n`,
   notes: Object.freeze({ simulated: 'sim', skips: 'skips', replacesA: 'replaces A', replacesB: 'replaces B', avoided: 'avoid', sync: 'needs var_sync' }),
 });

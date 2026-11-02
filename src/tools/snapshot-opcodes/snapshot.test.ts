@@ -34,6 +34,7 @@ describe('snapshot-opcodes', () => {
         99: { alias: 'ExecTrigger', a: 'trigger', b: 'nochange', desc: 'Execute' },
         363: { a: 'trigger', b: 'nochange', desc: 'Switch' },
       },
+      values: {},
     });
   });
 });

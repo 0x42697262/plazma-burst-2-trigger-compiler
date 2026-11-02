@@ -10,11 +10,11 @@ export const KEYWORD = Object.freeze({
 export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat' } as const);
 export const PUNCTUATORS: readonly string[] = Object.freeze([
   '..=', '+=', '-=', '*=', '/=', '%=', '=>', '==', '!=', '<=', '>=', '&&', '||', '..',
-  '(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '+', '-', '*', '/', '%', '!', '@',
+  '(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '+', '-', '*', '/', '%', '!', '@', '.',
 ]);
 export const PUNCTUATOR = Object.freeze({
   openParen: '(', closeParen: ')', openBrace: '{', closeBrace: '}', openBracket: '[', closeBracket: ']',
-  semicolon: ';', comma: ',', assign: '=', at: '@', minus: '-', not: '!', arrow: '=>', wildcard: '_',
+  semicolon: ';', comma: ',', assign: '=', at: '@', minus: '-', not: '!', arrow: '=>', wildcard: '_', dot: '.',
 } as const);
 export const COMPOUND_ASSIGNMENTS: Readonly<Record<string, BinaryOperator>> = Object.freeze({
   '+=': '+', '-=': '-', '*=': '*', '/=': '/', '%=': '%', '..=': '..',
@@ -69,6 +69,7 @@ export const OBJECT_AT = 'at';
 export const ARRAY_INDEX_PLACEHOLDER = 'i';
 export const SIDE = Object.freeze({ a: 'A', b: 'B' });
 export const TRIGGER_KIND = 'trigger';
+export const COLOR_KIND = 'textmsg';
 export const UID_MARK = '#';
 export const ACTION_BUILTIN = 'action';
 export const SIDE_B = 'B';

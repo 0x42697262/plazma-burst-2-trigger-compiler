@@ -13,7 +13,7 @@ import type { Declaration, Expression, Location, SourceFile, Statement, Template
 import { SourceError } from './lexer.ts';
 import {
   ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
-  WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND, ARRAY_INDEX_PLACEHOLDER,
+  WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND, ARRAY_INDEX_PLACEHOLDER, COLOR_KIND,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
 import { ACTION_ARGUMENTS, DEFAULT_SAY_COLOR, SAY_ARGUMENTS, SYNC_ARGUMENTS, UNLIMITED_TIMER_CALLS } from './constants.ts';
@@ -43,11 +43,13 @@ const fail = (location: Location, message: string): never => {
 };
 
 const isLiteralExpression = (expression: Expression): boolean =>
-  expression.kind === 'number' || expression.kind === 'boolean' || (expression.kind === 'string' && expression.parts.every((part) => part.kind === 'text'));
+  expression.kind === 'number' || expression.kind === 'boolean' || expression.kind === 'named'
+  || (expression.kind === 'string' && expression.parts.every((part) => part.kind === 'text'));
 
 const literalText = (expression: Expression): string => {
   switch (expression.kind) {
     case 'number':
+    case 'named':
       return expression.text;
     case 'boolean':
       return expression.value ? TRUE_TEXT : FALSE_TEXT;
@@ -1243,6 +1245,9 @@ export class Generator {
       fail(expression.location, TEXT.argumentRange(expression.callee, SAY_ARGUMENTS.min, SAY_ARGUMENTS.max, count));
     }
     const colorExpression = expression.args[1];
+    if (colorExpression?.kind === 'named' && colorExpression.paramKind !== COLOR_KIND) {
+      fail(colorExpression.location, TEXT.wrongValueGroup(OPCODE.showText, SIDE.b, COLOR_KIND, colorExpression.group));
+    }
     const color = colorExpression ? this.compileTimeText(colorExpression) ?? fail(colorExpression.location, TEXT.sayColor) : DEFAULT_SAY_COLOR;
     const message = this.argument(expression, 0);
     const inline = this.inlineTemplate(message);
@@ -1291,6 +1296,9 @@ export class Generator {
       if (kind !== TRIGGER_KIND) fail(expression.location, TEXT.referenceNotTrigger(opcode.number, side, kind));
       return labelOperand(expression.name);
     }
+    if (expression.kind === 'named' && expression.paramKind !== kind && (expectsObject || !LOOSE_VALUE_KINDS.has(kind))) {
+      fail(expression.location, TEXT.wrongValueGroup(opcode.number, side, kind, expression.group));
+    }
     if (isLiteralExpression(expression)) return textOperand(literalText(expression));
     if (expression.kind === 'name') {
       const entry = this.lookup(expression.name, expression.location);
@@ -1311,7 +1319,9 @@ export class Generator {
     }
     if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));
     const inline = this.inlineTemplate(expression);
-    return inline === null ? fail(expression.location, TEXT.literalOnly(BUILTIN.action)) : textOperand(inline);
+    if (inline !== null) return textOperand(inline);
+    if (takesVariableName(opcode, side)) return textOperand(this.variableValue(expression));
+    return fail(expression.location, TEXT.literalOnly(BUILTIN.action));
   }
 
   private rawAction(expression: Extract<Expression, { kind: 'call' }>): void {

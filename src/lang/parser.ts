@@ -3,6 +3,11 @@ import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
 import { COMPOUND_ASSIGNMENTS, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
 import { isObjectKeyword } from '../objects/objects.ts';
+import { VALUE_GROUP_LIST, valueGroup } from '../opcodes/values.ts';
+
+const fail = (location: Location, message: string): never => {
+  throw new SourceError(location.line, message, location.file);
+};
 import { TEXT } from './text.ts';
 
 class Parser {
@@ -353,6 +358,12 @@ class Parser {
     if (this.isPunctuator(PUNCTUATOR.openParen)) return this.parenthesized();
     if (token.kind !== 'identifier') return this.fail(TEXT.expression);
     const name = this.identifier();
+    if (this.accept(PUNCTUATOR.dot)) {
+      const member = this.identifier();
+      const group = valueGroup(name) ?? fail(location, TEXT.unknownValueGroup(name, VALUE_GROUP_LIST.map((entry) => entry.name)));
+      const text = group.members.get(member) ?? fail(location, TEXT.unknownValueMember(name, member));
+      return { kind: 'named', group: name, member, paramKind: group.paramKind, text, location };
+    }
     if (this.accept(PUNCTUATOR.openParen)) {
       const args: Expression[] = [];
       if (!this.isPunctuator(PUNCTUATOR.closeParen)) {

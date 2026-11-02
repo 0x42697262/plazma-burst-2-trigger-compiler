@@ -56,5 +56,8 @@ export const TEXT = Object.freeze({
   matchPattern: 'a match pattern must be a fixed value: a number, text, true/false, a constant or a named value',
   matchDefaultLast: 'the "_" arm must be the last one',
   matchDuplicate: (pattern: string): string => `the pattern ${JSON.stringify(pattern)} appears twice in this match`,
+  unknownValueGroup: (name: string, groups: readonly string[]): string => `unknown value group "${name}"; the groups are ${groups.join(', ')} (see docs/actions.md)`,
+  unknownValueMember: (group: string, member: string): string => `${group} has no value "${member}" (see docs/actions.md)`,
+  wrongValueGroup: (action: number, side: string, kind: string, group: string): string => `action ${action} takes ${kind} as ${side}, not a ${group} value`,
   sayColor: 'the color of say(...) must be a number or a string',
 });

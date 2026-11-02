@@ -2,6 +2,7 @@ import { OPCODES } from '../../opcodes/table.ts';
 import type { Opcode } from '../../opcodes/table.ts';
 import { SKIPS_NEXT, SYNC_ACTIONS } from '../../opcodes/constants.ts';
 import { SIMULATED_ACTIONS } from '../../sim/actions.ts';
+import { VALUE_GROUP_LIST } from '../../opcodes/values.ts';
 import { CATEGORY_SEPARATOR, CELL_PIPE, ESCAPED_PIPE, LINE_END, NOTE_SEPARATOR, OP_PREFIX, UNCATEGORIZED } from './keys.ts';
 import { TEXT } from './text.ts';
 
@@ -40,6 +41,11 @@ export function renderActions(): string {
         opcode.number, cell(opcode.alias ?? `${OP_PREFIX}${opcode.number}`), cell(opcode.paramA), cell(opcode.paramB), cell(descriptionOf(opcode)), notesOf(opcode),
       ));
     }
+  }
+  lines.push('', TEXT.valuesTitle);
+  for (const group of VALUE_GROUP_LIST) {
+    lines.push('', TEXT.valueGroup(group.name, group.paramKind, group.members.size), '', TEXT.valueHead);
+    for (const [name, value] of group.members) lines.push(TEXT.valueRow(name, cell(value), cell(group.labels.get(name) ?? '')));
   }
   return lines.join(LINE_END) + LINE_END;
 }
