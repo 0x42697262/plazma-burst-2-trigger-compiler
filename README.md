@@ -45,6 +45,9 @@ sync; the simulator runs 63 actions (all the compiler emits) and skips the other
 selection, a calculator, three parsers and data structures (linked list, binary tree, sorts).
 Each is in `examples/tutorial/`.
 
+[docs/challenges/game-of-life.md](docs/challenges/game-of-life.md): a challenge for developers,
+Conway's Game of Life in a map.
+
 [docs/actions.md](docs/actions.md): all 531 actions, how to call each one, and which the
 simulator runs.
 
