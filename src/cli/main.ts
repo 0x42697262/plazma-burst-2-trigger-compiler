@@ -127,7 +127,10 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const base = path.join(lastValue(parsed, FLAG.out) ?? DEFAULT_OUT, path.basename(file, path.extname(file)));
     const check = hostMap === null ? null : checkObjects(result.objects, hostMap);
     if (check && check.problems.length > 0) throw new UsageError(TEXT.objectProblems(check.problems));
-    const creating = check !== null && !parsed.flags.has(FLAG.noCreate) ? check.missing : [];
+    const allObjects = check === null && parsed.flags.has(FLAG.objects);
+    if (check !== null && parsed.flags.has(FLAG.objects)) output.err(TEXT.warning(TEXT.objectsIgnored));
+    const creating = allObjects ? [...result.objects] : check !== null && !parsed.flags.has(FLAG.noCreate) ? check.missing : [];
+    if (allObjects && creating.length > 0) output.err(TEXT.warning(TEXT.objectsWithoutMap(creating.map((object) => object.uid))));
     if (check !== null && parsed.flags.has(FLAG.noCreate)) {
       for (const object of check.missing) output.err(TEXT.warning(TEXT.objectMissing(object.name, object.uid)));
     }

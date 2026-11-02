@@ -38,6 +38,7 @@ const targetSelect = element<HTMLSelectElement>(ELEMENT.target);
 const replaceInput = element<HTMLInputElement>(ELEMENT.replace);
 const nameSeedInput = element<HTMLInputElement>(ELEMENT.nameSeed);
 const obfuscateInput = element<HTMLInputElement>(ELEMENT.obfuscate);
+const objectsInput = element<HTMLInputElement>(ELEMENT.objects);
 const obfuscateSeedInput = element<HTMLInputElement>(ELEMENT.obfuscateSeed);
 const newSeedButton = element<HTMLButtonElement>(ELEMENT.newSeed);
 const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
@@ -58,6 +59,7 @@ targetSelect.value = savedOptions.target ?? DEFAULT_TARGET;
 replaceInput.checked = savedOptions.replace ?? false;
 nameSeedInput.value = savedOptions.nameSeed ?? '';
 obfuscateInput.checked = savedOptions.obfuscate ?? false;
+objectsInput.checked = savedOptions.objects ?? false;
 obfuscateSeedInput.value = savedOptions.obfuscateSeed ?? '';
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 
@@ -70,7 +72,7 @@ let statusTimer = 0;
 
 const options = (): Options => {
   const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked, nameSeed: nameSeedInput.value,
-    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value,
+    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value, objects: objectsInput.checked,
   };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   return value;
@@ -248,7 +250,7 @@ environmentInput.addEventListener(EVENT.input, () => {
   environmentButton.textContent = TEXT.environmentButton(Object.keys(environment()).length);
   editor.relint();
 });
-for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput]) {
+for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput, objectsInput]) {
   input.addEventListener(EVENT.change, () => {
     options();
     editor.relint();

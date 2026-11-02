@@ -154,6 +154,20 @@ describe('compile CLI', () => {
     assert.notEqual(fs.readFileSync(path.join(folder, 'r.xml'), 'utf8'), first);
   });
 
+  it('adds every declared object without a map only with --objects', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'f.ptc');
+    fs.writeFileSync(source, 'player slots[] = "#player*{1..16}";\nregion goal = "#goal" at 100, 50;\non start { action(SetCharHP, slots[0], 50); action(TeleportInitiatorFromTo, goal, goal); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder], output), 0);
+    assert.ok(!fs.readFileSync(path.join(folder, 'f.xml'), 'utf8').includes('<player'));
+    assert.equal(main([source, '--out', folder, '--objects'], output), 0, lines.err.join('\n'));
+    const xml = fs.readFileSync(path.join(folder, 'f.xml'), 'utf8');
+    assert.equal((xml.match(/<player uid="#player\*/g) ?? []).length, 16);
+    assert.match(xml, /<region uid="#goal" x="100" y="50"/);
+    assert.ok(lines.err.some((line) => line.includes('delete any the map already has') && line.includes('#player*16')));
+  });
+
   it('records a build manifest and replaces across renamed builds', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'm.ptc');

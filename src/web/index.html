@@ -22,6 +22,7 @@
     <input id="host-map" type="file" accept=".xml,.txt" hidden>
     <button id="host-map-button" title="A map XML downloaded from the editor: the program is appended to it">map XML…</button>
     <span id="host-map-name" class="muted">no map</span>
+    <label title="Without a map XML: add every declared object (doors, regions, player slots...) to the XML, for a new map. With a map XML, only the missing ones are added anyway"><input id="objects" type="checkbox"> objects</label>
     <label title="When adding to a map that already has this program, remove its old triggers and timers first (update in place)"><input id="replace" type="checkbox"> replace</label>
     <label title="Derive the name prefix from a seed: reproducible, source-independent names. Use with replace to update in place.">name seed <input id="name-seed" size="8" placeholder="off"></label>
     <label title="Shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check; about 3 times slower (--obfuscate)"><input id="obfuscate" type="checkbox"> obfuscate</label>

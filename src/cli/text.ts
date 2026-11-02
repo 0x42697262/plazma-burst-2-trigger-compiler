@@ -17,6 +17,7 @@ export const TEXT = Object.freeze({
     '  --at <x>,<y>      where the first trigger goes in the map (default 0,0)',
     '  --no-sync-mark    do not add the Var Sync engine mark when the program syncs variables',
     '  --no-create       with --into, do not add declared objects the map lacks; warn instead',
+    '  --objects         without --into, add every declared object to the XML (for a new map; a map that has one of them would get it twice)',
     '  --no-number-text  write number-like text such as "007" as it is (for map editors other than the website one)',
     '  --target <name>   triggers (default): compile to triggers; pcode: compile to p-code run by a fixed set of triggers (slower, experimental)',
     '  --direct-index    read and write array elements without scanning every variable (2 more actions each; faster in maps with many variables)',
@@ -41,6 +42,8 @@ export const TEXT = Object.freeze({
   textNeedsVarSync: 'the program syncs variables: in the editor, add a Var Sync engine mark to the map, or every sync stops its trigger',
   objectCreated: (keyword: string, uid: string, positionX: number, positionY: number): string =>
     `Added ${keyword} ${uid} at ${positionX}, ${positionY}: move it into place in the editor`,
+  objectsWithoutMap: (uids: readonly string[]): string => `--objects added every declared object without checking a map; delete any the map already has: ${uids.join(', ')}`,
+  objectsIgnored: '--objects is not needed with --into: the map is checked and only missing objects are added',
   objectMissing: (name: string, uid: string): string => `the map has no ${uid} for "${name}" (--no-create)`,
   objectProblems: (problems: readonly string[]): string => problems.join('\n'),
   exported: (list: readonly string[]): string => `Exported variables: ${list.join(', ')}`,

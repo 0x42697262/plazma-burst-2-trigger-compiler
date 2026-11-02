@@ -7,7 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '' };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '', objects: false };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -94,6 +94,21 @@ describe('web page logic', () => {
     assert.notEqual(first.xml, second.xml);
     assert.equal(build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: seed }, null).xml, first.xml);
     assert.equal(simulate(first.result!, 1)[0], 'chat: n 1');
+  });
+
+  it('adds every declared object without a map only when asked', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'player slots[] = "#player*{1..16}";\ndoor gate = "#gate";\non start { action(SetCharHP, slots[0], 50); action(MovableTo, gate, "#r"); }\n');
+    workspace.activate('/work/main.ptc');
+    assert.ok(!build(workspace, '/work/main.ptc', OPTIONS, null).xml.includes('<player'));
+    const fresh = build(workspace, '/work/main.ptc', { ...OPTIONS, objects: true }, null);
+    assert.equal((fresh.xml.match(/<player uid="#player\*/g) ?? []).length, 16);
+    assert.ok(fresh.xml.includes('<door uid="#gate"'));
+    assert.ok(fresh.notes.some((note) => note.includes('#player*16')));
+    const host = '<player uid="#player*1" x="0" y="0" />\n';
+    const merged = build(workspace, '/work/main.ptc', { ...OPTIONS, objects: true }, host);
+    assert.equal((merged.map.match(/uid="#player\*1"/g) ?? []).length, 1);
+    assert.equal((merged.map.match(/<player uid="#player\*/g) ?? []).length, 16);
   });
 
   it('replaces an older build of the program in the host map when asked', () => {

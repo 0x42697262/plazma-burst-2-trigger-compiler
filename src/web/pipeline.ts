@@ -21,7 +21,7 @@ import type { Workspace } from './workspace.ts';
 import type { Target } from '../pcode/keys.ts';
 
 export type Options = {
-  prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string;
+  prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string; objects: boolean;
 };
 export type Problem = ServiceDiagnostic & { file: string };
 export type Build = {
@@ -88,7 +88,9 @@ export function build(workspace: Workspace, file: string, options: Options, host
   }
   const notes: string[] = [];
   const check = hostMap === null ? null : checkObjects(result.objects, hostMap);
-  const created = (check?.missing ?? []).map((object, index) => {
+  const adding = check?.missing ?? (options.objects ? [...result.objects] : []);
+  if (check === null && adding.length > 0) notes.push(TEXT.objectsWithoutMap(adding.map((object) => object.uid).join(TEXT.listSeparator)));
+  const created = adding.map((object, index) => {
     const staging = stagingPosition(index, result.program);
     notes.push(TEXT.added(object.keyword, object.uid, object.x ?? staging.x, object.y ?? staging.y));
     return objectElement(object, staging, escapeXml) + XML_LINE_END;
