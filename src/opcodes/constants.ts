@@ -38,6 +38,11 @@ export const OPCODE = Object.freeze({
   initiatorSlot: 180,
   playerNameBySlot: 185,
   playerNameBySlotVariable: 188,
+  syncReplace: 223,
+  syncDefault: 224,
+  syncMax: 225,
+  syncMin: 226,
+  syncLongest: 227,
   onPlayerJoin: 228,
   bindKey: 288,
   loadIndirect: 294,
@@ -73,3 +78,9 @@ export const SKIPS_NEXT: ReadonlySet<number> = new Set([
 ]);
 
 export const AVOIDED: ReadonlySet<number> = new Set([OPCODE.switchToTriggerIndex]);
+
+export const SYNC_ACTIONS: ReadonlySet<number> = new Set([
+  OPCODE.syncReplace, OPCODE.syncDefault, OPCODE.syncMax, OPCODE.syncMin, OPCODE.syncLongest,
+]);
+
+export const SYNC_TEXT_LIMIT = 2048;

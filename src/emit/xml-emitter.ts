@@ -1,7 +1,7 @@
 import type { Action, Program, Timer, Trigger } from '../program/types.ts';
 import { DEFAULT_LAYOUT, FIRST_ACTION_NUMBER } from './constants.ts';
 import { ATTRIBUTE_SEPARATOR, XML_ESCAPES, XML_LINE_END } from './keys.ts';
-import { TRIGGER_ATTRIBUTE } from './attributes.ts';
+import { ENGINE_MARK, TRIGGER_ATTRIBUTE } from './attributes.ts';
 import { TEXT } from './text.ts';
 import { checkProgram } from './check.ts';
 
@@ -45,9 +45,17 @@ const timerElement = (timer: Timer, position: Position): string => TEXT.xmlTimer
   attribute(TRIGGER_ATTRIBUTE.delay, timer.delay),
 ].join(ATTRIBUTE_SEPARATOR));
 
+const varSyncElement = (position: Position): string => TEXT.xmlEngineMark([
+  attribute(TRIGGER_ATTRIBUTE.x, position.x),
+  attribute(TRIGGER_ATTRIBUTE.y, position.y),
+  attribute(ENGINE_MARK.markAttribute, ENGINE_MARK.varSync),
+  attribute(ENGINE_MARK.teamAttribute, ENGINE_MARK.anyTeam),
+].join(ATTRIBUTE_SEPARATOR));
+
 export function emitXml(program: Program, layout: Layout = DEFAULT_LAYOUT): string {
   checkProgram(program);
   const elements = program.triggers.map((trigger, index) => triggerElement(trigger, positionOf(index, layout)));
   program.timers.forEach((timer, index) => elements.push(timerElement(timer, positionOf(program.triggers.length + index, layout))));
+  if (program.varSyncMark) elements.push(varSyncElement(positionOf(program.triggers.length + program.timers.length, layout)));
   return elements.map((element) => element + XML_LINE_END).join('');
 }

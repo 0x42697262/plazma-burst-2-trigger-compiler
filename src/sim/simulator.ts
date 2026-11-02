@@ -1,5 +1,5 @@
 import type { Program } from '../program/types.ts';
-import { OPCODE } from '../opcodes/constants.ts';
+import { OPCODE, SYNC_TEXT_LIMIT } from '../opcodes/constants.ts';
 import {
   CLOCK_START, DECIMAL, DEFAULT_MAX_STEPS, FALSE_FLAG, MILLISECONDS_PER_FRAME, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
 } from './constants.ts';
@@ -43,12 +43,14 @@ export class Simulation {
   private readonly options: SimulationOptions;
   private readonly registry: Registry = { uids: [], ids: [] };
   private joinTrigger: number | null = null;
+  private readonly varSync: boolean;
   private steps = 0;
   private frames = 0;
   private seed = RANDOM_SEED;
 
   constructor(program: Program, options: Partial<SimulationOptions> = {}) {
     this.options = { ...DEFAULT_SIMULATION, ...options };
+    this.varSync = program.varSyncMark === true;
     program.triggers.forEach((trigger, index) => this.register(trigger.uid, index));
     program.timers.forEach((timer, index) => this.register(timer.uid, index));
     this.triggers = program.triggers.map((trigger) => ({
@@ -314,6 +316,15 @@ export class Simulation {
         break;
       case OPCODE.playerNameBySlotVariable:
         vars[nameA] = this.characterName(vars[nameB]);
+        break;
+      case OPCODE.syncReplace:
+      case OPCODE.syncDefault:
+      case OPCODE.syncMax:
+      case OPCODE.syncMin:
+      case OPCODE.syncLongest:
+        if (stringOf(action.targetA).length > SYNC_TEXT_LIMIT) throw new Error(TEXT.syncNameTooLong);
+        if (stringOf(vars[nameA]).length > SYNC_TEXT_LIMIT) throw new Error(TEXT.syncValueTooLong);
+        if (!this.varSync) throw new Error(TEXT.noVarSync);
         break;
       case OPCODE.onPlayerJoin:
         this.joinTrigger = toIndex(action.targetA);

@@ -7,6 +7,7 @@ export const TEXT = Object.freeze({
     `Trigger ${uid}, action ${position}: the values ${JSON.stringify(value)} cannot be written as trigger text.`,
   xmlTrigger: (attributes: string): string => `<trigger ${attributes} />`,
   xmlTimer: (attributes: string): string => `<timer ${attributes} />`,
+  xmlEngineMark: (attributes: string): string => `<inf ${attributes} />`,
   xmlAttribute: (name: string, value: string): string => `${name}="${value}"`,
   actionAttribute: (position: number, field: string): string => `actions_${position}_${field}`,
   header: (name: string, value: string): string => `${name}: ${value}`,

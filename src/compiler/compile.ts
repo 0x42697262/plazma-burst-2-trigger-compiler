@@ -9,13 +9,16 @@ import { lower } from './lower.ts';
 import { layout } from './layout.ts';
 import type { SourceMapEntry } from './layout.ts';
 import { checkTriggers } from './check.ts';
+import { SYNC_ACTIONS } from '../opcodes/constants.ts';
 import { DEFAULT_LOOP_GUARD } from './constants.ts';
 import { START_TIMER_LABEL } from './keys.ts';
 import { TEXT } from './text.ts';
 
-export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[] };
+export type VarSyncMark = 'add' | 'present' | 'off';
 
-export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [] });
+export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[]; varSync: VarSyncMark };
+
+export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add' });
 
 export type CompileResult = { program: Program; warnings: string[]; sourceMap: SourceMapEntry[]; entries: Map<string, string> };
 
@@ -34,11 +37,13 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
   timers.push(...module.timers.map((spec) => ({
     uid: names.triggerUid(spec.label), target: uidOf(spec.target), enabled: spec.enabled, maxCalls: spec.maxCalls, delay: spec.delay,
   })));
-  const program: Program = { triggers: laid.triggers, timers };
+  const usesSync = laid.triggers.some((trigger) => trigger.actions.some((action) => SYNC_ACTIONS.has(action.opcode)));
+  const program: Program = { triggers: laid.triggers, timers, varSyncMark: usesSync && options.varSync === 'add' };
   checkProgram(program);
   const entries = new Map(module.instructions.flatMap((instruction) =>
     (instruction.kind === 'label' && instruction.entry ? [[instruction.label, uidOf(instruction.label)] as const] : [])));
   const startWarning = !options.startTimer && module.start !== null ? [TEXT.noStart(uidOf(module.start))] : [];
+  if (usesSync && options.varSync === 'off') startWarning.push(TEXT.noVarSync);
   return {
     program,
     warnings: [...(module.warnings ?? []), ...startWarning, ...laid.warnings, ...checkTriggers(program, options.externalUids)],

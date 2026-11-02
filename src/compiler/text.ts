@@ -4,6 +4,7 @@ export const TEXT = Object.freeze({
   unknownLabel: (label: string): string => `Unknown label "${label}".`,
   duplicateLabel: (label: string): string => `The label "${label}" is defined twice.`,
   unreachable: (line: number, count: number): string => `line ${line}: ${count} unreachable action(s) after a jump or return were dropped.`,
+  noVarSync: 'The program syncs variables, but no Var Sync engine mark is added: without one in the map, the game stops the trigger at every sync action.',
   noStart: (uid: string): string => `No start timer: the start code (variable values, on join) runs only when the map runs ${uid}.`,
   skipBeforeBranch: (line: number): string => `line ${line}: a skip action cannot come right before a conditional jump; it would skip only part of it.`,
   skipBeforeLabel: (label: string): string => `A skip action comes right before the label "${label}"; it cannot skip into another trigger.`,
