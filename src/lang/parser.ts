@@ -108,8 +108,9 @@ class Parser {
     }
     if (exported) this.fail(TEXT.quoted(KEYWORD.function));
     if (this.accept(KEYWORD.on)) {
+      const eventLine = this.current.line;
       const event = this.identifier();
-      if (event !== EVENT.start && event !== EVENT.join) return this.fail(TEXT.event);
+      if (event !== EVENT.start && event !== EVENT.join) throw new SourceError(eventLine, TEXT.unknownEvent(event));
       return { kind: 'on', event, body: this.block(), location };
     }
     if (this.accept(KEYWORD.every)) {
@@ -223,7 +224,7 @@ class Parser {
   private targetOf(expression: Expression): Target {
     if (expression.kind === 'name') return { kind: 'name', name: expression.name };
     if (expression.kind === 'index') return { kind: 'index', array: expression.array, index: expression.index };
-    return this.fail(TEXT.identifier);
+    throw new SourceError(expression.location.line, TEXT.assignTarget);
   }
 
   private parenthesized(): Expression {
@@ -251,7 +252,7 @@ class Parser {
     const location = this.location();
     if (this.accept(PUNCTUATOR.minus)) {
       const operand = this.unary();
-      if (operand.kind === 'number') return { ...operand, text: operand.text.startsWith(PUNCTUATOR.minus) ? operand.text.slice(1) : PUNCTUATOR.minus + operand.text };
+      if (operand.kind === 'number') return { ...operand, text: String(-Number(operand.text)) };
       return { kind: 'unary', operator: '-', operand, location };
     }
     if (this.accept(PUNCTUATOR.not)) return { kind: 'unary', operator: '!', operand: this.unary(), location };
@@ -263,7 +264,7 @@ class Parser {
     const token = this.current;
     if (token.kind === 'number') {
       this.next();
-      return { kind: 'number', text: token.text, location };
+      return { kind: 'number', text: String(Number(token.text)), location };
     }
     if (token.kind === 'string') {
       this.next();

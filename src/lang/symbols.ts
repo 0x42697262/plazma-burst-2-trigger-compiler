@@ -30,6 +30,7 @@ export class Frame {
   readonly isFunction: boolean;
   readonly frameVariables: string[] = [];
   readonly loops: Loop[] = [];
+  returnLabel: string | null = null;
   private readonly names: Names;
   private readonly scopes: Map<string, SymbolEntry>[] = [new Map<string, SymbolEntry>()];
   private readonly declared = new Map<string, number>();

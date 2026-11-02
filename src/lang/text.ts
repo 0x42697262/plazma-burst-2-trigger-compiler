@@ -33,5 +33,10 @@ export const TEXT = Object.freeze({
   valueOfVoid: (name: string): string => `"${name}" gives no value`,
   quoted: (text: string): string => `"${text}"`,
   dropCount: 'the count of drop(...) must be a whole number',
+  waitDelay: '"wait" needs a whole number of frames above 0',
+  returnValueInBlock: 'only functions return a value',
+  reservedName: (name: string): string => `"${name}" is a builtin; pick another function name`,
+  assignTarget: 'only a variable or an array element can be assigned',
+  unknownEvent: (name: string): string => `unknown event "${name}"; use start or join`,
   sayColor: 'the color of say(...) must be a number or a string',
 });

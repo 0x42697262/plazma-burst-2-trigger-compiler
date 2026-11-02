@@ -49,12 +49,12 @@ var s = "a" .. n .. "b";
 var t = "n={n}, double={n * 2}!";
 var u = 1 .. 2;
 var v = "x";
-on start { v ..= "y"; v = "<" .. v .. ">"; }
+on start { v ..= "y"; v = "[" .. v .. "]"; }
 `);
     assert.equal(get('s'), 'a3b');
     assert.equal(get('t'), 'n=3, double=6!');
     assert.equal(get('u'), '12');
-    assert.equal(get('v'), '<xy>');
+    assert.equal(get('v'), '[xy]');
   });
 
   it('turns comparisons and logic into 1 or 0', () => {
@@ -304,6 +304,68 @@ on start { for player p { names = names .. name(p) .. ";"; } }
   });
 });
 
+describe('language: review fixes', () => {
+  it('keeps the loop guard when a loop calls an exported function', () => {
+    const { get, sim } = run('var n = 0;\nexport function tick() { n += 1; }\non start { while (true) { tick(); } }', 1, { loopGuard: 300 });
+    assert.equal(get('n'), 300);
+    assert.deepEqual(sim.errors, []);
+  });
+
+  it('evaluates an element index once, before the value', () => {
+    const { sim } = run(`
+var list[]; var i = 0; var calls = 0;
+function next() { calls += 1; i += 1; return i; }
+function bump() { i = 2; return 1; }
+on start {
+  list[1] = 100; list[2] = 200; i = 0;
+  list[next()] += 5;
+  i = 1;
+  list[i] += bump();
+}
+`);
+    assert.equal(sim.variables['~t_calls~'], 1);
+    assert.equal(sim.variables['~t_list[1]~'], 106);
+    assert.equal(sim.variables['~t_list[2]~'], 200);
+  });
+
+  it('reads text as numbers with parseFloat in every arithmetic operator', () => {
+    const { get } = run(`
+var s = "4x"; var e = "";
+var plus = s + 1; var minus = s - 1; var times = s * 2; var divided = s / 2;
+var rminus = 10 - s; var neg = -s; var minusEmptyVar = 10 - e; var minusEmptyLit = 10 - "";
+var list[];
+on start { list[0] = "4x"; let k = 0; list[k] *= 2; }
+`);
+    assert.deepEqual(['plus', 'minus', 'times', 'divided', 'rminus', 'neg'].map(get), [5, 3, 8, 2, 6, -4]);
+    assert.ok(Number.isNaN(get('minusEmptyVar')));
+    assert.ok(Number.isNaN(get('minusEmptyLit')));
+    assert.equal(get('list[0]'), 8);
+  });
+
+  it('runs every on start block, each with its own scope and return', () => {
+    const { get, sim } = run('var r = 0;\non start { r = 1; if (r == 1) { return; } r = 2; }\non start { say("second"); r = 3; }');
+    assert.equal(get('r'), 3);
+    assert.deepEqual(sim.chat, ['second']);
+    assert.throws(() => compileSource('on start { let x = 1; }\non start { say("{x}"); }', 't'), /unknown variable "x"/);
+  });
+
+  it('writes number literals in their shortest form', () => {
+    const { get } = run('var a = -0 == 0; var b = 5.0 == 5; var c = 2.50 .. ""; var d = 0;\non start { if (0.0) { d = 1; } }');
+    assert.deepEqual(['a', 'b', 'c', 'd'].map(get), [1, 1, '2.5', 0]);
+  });
+
+  it('gives empty text when a function ends without a value', () => {
+    const { get } = run('var out = "";\nfunction f(x) { if (x) { return 7; } }\non start { out = f(1) .. "," .. f(0) .. ","; }');
+    assert.equal(get('out'), '7,,');
+  });
+
+  it('accepts constants as say color and drop count', () => {
+    const { sim, get } = run('const RED = 2; const N = 1;\nvar t = drop("abc", N);\non start { say("x", RED); }');
+    assert.equal(get('t'), 'bc');
+    assert.equal(sim.chat[0], 'x');
+  });
+});
+
 describe('language: errors', () => {
   const error = (source: string, pattern: RegExp) => assert.throws(() => compileSource(source, 't'), pattern);
 
@@ -320,5 +382,10 @@ describe('language: errors', () => {
     error('var x;\nvar x;', /"x" is already defined/);
     error('on start { let y = say("x"); }', /"say" gives no value/);
     error('var n = 2;\nvar s = drop("abc", n);', /drop\(\.\.\.\) must be a whole number/);
+    error('function len(x) { return 1; }', /"len" is a builtin/);
+    error('on start { wait(0); }', /"wait" needs a whole number/);
+    error('every 5 { return 1; }', /only functions return a value/);
+    error('on start { 1 = 2; }', /only a variable or an array element can be assigned/);
+    error('on foo { }', /unknown event "foo"/);
   });
 });

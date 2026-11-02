@@ -74,6 +74,26 @@ function hasCall(expression: Expression): boolean {
   }
 }
 
+const NUMERIC_BUILTINS: ReadonlySet<string> = new Set([
+  BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.time, BUILTIN.number,
+]);
+
+function isNumeric(expression: Expression): boolean {
+  switch (expression.kind) {
+    case 'number':
+    case 'boolean':
+      return true;
+    case 'unary':
+      return true;
+    case 'binary':
+      return ARITHMETIC.has(expression.operator) || COMPARISONS.has(expression.operator) || expression.operator === '&&' || expression.operator === '||';
+    case 'call':
+      return NUMERIC_BUILTINS.has(expression.callee);
+    default:
+      return false;
+  }
+}
+
 function flattenConcat(expression: Expression): Expression[] {
   if (expression.kind === 'binary' && expression.operator === '..') return [...flattenConcat(expression.left), ...flattenConcat(expression.right)];
   if (expression.kind === 'string' && expression.parts.some((part) => part.kind === 'expression')) {
@@ -149,17 +169,23 @@ export class Generator {
 
   generate(file: SourceFile): Module {
     this.collect(file);
-    const startBody: Statement[] = [];
+    const startBlocks: Statement[][] = [];
     const sections: Instruction[][] = [];
     let hasJoin = false;
     for (const declaration of file.declarations) {
-      if (declaration.kind === 'on' && declaration.event === EVENT.start) startBody.push(...declaration.body);
+      if (declaration.kind === 'on' && declaration.event === EVENT.start) startBlocks.push(declaration.body);
       if (declaration.kind === 'on' && declaration.event === EVENT.join) hasJoin = true;
     }
     sections.push(this.section(LABEL.start, EVENT.start, false, () => {
       for (const declaration of file.declarations) this.initializeGlobal(declaration);
       if (hasJoin) this.act(OPCODE.onPlayerJoin, labelOperand(LABEL.join));
-      this.statements(startBody);
+      for (const body of startBlocks) {
+        const end = this.fresh(LABEL.end);
+        this.frame.returnLabel = end;
+        this.statements(body);
+        this.label(end);
+      }
+      this.frame.returnLabel = null;
     }));
     for (const declaration of file.declarations) {
       if (declaration.kind === 'on' && declaration.event === EVENT.join) {
@@ -201,6 +227,7 @@ export class Generator {
           break;
         case 'function': {
           define(declaration.name, declaration.location);
+          if (VALUE_BUILTINS.has(declaration.name) || VOID_BUILTINS.has(declaration.name)) fail(declaration.location, TEXT.reservedName(declaration.name));
           const seen = new Set<string>();
           for (const parameter of declaration.params) {
             if (seen.has(parameter)) fail(declaration.location, TEXT.duplicate(parameter));
@@ -242,7 +269,14 @@ export class Generator {
     return this.section(declaration.name, declaration.name, true, () => {
       info.params.forEach((parameter, index) => this.frame.bindParameter(parameter, info.paramVariables[index] ?? EMPTY_TEXT));
       this.statements(declaration.body);
+      if (!terminates(declaration.body)) this.setReturnValue(null);
     }, declaration.exported);
+  }
+
+  private setReturnValue(value: Expression | null): void {
+    const info = this.functions.get(this.frame.key) as FunctionInfo;
+    if (value) this.into(value, info.returnVariable);
+    else this.act(OPCODE.setVariable, info.returnVariable, EMPTY_TEXT);
   }
 
   private initializeGlobal(declaration: Declaration): void {
@@ -331,11 +365,13 @@ export class Generator {
         break;
       }
       case 'return':
-        if (statement.value) {
-          if (!this.frame.isFunction) fail(statement.location, TEXT.valueOfVoid(this.frame.key));
-          const info = this.functions.get(this.frame.key) as FunctionInfo;
-          this.into(statement.value, info.returnVariable);
+        if (!this.frame.isFunction) {
+          if (statement.value) fail(statement.location, TEXT.returnValueInBlock);
+          if (this.frame.returnLabel !== null) this.jump(this.frame.returnLabel);
+          else this.emit({ kind: 'return', location: this.location });
+          break;
         }
+        this.setReturnValue(statement.value);
         this.emit({ kind: 'return', location: this.location });
         break;
       case 'wait':
@@ -442,7 +478,7 @@ export class Generator {
     if (this.frame.isFunction) fail(statement.location, TEXT.waitInFunction);
     const frames = statement.frames;
     const delay = frames.kind === 'number' ? Number(frames.text) : NaN;
-    if (!Number.isInteger(delay) || delay <= 0) fail(statement.location, TEXT.everyDelay);
+    if (!Number.isInteger(delay) || delay <= 0) fail(statement.location, TEXT.waitDelay);
     const continuation = this.fresh(LABEL.wait);
     const timer = this.fresh(LABEL.timer);
     const timerUid = this.names.triggerUid(timer);
@@ -466,12 +502,35 @@ export class Generator {
       return;
     }
     const array = this.arrayOf(target.array, location);
-    const element: Expression = { kind: 'index', array: target.array, index: target.index, location };
-    const value: Expression = statement.operator
-      ? { kind: 'binary', operator: statement.operator, left: element, right: statement.value, location }
-      : statement.value;
-    const source = this.variableValue(value);
-    this.storeElement(array.base, target.index, source);
+    if (isLiteralExpression(target.index)) {
+      const element = elementName(this.names, array.base, normalizeIndex(literalText(target.index)));
+      const elementExpression: Expression = { kind: 'index', array: target.array, index: target.index, location };
+      this.into(statement.operator
+        ? { kind: 'binary', operator: statement.operator, left: elementExpression, right: statement.value, location }
+        : statement.value, element);
+      return;
+    }
+    const indexName = this.stableVariable(target.index, hasCall(statement.value));
+    const address = this.frame.temp();
+    this.act(OPCODE.replaceInValue, address, elementName(this.names, array.base, indexName));
+    if (!statement.operator) {
+      this.act(OPCODE.storeIndirect, address, this.variableValue(statement.value));
+      return;
+    }
+    const current = this.frame.temp();
+    this.act(OPCODE.loadIndirect, current, address);
+    if (statement.operator === '..') {
+      this.act(OPCODE.appendString, current, this.variableValue(statement.value));
+    } else {
+      if (statement.operator === '*' || statement.operator === '/') this.act(OPCODE.addValue, current, FALSE_TEXT);
+      this.applyArithmetic(statement.operator, current, this.value(statement.value));
+    }
+    this.act(OPCODE.storeIndirect, address, current);
+  }
+
+  private stableVariable(expression: Expression, laterHasCall: boolean): string {
+    const value = this.stableValue(expression, laterHasCall);
+    return this.asVariable(value);
   }
 
   private storeElement(base: string, index: Expression, source: string): void {
@@ -549,6 +608,10 @@ export class Generator {
         return entry?.kind === 'variable' && entry.name === name;
       }
       case 'index':
+        if (isLiteralExpression(expression.index)) {
+          const entry = this.frame.lookup(expression.array) ?? this.globals.get(expression.array);
+          if (entry?.kind === 'array' && elementName(this.names, entry.base, normalizeIndex(literalText(expression.index))) === name) return true;
+        }
         return this.mentions(expression.index, name);
       case 'call':
         return expression.args.some((argument) => this.mentions(argument, name));
@@ -593,6 +656,7 @@ export class Generator {
       case 'unary':
         if (expression.operator === '-') {
           this.into(expression.operand, destination);
+          if (!isNumeric(expression.operand)) this.act(OPCODE.addValue, destination, FALSE_TEXT);
           this.act(OPCODE.negate, destination);
         } else {
           this.booleanInto(expression, destination);
@@ -619,6 +683,7 @@ export class Generator {
   private arithmeticInto(operator: BinaryOperator, left: Expression, right: Expression, destination: string): void {
     const work = this.workTarget(destination, this.mentions(right, destination) || hasCall(right));
     this.into(left, work);
+    if ((operator === '*' || operator === '/') && !isNumeric(left)) this.act(OPCODE.addValue, work, FALSE_TEXT);
     const value = this.value(right);
     this.applyArithmetic(operator, work, value);
     if (work !== destination) this.act(OPCODE.copyVariable, destination, work);
@@ -642,6 +707,7 @@ export class Generator {
         } else {
           const negated = this.frame.temp();
           this.act(OPCODE.copyVariable, negated, text);
+          this.act(OPCODE.addValue, negated, FALSE_TEXT);
           this.act(OPCODE.negate, negated);
           this.act(OPCODE.addValue, work, FALSE_TEXT);
           this.act(OPCODE.addVariable, work, negated);
@@ -878,8 +944,10 @@ export class Generator {
         return;
       }
       case BUILTIN.drop: {
-        const count = this.argument(expression, 1);
-        if (count.kind !== 'number' || !WHOLE_NUMBER.test(count.text)) return fail(count.location, TEXT.dropCount);
+        const countExpression = this.argument(expression, 1);
+        const countText = this.compileTimeText(countExpression);
+        if (countText === null || !WHOLE_NUMBER.test(countText)) return fail(countExpression.location, TEXT.dropCount);
+        const count = { text: countText };
         const source = this.variableValue(first());
         const work = this.frame.temp();
         this.act(OPCODE.setVariable, work, EMPTY_TEXT);
@@ -995,11 +1063,17 @@ export class Generator {
       fail(expression.location, TEXT.argumentRange(expression.callee, SAY_ARGUMENTS.min, SAY_ARGUMENTS.max, count));
     }
     const colorExpression = expression.args[1];
-    if (colorExpression && !isLiteralExpression(colorExpression)) fail(colorExpression.location, TEXT.sayColor);
-    const color = colorExpression ? literalText(colorExpression) : DEFAULT_SAY_COLOR;
+    const color = colorExpression ? this.compileTimeText(colorExpression) ?? fail(colorExpression.location, TEXT.sayColor) : DEFAULT_SAY_COLOR;
     const message = this.argument(expression, 0);
     const inline = this.inlineTemplate(message);
     this.act(OPCODE.showText, inline ?? this.variableValue(message), color);
+  }
+
+  private compileTimeText(expression: Expression): string | null {
+    if (isLiteralExpression(expression)) return literalText(expression);
+    if (expression.kind !== 'name') return null;
+    const entry = this.lookup(expression.name, expression.location);
+    return entry.kind === 'constant' ? entry.text : null;
   }
 
   private inlineTemplate(expression: Expression): string | null {
