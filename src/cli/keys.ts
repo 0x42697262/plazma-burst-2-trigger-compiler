@@ -9,8 +9,10 @@ export const FLAG = Object.freeze({
   help: '--help',
   run: '--run',
   frames: '--frames',
+  at: '--at',
 });
-export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames]);
+export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at]);
+export const POSITION_SEPARATOR = ',';
 export const ASSEMBLY_EXTENSION = '.pasm';
 export const FLAG_MARK = '--';
 export const FILE_ENCODING = 'utf8';

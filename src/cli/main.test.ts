@@ -42,6 +42,19 @@ describe('compile CLI', () => {
     assert.match(lines.err.at(-1) ?? '', /one input file/);
   });
 
+  it('places triggers with --at, checks --frames and notes missing timers in the text', () => {
+    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'ptc-'));
+    const source = path.join(folder, 'p.pasm');
+    fs.writeFileSync(source, 'start:\n    ret\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--at', '1000,-500'], output), 0);
+    assert.match(fs.readFileSync(path.join(folder, 'p.xml'), 'utf8'), /x="1000" y="-500"/);
+    assert.ok(lines.err.some((line) => line.includes('the trigger text has no timers')));
+    assert.equal(main([source, '--run', '--frames', '0'], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /--frames needs/);
+    assert.equal(main([source, '--at', '5'], output), 1);
+  });
+
   it('removes an old text file when the new program cannot be written as text', () => {
     const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'ptc-'));
     const source = path.join(folder, 'c.pasm');
