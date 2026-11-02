@@ -19,3 +19,6 @@ export const OBJECT_PARAM_KINDS: ReadonlySet<string> = new Set([
 export const LABEL_HINT = Object.freeze({ then: 'then', body: 'body' });
 export const SHOWN_DECODED: readonly string[] = Object.freeze(['<', '>', '"']);
 export const COLOR_PARAM_KIND = 'textmsg';
+export const HOST_TRIGGER_ELEMENT = /<trigger\b[^>]*>/g;
+export const HOST_ACTION_ATTRIBUTE = /actions_(\d+)_type="(-?\d+)" actions_\1_targetA="([^"]*)"/g;
+export const STRING_PARAM_KIND = 'string';

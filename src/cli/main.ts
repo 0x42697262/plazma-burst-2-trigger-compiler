@@ -5,6 +5,7 @@ import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap } from '../emit/merge.ts';
+import { checkHostNames } from '../compiler/host.ts';
 import { DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
@@ -91,7 +92,11 @@ export function main(argumentsList: readonly string[], output: Output): number {
     }
     writeFile(base + OUTPUT.sourceMap, JSON.stringify(result.sourceMap, null, JSON_INDENT), output);
     const into = lastValue(parsed, FLAG.into);
-    if (into !== null) writeFile(base + OUTPUT.map, appendToMap(fs.readFileSync(into, FILE_ENCODING), xml), output);
+    if (into !== null) {
+      const hostMap = fs.readFileSync(into, FILE_ENCODING);
+      for (const warning of checkHostNames(result.program, hostMap)) output.err(TEXT.warning(warning));
+      writeFile(base + OUTPUT.map, appendToMap(hostMap, xml), output);
+    }
     if (parsed.flags.has(FLAG.run)) {
       const frames = lastValue(parsed, FLAG.frames);
       simulate(result, frames === null ? DEFAULT_RUN_FRAMES : positiveInteger(frames, TEXT.badFrames), output);
