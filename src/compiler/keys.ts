@@ -1,0 +1,21 @@
+export const PREFIX_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
+export const VARIABLE_MARK = '~';
+export const TRIGGER_MARK = '#';
+export const USER_SEPARATOR = '_';
+export const INTERNAL_MARK = ':';
+export const CONTINUATION_SEPARATOR = '.';
+export const START_TIMER_LABEL = ':start-timer';
+export const INTERNAL_VARIABLE = Object.freeze({
+  left: 'left',
+  right: 'right',
+  steps: 'steps',
+  stop: 'stop',
+  empty: 'empty',
+});
+export const EMPTY_VALUE = '';
+export const ZERO_VALUE = '0';
+export const STEP_VALUE = '1';
+export const OBJECT_PARAM_KINDS: ReadonlySet<string> = new Set([
+  'trigger', 'timer', 'region', 'door', 'vehicle', 'character', 'gun', 'barrel', 'decor', 'pushf', 'lamp', 'water',
+]);
+export const LABEL_HINT = Object.freeze({ then: 'then', body: 'body' });
