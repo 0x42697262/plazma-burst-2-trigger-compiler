@@ -90,11 +90,13 @@ describe('trigger text emitter', () => {
   });
 
   it('refuses values the text format cannot hold', () => {
-    assert.equal(isWritableAsText('a", "b'), false);
-    assert.equal(isWritableAsText('a" );'), false);
-    assert.equal(isWritableAsText('two\nlines'), false);
-    assert.equal(isWritableAsText('"fine"'), true);
-    assert.throws(() => emitTriggerText(trigger('#a', [action(100, 'x', 'a", "b')])), /action 1: the value/);
+    assert.equal(isWritableAsText('a", "b', '0'), false);
+    assert.equal(isWritableAsText('x', 'a" );'), false);
+    assert.equal(isWritableAsText('two\nlines', '0'), false);
+    assert.equal(isWritableAsText('"fine"', '"also"'), true);
+    assert.equal(isWritableAsText('hi", ', '1'), false);
+    assert.equal(isWritableAsText('x', ' );'), false);
+    assert.throws(() => emitTriggerText(trigger('#a', [action(100, 'x', 'a", "b')])), /action 1: the values/);
   });
 });
 

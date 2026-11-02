@@ -3,6 +3,7 @@ export const XML_ESCAPES: readonly (readonly [string, string])[] = Object.freeze
 ]);
 export const XML_LINE_END = '\n';
 export const TEXT_FORBIDDEN: readonly string[] = Object.freeze(['", "', '" );', '\n', '\r']);
+export const TEXT_TOKEN = Object.freeze({ start: '( "', separator: '", "', end: '" );' });
 export const TEXT_LINE_END = '\n';
 export const TEXT_BLOCK_SEPARATOR = '\n';
 export const OP_PREFIX = 'op';

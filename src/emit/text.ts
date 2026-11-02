@@ -4,7 +4,7 @@ export const TEXT = Object.freeze({
   duplicateUid: (uid: string): string => `The uid ${uid} is used twice.`,
   uidInMap: (uid: string): string => `The map already has an object with uid ${uid}.`,
   notWritableAsText: (uid: string, position: number, value: string): string =>
-    `Trigger ${uid}, action ${position}: the value ${JSON.stringify(value)} cannot be written as trigger text.`,
+    `Trigger ${uid}, action ${position}: the values ${JSON.stringify(value)} cannot be written as trigger text.`,
   xmlTrigger: (attributes: string): string => `<trigger ${attributes} />`,
   xmlTimer: (attributes: string): string => `<timer ${attributes} />`,
   xmlAttribute: (name: string, value: string): string => `${name}="${value}"`,

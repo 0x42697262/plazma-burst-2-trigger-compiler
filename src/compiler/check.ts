@@ -26,7 +26,7 @@ export function checkTriggers(program: Program, externalUids: readonly string[])
           warnings.push(TEXT.hashValue(trigger.uid, value));
         }
       }
-      const writable = isWritableAsText(action.targetA) && isWritableAsText(action.targetB);
+      const writable = isWritableAsText(action.targetA, action.targetB);
       if (!writable && !textWarned) {
         warnings.push(TEXT.notText(trigger.uid));
         textWarned = true;
