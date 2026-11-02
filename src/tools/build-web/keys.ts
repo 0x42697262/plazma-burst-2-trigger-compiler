@@ -1,0 +1,12 @@
+export const VIRTUAL_EXAMPLES = 'virtual:examples';
+export const VIRTUAL_FILTER = /^virtual:examples$/;
+export const VIRTUAL_NAMESPACE = 'examples';
+export const EXAMPLE_FILE = /\.(ptc|pasm)$/;
+export const EXAMPLES_PREFIX = '/examples/';
+export const FILE_ENCODING = 'utf8';
+export const JSON_LOADER = 'json';
+export const BROWSER = 'browser';
+export const MODULE_FORMAT = 'esm';
+export const TARGET = 'es2022';
+export const SEPARATOR = /\\/g;
+export const SLASH = '/';

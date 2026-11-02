@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PB2 Trigger Compiler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>PB2 Trigger Compiler</h1>
+    <select id="examples" title="Load an example (replaces your files)"></select>
+    <label title="Prefix of every variable and trigger uid; empty: from the file name">prefix <input id="prefix" size="8" placeholder="auto"></label>
+    <label title="Stop a loop after this many jumps back per event; 0: no guard">guard <input id="guard" type="number" min="0" step="1000"></label>
+    <label title="Frames to simulate with Run">frames <input id="frames" type="number" min="1"></label>
+    <label title="Vim key bindings"><input id="vim" type="checkbox"> Vim</label>
+    <button id="compile" title="Ctrl+Enter">Compile</button>
+    <button id="run" title="Ctrl+Shift+Enter">Run</button>
+    <label class="file" title="A map XML downloaded from the editor: the program is appended to it">map XML <input id="host-map" type="file" accept=".xml,.txt"></label>
+    <span id="host-map-name"></span>
+    <a href="https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md" target="_blank" rel="noopener">docs</a>
+  </header>
+  <main>
+    <section class="source">
+      <nav id="tabs"></nav>
+      <div id="editor"></div>
+    </section>
+    <section class="result">
+      <nav id="output-tabs">
+        <button data-output="problems" class="active">Problems</button>
+        <button data-output="xml">XML</button>
+        <button data-output="text">Trigger text</button>
+        <button data-output="map">Map</button>
+        <button data-output="run">Run</button>
+        <span class="spacer"></span>
+        <button id="copy">Copy</button>
+        <button id="download">Download</button>
+      </nav>
+      <pre id="output"></pre>
+      <div id="status"></div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
