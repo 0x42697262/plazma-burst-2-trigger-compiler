@@ -1,0 +1,2816 @@
+{
+ "source": "https://www.plazmaburst2.com/level_editor/editor_scripts/lib_params.js",
+ "fetched": "2026-11-01",
+ "actions": {
+  "0": {
+   "alias": "MovableTo",
+   "a": "door",
+   "b": "region",
+   "desc": "Movable › Force Movable 'A' move to region 'B'"
+  },
+  "1": {
+   "alias": "SetMovableSpeed",
+   "a": "door",
+   "b": "value>=0",
+   "desc": "Movable › Change Speed of Movable 'A' to value 'B'"
+  },
+  "2": {
+   "alias": "RegionToRegion",
+   "a": "region",
+   "b": "region",
+   "desc": "Region › Quickly move Region with name 'A' to the position of the region with name 'B'"
+  },
+  "3": {
+   "alias": "ChangeVehHPPerc",
+   "a": "vehicle",
+   "b": "value",
+   "desc": "Vehicle › Change the number of hit points of Vehicle 'A' to 'B' percents"
+  },
+  "4": {
+   "alias": "ChangeCharHPPerc",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Change the number of hit points of Character 'A' to 'B' percents"
+  },
+  "5": {
+   "alias": "SetGravity",
+   "a": "value",
+   "b": "nochange",
+   "desc": "Gravity › Change the gravity to the value 'A' (Default is 0.5)"
+  },
+  "6": {
+   "alias": "DamageRegion",
+   "a": "value",
+   "b": "region",
+   "desc": "Region › Make damage in Region 'B' with power of 'A' hit points"
+  },
+  "9": {
+   "alias": "EndMission",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Scenario › End mission with reason 'A'"
+  },
+  "10": {
+   "alias": "StabilityDamageRegion",
+   "a": "value",
+   "b": "region",
+   "desc": "Region › Harm the stability with power 'A' of all Characters located at Region with the name 'B'"
+  },
+  "11": {
+   "alias": "KillUnaliedInRegion",
+   "a": "character",
+   "b": "region",
+   "desc": "Region › Kill all Characters at Region 'B' which are not allied to Character 'A'"
+  },
+  "12": {
+   "alias": "DestroyVehsInRegion",
+   "a": "region",
+   "b": "nochange",
+   "desc": "Region › Destroy all vehicles in Region 'A'"
+  },
+  "13": {
+   "alias": "PutCharInVeh",
+   "a": "character",
+   "b": "vehicle",
+   "desc": "Character › Put Character 'A' into the Vehicle 'B'"
+  },
+  "14": {
+   "alias": "MoveCharToReguin",
+   "a": "character",
+   "b": "region",
+   "desc": "Character › Move Character 'A' to the region 'B' (if Character alive)"
+  },
+  "15": {
+   "alias": "MoveGunToReguin",
+   "a": "gun",
+   "b": "region",
+   "desc": "Gun › Move Gun 'A' to the Region 'B'"
+  },
+  "16": {
+   "alias": "MoveBarrelToReguin",
+   "a": "barrel",
+   "b": "region",
+   "desc": "Barrel › Move Barrel 'A' to the Region 'B' (if Barrel not exploded)"
+  },
+  "18": {
+   "alias": "RegionToRegionCenter",
+   "a": "region",
+   "b": "region",
+   "desc": "Region › Move Region 'A' to the Region 'B' (centres will be located in the same point)"
+  },
+  "19": {
+   "alias": "TriggerDisable",
+   "a": "trigger",
+   "b": "nochange",
+   "desc": "Trigger › Deactivate Trigger 'A'"
+  },
+  "20": {
+   "alias": "TriggerEnable",
+   "a": "trigger",
+   "b": "nochange",
+   "desc": "Trigger › Activate Trigger 'A'"
+  },
+  "21": {
+   "alias": "TriggerSetCalls0",
+   "a": "trigger",
+   "b": "nochange",
+   "desc": "Trigger › Set number of remain calls of Trigger 'A' to 0"
+  },
+  "22": {
+   "alias": "TriggerSetCallsValue",
+   "a": "trigger",
+   "b": "maxcalls",
+   "desc": "Trigger › Set number of remain calls of Trigger 'A' to value 'B'"
+  },
+  "23": {
+   "alias": "SetCharHP",
+   "a": "character",
+   "b": "int",
+   "desc": "Character › Set current hit points of Character 'A' to 'B' hit points (not sets hit points of each limb)"
+  },
+  "24": {
+   "alias": "ExplosionRegion",
+   "a": "value>=0",
+   "b": "region",
+   "desc": "Region › Make an explosion with power 'A' at Region 'B'"
+  },
+  "25": {
+   "alias": "TimerEnable",
+   "a": "timer",
+   "b": "nochange",
+   "desc": "Timer › Activate Timer 'A'"
+  },
+  "26": {
+   "alias": "TimerDisable",
+   "a": "timer",
+   "b": "nochange",
+   "desc": "Timer › Deactivate Timer 'A'"
+  },
+  "27": {
+   "alias": "TimerSetFrequency",
+   "a": "timer",
+   "b": "int",
+   "desc": "Timer › Set the frequency of calls of Timer 'A' to value 'B'"
+  },
+  "28": {
+   "alias": "CloneCharInRegionCentre",
+   "a": "character",
+   "b": "region",
+   "desc": "Character › Clone Character 'A' and spawn it in the centre of Region 'B'"
+  },
+  "29": {
+   "alias": "ForceRegionHuntForChar",
+   "a": "character",
+   "b": "region",
+   "desc": "Region › Force all enemies of Character 'A' who located in region 'B' hunt for Character 'A'"
+  },
+  "30": {
+   "alias": "TeleportFromRegionToRegion",
+   "a": "region",
+   "b": "region",
+   "desc": "Region › Teleport all players from Region 'A' to Region 'B'"
+  },
+  "31": {
+   "alias": "TeleportFromRegionToRegionFlip",
+   "a": "region",
+   "b": "region",
+   "desc": "Region › Teleport all players from Region 'A' to Region 'B' and invert speed by X axis (used to avoid loop teleportation)"
+  },
+  "32": {
+   "alias": "SetAIBehavior",
+   "a": "character",
+   "b": "botaction",
+   "desc": "Character › Set ''AI Behavior'' parameter of computer-controlled Character 'A' to value 'B'"
+  },
+  "33": {
+   "alias": "SetCharTeam",
+   "a": "character",
+   "b": "team",
+   "desc": "Character › Change team of Character 'A' to value 'B'"
+  },
+  "34": {
+   "alias": "SetDecorModel",
+   "a": "decor",
+   "b": "decor_model",
+   "desc": "Decoration › Change model of Decoration 'A' to model named 'B'"
+  },
+  "35": {
+   "alias": "SetPusherAccelX",
+   "a": "pushf",
+   "b": "value",
+   "desc": "Gravitator Area Field › Set X acceleration of Gravitator Area Field 'A' to value 'B'"
+  },
+  "36": {
+   "alias": "SetPusherAccelY",
+   "a": "pushf",
+   "b": "value",
+   "desc": "Gravitator Area Field › Set Y acceleration of Gravitator Area Field 'A' to value 'B'"
+  },
+  "37": {
+   "alias": "SetPusherStabilityDmg",
+   "a": "pushf",
+   "b": "value>=0",
+   "desc": "Gravitator Area Field › Set stability damage of Gravitator Area Field 'A' to value 'B' (0 for disable)"
+  },
+  "38": {
+   "alias": "SetPusherHPDmg",
+   "a": "pushf",
+   "b": "pushf_damage",
+   "desc": "Gravitator Area Field › Set damage of Gravitator Area Field 'A' to value 'B' (0 for disable)"
+  },
+  "39": {
+   "alias": "SetGameSpeed",
+   "a": "value>=0",
+   "b": "nochange",
+   "desc": "Gameplay › Set game speed to 'A' frames per second (default game speed is 30. Does not influence rendering)"
+  },
+  "40": {
+   "alias": "SetStrictCasualMode",
+   "a": "enable-disable",
+   "b": "nochange",
+   "desc": "Gameplay › Change Strict Casual Mode status"
+  },
+  "41": {
+   "alias": "PlaySound",
+   "a": "sound",
+   "b": "nochange",
+   "desc": "Sound › Play sound 'A' from library"
+  },
+  "42": {
+   "alias": "ShowText",
+   "a": "string",
+   "b": "textmsg",
+   "desc": "Interface › Show text 'A' in chat with color 'B'"
+  },
+  "43": {
+   "alias": "SetHint",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Interface › Show hint with text 'A'. Leave 'A' as empty to force hint dissapear"
+  },
+  "44": {
+   "alias": "ResetTimerPhase",
+   "a": "timer",
+   "b": "nochange",
+   "desc": "Timer › Reset current phase of between-call waiting of Timer 'A'"
+  },
+  "45": {
+   "alias": "SetAIHeal",
+   "a": "enable-disable",
+   "b": "nochange",
+   "desc": "Gameplay › Allow or disallow usage of defibrillators by allies with value of parameter 'A'"
+  },
+  "46": {
+   "alias": "SetTimerCalls",
+   "a": "timer",
+   "b": "maxcalls",
+   "desc": "Timer › Set remain calls number of Timer 'A' to value 'B'"
+  },
+  "48": {
+   "alias": "MultCharCurrentMaxHPPercent",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Multiply maximal and current hit points of Character 'A' by 'B' percents. Not for multiplayer"
+  },
+  "49": {
+   "alias": "SetSwords",
+   "a": "enable-disable",
+   "b": "nochange",
+   "desc": "Gameplay › Set Disabling of psi swords to value of parameter 'A'"
+  },
+  "50": {
+   "alias": "NextMap",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Scenario › Mission complete and switch to level with ID 'A'"
+  },
+  "51": {
+   "alias": "Zoom",
+   "a": "value>0",
+   "b": "nochange",
+   "desc": "Gameplay › Zoom game camera to 'A' % (percents)"
+  },
+  "52": {
+   "alias": "SetCharNickname",
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Change Character 'A' nickname to 'B'"
+  },
+  "53": {
+   "alias": "CloneCharToRegionRandomY",
+   "a": "character",
+   "b": "region",
+   "desc": "Character › Clone Character 'A' and spawn it in random place in Region 'B'"
+  },
+  "54": {
+   "alias": "LightOn",
+   "a": "lamp",
+   "b": "nochange",
+   "desc": "Light › Turn light 'A' on"
+  },
+  "55": {
+   "alias": "LightOff",
+   "a": "lamp",
+   "b": "nochange",
+   "desc": "Light › Turn light 'A' off"
+  },
+  "56": {
+   "alias": "FlipXVelocityRegion",
+   "a": "nochange",
+   "b": "region",
+   "desc": "Region › Flip X speed for all players in region 'B'"
+  },
+  "57": {
+   "alias": "FlipYVelocityRegion",
+   "a": "nochange",
+   "b": "region",
+   "desc": "Region › Flip Y speed for all players in region 'B'"
+  },
+  "58": {
+   "alias": "SetCharSkin",
+   "a": "character",
+   "b": "char",
+   "desc": "Character › Change Character 'A' skin to 'B'"
+  },
+  "59": {
+   "alias": "SetCharCurrentMaxHPValue",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Set Character 'A' current and max hit points to value 'B'"
+  },
+  "60": {
+   "alias": "MakeCharDropGuns",
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Force Character 'A' to drop all weapons"
+  },
+  "61": {
+   "alias": "MultCharSpeed",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Multiply Character 'A' speed by value 'B'"
+  },
+  "62": {
+   "alias": "SetGunProjectileCount",
+   "a": "gun",
+   "b": "value",
+   "desc": "Gun › Force Gun 'A' spawn 'B' projectiles per shot"
+  },
+  "63": {
+   "alias": "SetGunAccuracy",
+   "a": "gun",
+   "b": "value",
+   "desc": "Gun › Change Gun 'A' accuracy to 'B' degress"
+  },
+  "64": {
+   "alias": "SetGunPower",
+   "a": "gun",
+   "b": "value",
+   "desc": "Gun › Change Gun 'A' projectile power to 'B'"
+  },
+  "65": {
+   "alias": "TurnGunProjectileBullets",
+   "a": "gun",
+   "b": "nochange",
+   "desc": "Gun › Convert Gun 'A' projectiles into bullets"
+  },
+  "66": {
+   "alias": "TurnGunProjectileRails",
+   "a": "gun",
+   "b": "nochange",
+   "desc": "Gun › Convert Gun 'A' projectiles into rails"
+  },
+  "67": {
+   "alias": "TurnGunProjectileGrenades",
+   "a": "gun",
+   "b": "nochange",
+   "desc": "Gun › Convert Gun 'A' projectiles into grenades"
+  },
+  "68": {
+   "alias": "TurnGunProjectileEnergy",
+   "a": "gun",
+   "b": "nochange",
+   "desc": "Gun › Convert Gun 'A' projectiles into energy"
+  },
+  "69": {
+   "alias": "TurnGunProjectileRockets",
+   "a": "gun",
+   "b": "nochange",
+   "desc": "Gun › Convert Gun 'A' projectiles into rockets"
+  },
+  "70": {
+   "alias": "TeleportInitiatorFromTo",
+   "a": "region",
+   "b": "region",
+   "desc": "Region › Teleport player-initiator from Region 'A' to Region 'B'"
+  },
+  "71": {
+   "alias": "SetMovableColor",
+   "a": "door",
+   "b": "string",
+   "desc": "Movable › Change color of Movable 'A' to HEX color 'B'"
+  },
+  "72": {
+   "alias": "MultCharsSpeedsAtRegion",
+   "a": "region",
+   "b": "value",
+   "desc": "Region › Multiply speed of players in Region 'A' by value 'B'"
+  },
+  "73": {
+   "alias": "SetBulletSpeed",
+   "a": "value",
+   "b": "nochange",
+   "desc": "Gameplay › Change bullet speed to value 'A' (default value is 60)"
+  },
+  "74": {
+   "alias": "SetBulletPenetration",
+   "a": "value",
+   "b": "nochange",
+   "desc": "Gameplay › Change bullet penetration factor to value 'A' (default value is 1)"
+  },
+  "75": {
+   "alias": "SetBulletMaxLife",
+   "a": "value",
+   "b": "nochange",
+   "desc": "Gameplay › Change max bullet life value 'A' (default value is 30)"
+  },
+  "76": {
+   "alias": "SetGunForChars",
+   "a": "gun",
+   "b": "nochange",
+   "desc": "Gun › Allow Gun 'A' only for characters"
+  },
+  "77": {
+   "alias": "SetGunForVehicles",
+   "a": "gun",
+   "b": "nochange",
+   "desc": "Gun › Allow Gun 'A' only for vehicles"
+  },
+  "78": {
+   "alias": "SetGunSlot",
+   "a": "gun",
+   "b": "int",
+   "desc": "Gun › Set Gun 'A' slot to 'B'"
+  },
+  "79": {
+   "alias": "MoveRegionToCharInitiator",
+   "a": "region",
+   "b": "nochange",
+   "desc": "Region › Move Region 'A' to player-initiator"
+  },
+  "80": {
+   "alias": "MoveRegionToChar",
+   "a": "region",
+   "b": "character",
+   "desc": "Region › Move Region 'A' to player 'B'"
+  },
+  "81": {
+   "alias": "MakeGunExecTriggerOnFire",
+   "a": "gun",
+   "b": "trigger",
+   "desc": "Gun › Call Trigger 'B' when Gun 'A' fired"
+  },
+  "82": {
+   "alias": "MakeMovableExecTriggerOnDamage",
+   "a": "door",
+   "b": "trigger",
+   "desc": "Movable › Call Trigger 'B' when Movable 'A' got damage"
+  },
+  "83": {
+   "alias": "AddRegionPosX",
+   "a": "region",
+   "b": "value",
+   "desc": "Region › Move Region 'A' relative to current position along X"
+  },
+  "84": {
+   "alias": "AddRegionPosY",
+   "a": "region",
+   "b": "value",
+   "desc": "Region › Move Region 'B' relative to current position along Y"
+  },
+  "85": {
+   "alias": "MuteMovable",
+   "a": "door",
+   "b": "nochange",
+   "desc": "Movable › Mute Movable 'A'"
+  },
+  "86": {
+   "alias": "UnmuteMovable",
+   "a": "door",
+   "b": "nochange",
+   "desc": "Movable › Unmute Movable 'A'"
+  },
+  "87": {
+   "alias": "MoveRegionToInitiatorCursor",
+   "a": "region",
+   "b": "nochange",
+   "desc": "Region › Move Region 'A' to player-initiator's cursor"
+  },
+  "88": {
+   "alias": "SetCharMobility",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Change Character 'A' mobility factor to 'B'"
+  },
+  "89": {
+   "alias": "SetCharArmor",
+   "a": "character",
+   "b": "int",
+   "desc": "Character › Change Character 'A' armor type to 'B' (0, 1 or 2)"
+  },
+  "90": {
+   "alias": "SetCharBloodColor",
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Change blood color of Character 'A' to HEX color 'B'"
+  },
+  "91": {
+   "a": "character",
+   "b": "int",
+   "desc": "Character › Set horizontal movement on idle Character 'A' to value 'B' (0, -1 or 1)"
+  },
+  "92": {
+   "a": "character",
+   "b": "int",
+   "desc": "Character › Set vertical movement on idle Character 'A' to value 'B' (0, -1 or 1)"
+  },
+  "93": {
+   "a": "character",
+   "b": "int",
+   "desc": "Character › Set shoot action on idle Character 'A' to value 'B' (0 or 1)"
+  },
+  "94": {
+   "a": "character",
+   "b": "region",
+   "desc": "Character › Force Character 'A' to look at random point in Region 'B'"
+  },
+  "95": {
+   "a": "region",
+   "b": "region",
+   "desc": "Trigger execution › Continue execution of this trigger only if tracing from center of Region 'A' to center of Region 'B' is possible"
+  },
+  "96": {
+   "a": "region",
+   "b": "region",
+   "desc": "Trigger execution › Continue execution of this trigger only if tracing from center of Region 'A' to center of Region 'B' is impossible"
+  },
+  "97": {
+   "a": "character",
+   "b": "character",
+   "desc": "Character › Force Character 'A' to hunt Character 'B'"
+  },
+  "98": {
+   "a": "region",
+   "b": "door",
+   "desc": "Region › Move Region 'A' to Movable 'B'"
+  },
+  "99": {
+   "alias": "ExecTrigger",
+   "a": "trigger",
+   "b": "nochange",
+   "desc": "Trigger execution › Execute trigger 'A'"
+  },
+  "100": {
+   "alias": "VarSetValue",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to value 'B'"
+  },
+  "101": {
+   "alias": "VarSetValueIfUndefined",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to value 'B' if 'A' is not defined"
+  },
+  "102": {
+   "alias": "VarAddValue",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Add value 'B' to value of variable 'A'"
+  },
+  "103": {
+   "alias": "VarMultValue",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Multiply value of variable 'A' by value 'B'"
+  },
+  "104": {
+   "alias": "VarAddVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Add value of variable 'B' to value of variable 'A'"
+  },
+  "105": {
+   "alias": "VarMultVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Multiply value of variable 'A' by value of variable 'B'"
+  },
+  "106": {
+   "alias": "VarRand1",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to random number with floating point in range 0..B"
+  },
+  "107": {
+   "alias": "VarRandRange",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to random integer number in range 0..B-1"
+  },
+  "108": {
+   "alias": "VarRound",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Round value of variable 'A'"
+  },
+  "109": {
+   "alias": "VarFloor",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Floor value of variable 'A'"
+  },
+  "110": {
+   "alias": "continue if VarA > VarB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if variable 'A' is greater than variable 'B'"
+  },
+  "111": {
+   "alias": "continue if VarA < VarB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if variable 'A' is less than variable 'B'"
+  },
+  "112": {
+   "alias": "continue if VarA == VarB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if variable 'A' equals variable 'B'"
+  },
+  "113": {
+   "alias": "continue if VarA != VarB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if variable 'A' does not equals to variable 'B'"
+  },
+  "114": {
+   "alias": "continue if VarA > ValueB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if variable 'A' has greater value than value 'B'"
+  },
+  "115": {
+   "alias": "continue if VarA < ValueB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if value of variable 'A' is less than value 'B'"
+  },
+  "116": {
+   "alias": "continue if VarA == ValueB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if value of variable 'A' equals value 'B'"
+  },
+  "117": {
+   "alias": "continue if VarA != ValueB ",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Continue trigger actions execution only if value of variable 'A' does not equals to value 'B'"
+  },
+  "118": {
+   "alias": "VarSetRegionX",
+   "a": "string",
+   "b": "region",
+   "desc": "Var › Set value of variable 'A' to value of region 'B' X position of left-top corner point"
+  },
+  "119": {
+   "alias": "VarSetRegionY",
+   "a": "string",
+   "b": "region",
+   "desc": "Var › Set value of variable 'A' to value of region 'B' Y position of left-top corner point"
+  },
+  "120": {
+   "alias": "RegionXSetVar",
+   "a": "region",
+   "b": "string",
+   "desc": "Var › Set X position of 'A' region left-top corner point to value of variable 'B'"
+  },
+  "121": {
+   "alias": "RegionYSetVar",
+   "a": "region",
+   "b": "string",
+   "desc": "Var › Set Y position of 'A' region left-top corner point to value of variable 'B'"
+  },
+  "122": {
+   "alias": "VarSetCharHP",
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set value of variable 'A' to hitpoints value of player 'B'"
+  },
+  "123": {
+   "alias": "next if VarA == ValueB",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Skip next trigger action if value of variable 'A' does not equals value 'B'"
+  },
+  "124": {
+   "alias": "VarSetModuloDivValue",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to remainder after division by value 'B' (only positive numbers)"
+  },
+  "125": {
+   "alias": "VarSetVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to value of variable 'B'"
+  },
+  "126": {
+   "alias": "ExplosionVarRegion",
+   "a": "string",
+   "b": "region",
+   "desc": "Var › Make an explosion with power of value of variable 'A' at Region 'B'"
+  },
+  "127": {
+   "alias": "VarSetModuloDivVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to remainder after division by value of variable 'B' (only positive numbers)"
+  },
+  "128": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Force Gun 'A' spawn value of variable 'B' projectiles per shot"
+  },
+  "129": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Change Gun 'A' accuracy to value of variable 'B' degress"
+  },
+  "130": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Change Gun 'A' projectile power to value of variable 'B'"
+  },
+  "131": {
+   "alias": "VarDivValue",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Divide variable 'A' by value 'B'"
+  },
+  "132": {
+   "alias": "VarDivVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Divide variable 'A' by value of variable 'B'"
+  },
+  "133": {
+   "alias": "VarPowVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to result of power function with value of variable 'A' and power of value of variable 'B'"
+  },
+  "134": {
+   "alias": "VarPowValue",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to result of power function with value of variable 'A' and power of value 'B'"
+  },
+  "135": {
+   "alias": "VarSinVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to result of sin function with value of variable 'B' (in radians) as parameter"
+  },
+  "136": {
+   "alias": "VarCosVar",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to result of cos function with value of variable 'B' (in radians) as parameter"
+  },
+  "137": {
+   "alias": "SetACurrentPlayerSlot",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to slot of current player"
+  },
+  "138": {
+   "alias": "SetIsMP",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to 1 if game is in multiplyer mode and to 0 in else case"
+  },
+  "139": {
+   "alias": "SetIsSpectator",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to 1 if my player is spectating this match as spectator and to 0 in else case"
+  },
+  "140": {
+   "alias": "SetIsLowPhys",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to 1 if LOW PHYSICS setting is enabled and to 0 in else case"
+  },
+  "141": {
+   "alias": "DamageHead",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Damage player 'A' head hitpoints by value 'B'"
+  },
+  "142": {
+   "alias": "DamageArms",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Damage player 'A' arms hitpoints by value 'B'"
+  },
+  "143": {
+   "alias": "DamageBody",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Damage player 'A' body hitpoints by value 'B'"
+  },
+  "144": {
+   "alias": "DamageLegs",
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Damage player 'A' legs hitpoints by value 'B'"
+  },
+  "145": {
+   "alias": "SetCountAliveInRegion",
+   "a": "string",
+   "b": "region",
+   "desc": "Var › Set value of variable 'A' to number of alive players in region 'B'"
+  },
+  "146": {
+   "alias": "SetLoginOfInitiator",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set string-value of variable 'A' to login name of player-initiator"
+  },
+  "147": {
+   "alias": "SetNicknameOfInitiator",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set string-value of variable 'A' to displayed name of player-initiator"
+  },
+  "148": {
+   "alias": "SetMPMode",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set string-value of variable 'A' to multiplayer match name"
+  },
+  "149": {
+   "alias": "SetIsAContainsValueB",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to 1 if string-value of variable 'A' contains string-value 'B' and to 0 in else case"
+  },
+  "150": {
+   "alias": "SetIsAContainsVarB",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to 1 if string-value of variable 'A' contains string-value of variable 'B' and to 0 in else case"
+  },
+  "151": {
+   "alias": "CountLength",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to length of string-value of variable 'B'"
+  },
+  "152": {
+   "alias": "AddString",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Add string-value of variable 'B' at the end of string-value of variable 'A'"
+  },
+  "153": {
+   "alias": "OneMinusA",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to 1-A"
+  },
+  "154": {
+   "alias": "MinusA",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to -A"
+  },
+  "155": {
+   "alias": "GetGSPEED",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to current frame time"
+  },
+  "156": {
+   "alias": "SetChatInputCallback",
+   "a": "trigger",
+   "b": "nochange",
+   "desc": "Trigger › Set trigger 'A' as player chat message receiver"
+  },
+  "157": {
+   "alias": "GetTalkerLogin",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set string-value of variable 'A' to login name of player who says text"
+  },
+  "158": {
+   "alias": "GetTalkerNickname",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set string-value of variable 'A' to displayed name of player who says text"
+  },
+  "159": {
+   "alias": "GetTalkerID",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to slot index of player who says text"
+  },
+  "160": {
+   "alias": "GetChatInput",
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set string-value of variable 'A' to text being said"
+  },
+  "161": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Session vars › Clear all session variables"
+  },
+  "162": {
+   "a": "string",
+   "b": "string",
+   "desc": "Session vars › Save value of regular variable 'B' to session variable 'A'"
+  },
+  "163": {
+   "a": "string",
+   "b": "string",
+   "desc": "Session vars › Load value for regular variable 'B' from session variable 'A'"
+  },
+  "164": {
+   "a": "character",
+   "b": "char",
+   "desc": "Character › Change head model of Character 'A' to model 'B'"
+  },
+  "165": {
+   "a": "character",
+   "b": "char",
+   "desc": "Character › Change body model of Character 'A' to model 'B'"
+  },
+  "166": {
+   "a": "character",
+   "b": "char",
+   "desc": "Character › Change arms model of Character 'A' to model 'B'"
+  },
+  "167": {
+   "a": "character",
+   "b": "char",
+   "desc": "Character › Change legs model of Character 'A' to model 'B'"
+  },
+  "168": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' color pattern (4 small letters for each body sections, each represents first symbol of color in lowercase. - disables color change for specific section)"
+  },
+  "169": {
+   "a": "string",
+   "b": "string",
+   "desc": "URL › Request webpage with URL stored in variable 'A' and save response to variable 'B' once loaded (variable 'B' will be equal to ''loading...'' for some period of time)"
+  },
+  "170": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' speed multiplier to value 'B'"
+  },
+  "171": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Change Gun 'A' speed multiplier to value of variable 'B'"
+  },
+  "172": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' recoil multiplier to value 'B'"
+  },
+  "173": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Change Gun 'A' recoil multiplier to value of variable 'B'"
+  },
+  "174": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "AI › Set global AI difficulty (easy = 1, normal = 2, hard = 3)"
+  },
+  "175": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' projectile model to model with index 'B'"
+  },
+  "176": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Change Gun 'A' projectile model to model with index-value of variable 'B'"
+  },
+  "177": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to id of type of current multiplayer mode (0 = singleplayer, 1 = DM, 2 = COOP, 3 = TDM)"
+  },
+  "178": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Save inventory info of Character 'B' to variable 'A'"
+  },
+  "179": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Spawn all weapons stored in variable 'A' at position of Character 'B'"
+  },
+  "180": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to player-initiator slot"
+  },
+  "181": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to player-killer slot"
+  },
+  "182": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to login name of player-killer"
+  },
+  "183": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set value of variable 'A' to displayed name of player-killer"
+  },
+  "184": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to login name of player with slot 'B'"
+  },
+  "185": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to displayed name of player with slot 'B'"
+  },
+  "186": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to team ID of player with slot 'B'"
+  },
+  "187": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to login name of player with slot-value of variable 'B'"
+  },
+  "188": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to displayed name of player with slot-value of variable 'B'"
+  },
+  "189": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to team ID of player with slot-value of variable 'B'"
+  },
+  "190": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Interface › Enable multiplayer frag/death messages"
+  },
+  "191": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Interface › Disable multiplayer frag/death messages"
+  },
+  "192": {
+   "a": "sky_model",
+   "b": "nochange",
+   "desc": "Environment › Change sky image"
+  },
+  "193": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Environment › Change sky color HEX multiplier"
+  },
+  "194": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set respawn speed multiplier (defaults to 1, but 1.5 in ranked)"
+  },
+  "195": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Environment › Change sky color Red multiplier to value of variable 'A'"
+  },
+  "196": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Environment › Change sky color Green multiplier to value of variable 'A'"
+  },
+  "197": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Environment › Change sky color Blue multiplier to value of variable 'A'"
+  },
+  "198": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Text-to-speech › Create Voice object and save it as variable 'A'"
+  },
+  "199": {
+   "a": "string",
+   "b": "string",
+   "desc": "Text-to-speech › Set volume 'B' for Voice object 'A'"
+  },
+  "200": {
+   "a": "string",
+   "b": "string",
+   "desc": "Text-to-speech › Set pitch 'B' for Voice object 'A'"
+  },
+  "201": {
+   "a": "string",
+   "b": "string",
+   "desc": "Text-to-speech › Set voice model 'B' for Voice object 'A'"
+  },
+  "202": {
+   "a": "string",
+   "b": "string",
+   "desc": "Text-to-speech › Speak text 'B' with Voice object 'A'"
+  },
+  "203": {
+   "a": "string",
+   "b": "string",
+   "desc": "Text-to-speech › Speak text-value of variable 'B' with Voice object 'A'"
+  },
+  "204": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to result of asin function with value of variable 'B' as parameter"
+  },
+  "205": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to result of acos function with value of variable 'B' as parameter"
+  },
+  "206": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to result of atan2 function with values of variables 'A' and 'B' as parameters"
+  },
+  "207": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Enable anonymous mode (disable player overheads, chat messages are not show in chat)"
+  },
+  "208": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Disable anonymous mode (enable player overheads, chat messages are show in chat)"
+  },
+  "209": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set regeneration speed multiplier to value 'A' (defaults to 1)"
+  },
+  "210": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set regeneration speed multiplier to value of variable 'A'"
+  },
+  "211": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set regeneration delay multiplier to value 'A' (defaults to 1, but 2 in ranked)"
+  },
+  "212": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set regeneration delay multiplier to value of variable 'A'"
+  },
+  "213": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set physical player impact damage multiplier to 'A' (default is 1)"
+  },
+  "214": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set physical player impact damage threshold to 'A' (higher values increase chance to receive any impact damage. Default for approved maps is 0.9, in else cases it is 1)"
+  },
+  "215": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set self-boost force multiplier (default is 1)"
+  },
+  "216": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set unstable self-boost force multiplier for HIGH physics setting (default for approved maps is 2.8, in else cases it is 1)"
+  },
+  "217": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set unstable self-boost force multiplier for LOW physics setting (default is 1)"
+  },
+  "218": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' target knockback multiplier to value 'B'"
+  },
+  "219": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' target knockback multiplier to value of variable 'B'"
+  },
+  "220": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' scale to value 'B'"
+  },
+  "221": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' scale to value of variable 'B'"
+  },
+  "222": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' zoom to value 'B'"
+  },
+  "223": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Synchronize value of variable 'A' through overriding value for all connected players (requires Var Sync engine mark)"
+  },
+  "224": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Synchronize value of variable 'A' through keeping defined value (requires Var Sync engine mark)"
+  },
+  "225": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Synchronize value of variable 'A' through keeping maximum value (requires Var Sync engine mark)"
+  },
+  "226": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Synchronize value of variable 'A' through keeping minimum value (requires Var Sync engine mark)"
+  },
+  "227": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Synchronize value of variable 'A' through keeping longest String value (requires Var Sync engine mark)"
+  },
+  "228": {
+   "a": "trigger",
+   "b": "nochange",
+   "desc": "Trigger › Call trigger 'A' each time new player joins the match"
+  },
+  "229": {
+   "a": "song+none",
+   "b": "nochange",
+   "desc": "Sound › Play song"
+  },
+  "230": {
+   "a": "string",
+   "b": "string",
+   "desc": "Trigger execution › Continue trigger actions execution only if value of session variable 'A' was set by map with ID 'B' (list of map IDs can be used, separated with commas without spaces)"
+  },
+  "231": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set text placeholder decoration text"
+  },
+  "232": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration HEX color multiplier"
+  },
+  "233": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration scale to value 'B'"
+  },
+  "234": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration scale to value of variable 'B'"
+  },
+  "235": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' value to of projectile power (this trigger should receive damage from Movable)"
+  },
+  "236": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Subtract projectile power from value of variable 'A' (this trigger should receive damage from Movable)"
+  },
+  "237": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' max spread accuracy to value 'B' (in radians)"
+  },
+  "238": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' added spread accuracy to value 'B' (in radians) per shot"
+  },
+  "239": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' subtracted spread accuracy to value 'B' (in radians) over time"
+  },
+  "240": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set rocket projetiles' speed multiplier to value 'A'"
+  },
+  "241": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set grenade projetiles' speed multiplier to value 'A'"
+  },
+  "242": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set plasma projetiles' speed multiplier to value 'A'"
+  },
+  "243": {
+   "a": "region",
+   "b": "string",
+   "desc": "Map preview › Create Map Preview from Region 'A' (only owner can execute this. Prevent execution for other players in order to prevent lag)"
+  },
+  "244": {
+   "a": "string",
+   "b": "string",
+   "desc": "Text-to-speech › Set rate 'B' for Voice object 'A'"
+  },
+  "245": {
+   "a": "region",
+   "b": "string",
+   "desc": "Gameplay › Lock camera at region 'A' (region size must be 800x400 for zoom of 100%) with intensity multiplier 'B' (0..1)"
+  },
+  "246": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Unlock camera from any region"
+  },
+  "247": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Save horizontal movement intention of character 'B' to variable 'A'"
+  },
+  "248": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Save vertical movement intention of character 'B' to variable 'A'"
+  },
+  "249": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Save shoot intention of character 'B' to variable 'A'"
+  },
+  "250": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Enable kinetic module"
+  },
+  "251": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Disable kinetic module"
+  },
+  "252": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Var › Rotate decoration to angle-value of variable 'B' (in degrees)"
+  },
+  "253": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Var › Rotate decoration to angle-value 'B' (in degrees)"
+  },
+  "254": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Attempt healing of player-initiator by 'A' hit points. Stop trigger execution if player-initiator has maximum hit points or died"
+  },
+  "255": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Heal player 'A' by 'B' hit points"
+  },
+  "256": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Heal player 'A' by value of variable 'B' "
+  },
+  "257": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Var › Rotate decoration to angle-value of variable 'B' (in radians)"
+  },
+  "258": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Var › Rotate decoration to angle-value 'B' (in radians)"
+  },
+  "259": {
+   "a": "region",
+   "b": "character",
+   "desc": "Region › Move region 'A' to cursor of player 'B'"
+  },
+  "260": {
+   "a": "gun",
+   "b": "sound",
+   "desc": "Gun › Assign sound 'B' as firing sound for weapon 'A'"
+  },
+  "261": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Allow Time Warp"
+  },
+  "262": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Disallow Time Warp"
+  },
+  "263": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Save energy value to variable 'A' (gameplay)"
+  },
+  "264": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Load energy value from variable 'A' (gameplay)"
+  },
+  "265": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set max energy value to value of variable 'A' (gameplay)"
+  },
+  "266": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Save current AI difficulty to variable 'A' (easy = 1, normal = 2, hard = 3)"
+  },
+  "267": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration X scale to value 'B'"
+  },
+  "268": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration Y scale to value 'B'"
+  },
+  "270": {
+   "alias": "SetPassivePushIntens",
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set intensity scale of entity pushing force for player 'A' (default 0)"
+  },
+  "271": {
+   "alias": "SetPassivePushRadius",
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set radius of entity pushing force for player 'A' (default 200)"
+  },
+  "272": {
+   "alias": "SetVoicePreset",
+   "a": "character",
+   "b": "voice_preset",
+   "desc": "Character › Set Character 'A' voice preset to 'B'"
+  },
+  "273": {
+   "alias": "StartGhost",
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Add ghost effect to Character 'A'"
+  },
+  "274": {
+   "alias": "StopGhost",
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Remove ghost effect from Character 'A'"
+  },
+  "275": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Trigger execution › Continue trigger actions execution only if loading of custom images has been finished"
+  },
+  "276": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Trigger execution › Continue trigger actions execution only if all custom images have been successfully loaded (any error will prevent execution until map is restarted)"
+  },
+  "277": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Save current number of loaded custom images to variable 'A'"
+  },
+  "278": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Save number of expected custom images on current level to variable 'A'"
+  },
+  "279": {
+   "alias": "SilentlyTeleportInitiatorFromTo",
+   "a": "region",
+   "b": "region",
+   "desc": "Region › Silently teleport player-initiator from Region 'A' to Region 'B'"
+  },
+  "280": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to 1 if compromised song should play (if non-dying enemy is hunting player or player is hunting non-dying enemy). Sets to value 0.5 in case if song should be played more quietly (if there are non-dying enemies within radius of 400px). In else case sets to 0"
+  },
+  "281": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Apply damage-over-time effect to player-initiator with power 'A' and duration 'B' (30 duration = 1 second)"
+  },
+  "282": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Character › Remove all effects from player-initiator"
+  },
+  "283": {
+   "a": "character",
+   "b": "region",
+   "desc": "Region › Spawn damage particles of Character 'A' at the center of Region 'B'"
+  },
+  "284": {
+   "alias": "PlaySoundAtRegion",
+   "a": "sound",
+   "b": "region",
+   "desc": "Sound › Play sound 'A' at Region 'B' (volume and stereo effect won't be updated once sound starts)"
+  },
+  "285": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Experience › Reward player with experience points for level completion (singleplayer)"
+  },
+  "286": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Experience › Reward player-initiator with experience points for level completion (multiplayer)"
+  },
+  "287": {
+   "a": "gun",
+   "b": "gun_model",
+   "desc": "Gun › Override existing Gun 'A' with a new gun with model 'B'"
+  },
+  "288": {
+   "a": "trigger",
+   "b": "string",
+   "desc": "Trigger › Bind Trigger 'A' execution to key 'B' press event"
+  },
+  "289": {
+   "a": "trigger",
+   "b": "string",
+   "desc": "Trigger › Bind Trigger 'A' execution to key 'B' release event"
+  },
+  "290": {
+   "a": "character",
+   "b": "string",
+   "desc": "Var › Set Character 'A' color pattern to string-value of variable 'B' (4 small letters for each limb, each represents first symbol of color in lowercase)"
+  },
+  "291": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Disable automatic disabling of offscreen entities (automatic disabling is enabled by default)"
+  },
+  "292": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Enable automatic disabling of offscreen entities (automatic disabling is enabled by default)"
+  },
+  "293": {
+   "a": "decor",
+   "b": "decor",
+   "desc": "Decoration › Mask Decoration 'A' with Decoration 'B' (Flash Player only)"
+  },
+  "294": {
+   "alias": "VarSetValueOfVarNamed",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable 'A' to value of variable with name of string-value of variable 'B'"
+  },
+  "295": {
+   "alias": "VarSetStringReplaceVarWithVarValues",
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set string-value of variable 'A' to string-value 'B' while replacing all variable names found in string-value with corresponding variable values"
+  },
+  "296": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Override existing Gun 'A' with a new gun with model by string-value of variable 'B'"
+  },
+  "297": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set jump multiplier for player 'A' to value 'B'"
+  },
+  "298": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration 'A' visibility multiplier to value 'B' (0...1)"
+  },
+  "299": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Var › Set decoration 'A' visibility multiplier to value of variable 'B' (0...1)"
+  },
+  "300": {
+   "a": "decor",
+   "b": "gun",
+   "desc": "Decoration › Move, rotate and flip Decoration 'A' to position of Gun 'B'"
+  },
+  "301": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' projectile scale to value 'B'"
+  },
+  "302": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Var › Set Gun 'A' projectile scale to value of variable 'B'"
+  },
+  "303": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' arm 1 hold offset to 'B' (0..1)"
+  },
+  "304": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' arm 2 hold offset to 'B' (0..1)"
+  },
+  "305": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' holstered attachment to 'B' (0 = on leg, 1 = on back)"
+  },
+  "306": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' length to value 'B'"
+  },
+  "307": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Restart map (singleplayer)"
+  },
+  "308": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Reset game termination logic (for example if game is about to end due to player's death)"
+  },
+  "309": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Make all players leave map or multiplayer match"
+  },
+  "310": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Make player-initiator leave map or multiplayer match"
+  },
+  "311": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Gameplay › Make player-killer leave map or multiplayer match"
+  },
+  "312": {
+   "a": "character",
+   "b": "gun",
+   "desc": "Character › Set Character 'A' active weapon to Gun 'B'"
+  },
+  "313": {
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Make Character 'A' drop weapon at current slot"
+  },
+  "314": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set variable 'A' to 1 if Character 'B' is dying (variable 'A' becomes 0 in else case)"
+  },
+  "315": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to 1 if Character-initiator is dying (variable 'A' becomes 0 in else case)"
+  },
+  "316": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to 1 if Character-killer is dying (variable 'A' becomes 0 in else case)"
+  },
+  "317": {
+   "a": "nochange",
+   "b": "team",
+   "desc": "Character › Set player-initiator team to 'B'"
+  },
+  "318": {
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Make Character 'A' unhittable"
+  },
+  "319": {
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Make Character 'A' hittable"
+  },
+  "320": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Switch singleplayer control to Character 'A'. Set parameter 'B' to 1 if sound needs to be played"
+  },
+  "321": {
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Disallow weapon drop for Character 'A'"
+  },
+  "322": {
+   "a": "character",
+   "b": "nochange",
+   "desc": "Character › Allow weapon drop for Character 'A'"
+  },
+  "323": {
+   "a": "region",
+   "b": "gun",
+   "desc": "Region › Move Region 'A' to Gun 'B'"
+  },
+  "324": {
+   "a": "gun",
+   "b": "trigger",
+   "desc": "Gun › Call Trigger 'B' when Gun 'A' was fully reloaded while being held by some character"
+  },
+  "325": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Replace variables with their values in string-value of variable 'B' and save result to variable 'A'"
+  },
+  "326": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Replace variables with their values in string-value 'B' and save result to variable 'A'"
+  },
+  "327": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to random number with floating point in range 0..X, where X is value of variable 'B'"
+  },
+  "328": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to random integer number in range 0..X-1, where X is value of variable 'B'"
+  },
+  "329": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set interface visibility multiplier to value of variable 'A' and cursor visibility multiplier to value of variable 'B'"
+  },
+  "330": {
+   "a": "string",
+   "b": "string",
+   "desc": "Interface › Set interface visibility multiplier to value 'A' and cursor visibility multiplier to value 'B'"
+  },
+  "331": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' string-value to string-value of ''Gameplay modifications'' field from match starting screen"
+  },
+  "332": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to value 1 if Gun 'B' is not in owner's active slot, set to value 0 in else case"
+  },
+  "333": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to value 1 if Gun 'B' has owner, set to value 0 in else case"
+  },
+  "334": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to number of frames passed since last attack of Gun 'B'"
+  },
+  "335": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to value 1 if Gun 'B' is ready to fire, set to value 0 in else case"
+  },
+  "336": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to X direction of Gun 'B'"
+  },
+  "337": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set variable 'A' to X direction of Character 'B'"
+  },
+  "338": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Interface › Prevent alive players from seeing chat from dead players"
+  },
+  "339": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Interface › Let alive players see chat from dead players"
+  },
+  "340": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Interface › Disable leader board details (such as alive state, score, team)"
+  },
+  "341": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Interface › Enable leader board details (such as alive state, score, team)"
+  },
+  "342": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set value of variable in variable 'A' to value of variable 'B'"
+  },
+  "343": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Attach decoration 'A' to current player's camera. Param 'B' will determine which part of the camera (left, center..) the decoration will be attached to."
+  },
+  "344": {
+   "a": "string",
+   "b": "decor",
+   "desc": "Var › Set Variable 'A' to value of degrees rotation of Decoration 'B'"
+  },
+  "345": {
+   "a": "decor",
+   "b": "region",
+   "desc": "Decoration › Change top-left position of decor 'A' to top-left position of region 'B'"
+  },
+  "346": {
+   "a": "character",
+   "b": "bool",
+   "desc": "Character › Enable or Disable Nametag visibility of Character 'A' using parameter 'B'"
+  },
+  "347": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Change Character skin of slot-value variable 'A' to value of variable 'B'"
+  },
+  "348": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to time (in milliseconds) since START of game"
+  },
+  "349": {
+   "a": "string",
+   "b": "string",
+   "desc": "Array › Split variable 'A' by string-value 'B'"
+  },
+  "350": {
+   "a": "string",
+   "b": "string",
+   "desc": "Array › Get index 'B' of variable 'A' and store into variable 'A'"
+  },
+  "351": {
+   "a": "string",
+   "b": "region",
+   "desc": "Character › Move Character of slot-value variable 'A' to region 'B'"
+  },
+  "352": {
+   "a": "string",
+   "b": "string",
+   "desc": "Array › Add element 'B'(can be variable) to array 'A'"
+  },
+  "353": {
+   "a": "region",
+   "b": "character",
+   "desc": "Region › Move Region 'A' to lower body of player 'B'"
+  },
+  "354": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Array › Create array at variable 'A'"
+  },
+  "355": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' cursor/crosshair to value 'B'"
+  },
+  "356": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Change head model of Character slot-value variable 'A' to value of variable 'B'"
+  },
+  "357": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Change body model of Character slot-value variable 'A' to value of variable 'B'"
+  },
+  "358": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Change arms model of Character slot-value variable 'A' to value of variable 'B'"
+  },
+  "359": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set Character slot-value variable 'A' color pattern to value of variable 'B' (4 small letters for each body sections, each represents first symbol of color in lowercase. - disables color change for specific section)"
+  },
+  "360": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Change legs model of Character slot-value variable 'A' to value of variable 'B'"
+  },
+  "361": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Skip next trigger action if value of variable 'A' is equal to the value of variable 'B'"
+  },
+  "362": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Trigger execution › Switch execution to trigger ID in variable 'A'"
+  },
+  "363": {
+   "a": "trigger",
+   "b": "nochange",
+   "desc": "Trigger execution › Switch execution to trigger 'A'"
+  },
+  "364": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Skip next trigger action if value of variable 'A' is greater than value of variable 'B'"
+  },
+  "365": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Skip next trigger action if value of variable 'A' is less than value of variable 'B'"
+  },
+  "366": {
+   "a": "door",
+   "b": "string",
+   "desc": "Var › Change Speed of Movable 'A' to variable 'B'"
+  },
+  "367": {
+   "a": "timer",
+   "b": "string",
+   "desc": "Var › Set the frequency of calls of Timer 'A' to variable 'B'"
+  },
+  "368": {
+   "a": "character",
+   "b": "string",
+   "desc": "Var › Set Character 'A' zoom to variable 'B'"
+  },
+  "369": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to zoom of game camera"
+  },
+  "370": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set Character slot-value variable 'A' zoom to variable 'B'"
+  },
+  "371": {
+   "a": "character",
+   "b": "region",
+   "desc": "Var › Move Character 'A' to random place in region 'B'"
+  },
+  "372": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Remove beginning 'A' characters from variable 'B' (-/+)"
+  },
+  "373": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' to degrees between regions in 'B' (seperated by commas)"
+  },
+  "374": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' stability to value 'B'"
+  },
+  "375": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' stability to value of variable 'B'"
+  },
+  "376": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set variable 'A' to stability of Character 'B'"
+  },
+  "377": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set gun 'A' upgrade level to string-value/variable 'B'"
+  },
+  "378": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' color to 'B'"
+  },
+  "379": {
+   "a": "lamp",
+   "b": "string",
+   "desc": "Light › Change Light 'A' color to 'B'"
+  },
+  "380": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set list of slots that can be randomly given to player during respawn using variable 'A'"
+  },
+  "381": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set max amount of weapons that can be given to player during respawn using variable 'A'"
+  },
+  "382": {
+   "a": "region",
+   "b": "region",
+   "desc": "Graphics › Draw line on current graphic from top-left of region 'A' to top-left of region 'B'"
+  },
+  "383": {
+   "a": "string",
+   "b": "string",
+   "desc": "Graphics › Create graphic with name 'A' at layer 'B' (1 is lowest, 3 is highest)"
+  },
+  "384": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Graphics › Select graphic to draw on with name 'A'"
+  },
+  "385": {
+   "a": "string",
+   "b": "string",
+   "desc": "Graphics › Begin fill of graphic with name 'A' using hex-colour 'B'"
+  },
+  "386": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Graphics › End fill of graphic with name 'A'"
+  },
+  "387": {
+   "a": "region",
+   "b": "string",
+   "desc": "Graphics › Draw circle on current graphic at top-left of region 'A' with radius 'B'"
+  },
+  "388": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Graphics › Clear graphic with name 'A'"
+  },
+  "389": {
+   "a": "string",
+   "b": "string",
+   "desc": "Graphics › Set line style of current graphic to thickness 'A' and hex-colour 'B'"
+  },
+  "390": {
+   "a": "string",
+   "b": "region",
+   "desc": "Graphics › Set starting position of graphic with name 'A' to region 'B'"
+  },
+  "391": {
+   "a": "string",
+   "b": "region",
+   "desc": "Graphics › Draw line from current position of graphic with name 'A' to top-left region 'B'"
+  },
+  "392": {
+   "a": "water",
+   "b": "region",
+   "desc": "Water › Move Water 'A' to Region 'B'"
+  },
+  "393": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to value of time in miliseconds (since January 1 1970)"
+  },
+  "394": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' to value of time between January 1 1970 and variable 'B' (year, month, day) in miliseconds"
+  },
+  "395": {
+   "a": "water",
+   "b": "string",
+   "desc": "Water › Set water 'A' damage to string-value/variable 'B'"
+  },
+  "396": {
+   "a": "region",
+   "b": "nochange",
+   "desc": "Region › Move region 'A' to game camera"
+  },
+  "397": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to value of 1 if mouse is held down and to 0 if else case"
+  },
+  "398": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' to distance between 2 regions in 'B' (separated by commas)"
+  },
+  "399": {
+   "a": "string",
+   "b": "string",
+   "desc": "Array › Split variable 'A' by value of variable 'B'"
+  },
+  "400": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Add ghost effect to Character slot-value variable 'A'"
+  },
+  "401": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Remove ghost effect from Character slot-value variable 'A'"
+  },
+  "402": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Move Character slot-value variable 'A' to start position"
+  },
+  "403": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set gun 'A' color matrix to array 'B' (4 rows, 5 columns, first 4 columns are multiplicative, last column is additive)"
+  },
+  "404": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set Character slot-value variable 'A' properties to properties of Character slot-value variable 'B' (hitpoints, max hitpoints, mobility, voice, model)"
+  },
+  "405": {
+   "a": "string",
+   "b": "string",
+   "desc": "Array › Join variable 'A' by value of variable 'B'"
+  },
+  "406": {
+   "a": "region",
+   "b": "region",
+   "desc": "Trigger execution › Continue execution of this trigger only if tracing from center of Region 'A' to center of Region 'B'  doesn't intersect a character"
+  },
+  "407": {
+   "a": "region",
+   "b": "region",
+   "desc": "Trigger execution › Continue execution of this trigger only if tracing from center of Region 'A' to center of Region 'B' intersects a character"
+  },
+  "408": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set Decor 'A' color matrix to Array 'B' (array must have 4x5 items)"
+  },
+  "409": {
+   "a": "water",
+   "b": "string",
+   "desc": "Water › Change water 'A' color to string-value/variable 'B'"
+  },
+  "410": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set variable 'A' to active gun model of Character 'B'"
+  },
+  "411": {
+   "a": "character",
+   "b": "gun",
+   "desc": "Character › Make Character 'A' drop Gun 'B'"
+  },
+  "425": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set variable 'A' value to X speed of Character 'B'"
+  },
+  "426": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set variable 'A' value to Y speed of Character 'B'"
+  },
+  "427": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to X speed of Character slot-value variable 'B'"
+  },
+  "428": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to Y speed of Character slot-value variable 'B'"
+  },
+  "429": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set X speed of Character 'A' to value of variable 'B'"
+  },
+  "430": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Y speed of Character 'A' to value of variable 'B'"
+  },
+  "431": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set X speed of Character slot-value variable 'A' to value of variable 'B'"
+  },
+  "432": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set Y speed of Character slot-value variable 'A' to value of variable 'B'"
+  },
+  "433": {
+   "a": "string",
+   "b": "string",
+   "desc": "Graphics › Set opacity of graphic with name 'A' to variable 'B' (percent)"
+  },
+  "434": {
+   "a": "string",
+   "b": "character",
+   "desc": "Var › Set variable 'A' value to speed of Character 'B'"
+  },
+  "435": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' value to speed of Character slot-value variable 'B'"
+  },
+  "436": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to map ID of current game"
+  },
+  "437": {
+   "a": "decor",
+   "b": "vehicle",
+   "desc": "Decoration › Move, rotate and flip Decoration 'A' to position of Vehicle 'B'"
+  },
+  "438": {
+   "a": "vehicle",
+   "b": "bool",
+   "desc": "Vehicle › Enable or Disable visibility of Vehicle 'A' using parameter 'B'"
+  },
+  "439": {
+   "a": "vehicle",
+   "b": "trigger",
+   "desc": "Vehicle › Call Trigger 'B' when Vehicle 'A' destroyed"
+  },
+  "440": {
+   "a": "region",
+   "b": "character",
+   "desc": "Region › Initiate region 'A' using character 'B' as initiator"
+  },
+  "441": {
+   "a": "bool",
+   "b": "nochange",
+   "desc": "Gameplay › Enable kinetic module through walls using Parameter 'A'"
+  },
+  "443": {
+   "a": "string",
+   "b": "string",
+   "desc": "Graphics › Set line style of current graphic to thickness of variable 'A' and hex-colour of variable 'B'"
+  },
+  "444": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' bullet life multiplier to variable 'B'"
+  },
+  "446": {
+   "a": "character",
+   "b": "value",
+   "desc": "Character › Set Character 'A' Health bar GUI opacity to value 'B'"
+  },
+  "447": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' Health bar GUI opacity to variable 'B'"
+  },
+  "448": {
+   "a": "string",
+   "b": "value",
+   "desc": "Var › Set Character slot-value variable 'A' Health bar GUI opacity to value 'B'"
+  },
+  "449": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set Character slot-value variable 'A' Health bar GUI opacity to variable 'B'"
+  },
+  "450": {
+   "a": "value>=0",
+   "b": "nochange",
+   "desc": "Gameplay › Set range of bullet mirroring to value 'A' (default value is 30)"
+  },
+  "451": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Change Character 'A' sword life to variable 'B'"
+  },
+  "452": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Change Character slot-value variable 'A' sword life to variable 'B'"
+  },
+  "453": {
+   "a": "bool",
+   "b": "nochange",
+   "desc": "Gameplay › Set disabling of global player collision to parameter 'A'"
+  },
+  "454": {
+   "a": "string",
+   "b": "timer",
+   "desc": "Timer › Set variable 'A' to time elapsed of Timer 'B'"
+  },
+  "455": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Change Character 'A' nickname to variable 'B'"
+  },
+  "456": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Change Character 'A' nametag text to variable 'B'"
+  },
+  "458": {
+   "a": "character",
+   "b": "bool",
+   "desc": "Character › Set disabling of Character 'A' psi swords to parameter 'B'"
+  },
+  "459": {
+   "a": "string",
+   "b": "bool",
+   "desc": "Character › Set disabling of Character slot-value variable 'A' psi swords to parameter 'B'"
+  },
+  "460": {
+   "a": "barrel",
+   "b": "string",
+   "desc": "Barrel › Set Barrel 'A' hitpoints to variable 'B'"
+  },
+  "461": {
+   "a": "barrel",
+   "b": "region",
+   "desc": "Barrel › Clone Barrel 'A' and spawn it at centre of Region 'B'"
+  },
+  "462": {
+   "a": "decor",
+   "b": "barrel",
+   "desc": "Decoration › Move, rotate and flip Decoration 'A' to Barrel 'B'"
+  },
+  "463": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to value of chatting status (0 = off, 1 = chat, 2 = team chat)"
+  },
+  "464": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' current and max hit points to variable 'B'"
+  },
+  "465": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set Character slot-value variable 'A' current and max hit points to variable 'B'"
+  },
+  "466": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration 'A' X scale to variable 'B'"
+  },
+  "467": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Set decoration 'A' Y scale to variable 'B'"
+  },
+  "468": {
+   "a": "bool",
+   "b": "nochange",
+   "desc": "Gameplay › Set disabling of global limb breaking to parameter 'A'"
+  },
+  "469": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' rotation to variable 'B'"
+  },
+  "470": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' X scale to variable 'B'"
+  },
+  "471": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to rotation of Gun 'B'"
+  },
+  "472": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to X scale of Gun 'B'"
+  },
+  "473": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Set Gun 'A' Y scale to variable 'B'"
+  },
+  "474": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to Y scale of Gun 'B'"
+  },
+  "476": {
+   "a": "vehicle",
+   "b": "string",
+   "desc": "Vehicle › Change Vehicle 'A' nickname to variable 'B'"
+  },
+  "477": {
+   "a": "bool",
+   "b": "nochange",
+   "desc": "Gameplay › Set disabling of global fall impact instability using parameter 'A'"
+  },
+  "478": {
+   "a": "decor",
+   "b": "string",
+   "desc": "Decoration › Change Decoration 'A' blend mode to Mode 'B'"
+  },
+  "479": {
+   "a": "value",
+   "b": "nochange",
+   "desc": "Gameplay › Change global fall impact instability height multiplier to value 'A'"
+  },
+  "480": {
+   "a": "region",
+   "b": "string",
+   "desc": "Region › Move region 'A' relative to current position along variable 'B' X"
+  },
+  "481": {
+   "a": "region",
+   "b": "string",
+   "desc": "Region › Move region 'A' relative to current position along variable 'B' Y"
+  },
+  "482": {
+   "a": "string",
+   "b": "character",
+   "desc": "Character › Show text bubble above Character 'B' with text 'A'"
+  },
+  "483": {
+   "a": "bool",
+   "b": "nochange",
+   "desc": "Gameplay › Set Disabling of ambient sounds using parameter 'A'"
+  },
+  "484": {
+   "a": "string",
+   "b": "character",
+   "desc": "Character › Set variable 'A' to active weapon of Character 'B'"
+  },
+  "485": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Set Character 'A' active weapon slot to slot 'B'"
+  },
+  "486": {
+   "a": "gun",
+   "b": "string",
+   "desc": "Gun › Change Gun 'A' bullet speed multiplier to variable 'B'"
+  },
+  "487": {
+   "a": "region",
+   "b": "nochange",
+   "desc": "Region › Destroy all projectiles in region 'A'"
+  },
+  "488": {
+   "a": "region",
+   "b": "region",
+   "desc": "Region › Move projectiles in region 'A' to region 'B'"
+  },
+  "491": {
+   "a": "region",
+   "b": "string",
+   "desc": "Region › Multiply all projectiles' speed in region 'A' to value 'B'"
+  },
+  "492": {
+   "a": "region",
+   "b": "nochange",
+   "desc": "Trigger execution › Continue execution of this trigger only if Region 'A' contains projectiles"
+  },
+  "493": {
+   "a": "region",
+   "b": "nochange",
+   "desc": "Trigger execution › Continue execution of this trigger only if Region 'A' doesn't contain projectiles"
+  },
+  "494": {
+   "a": "gun",
+   "b": "region",
+   "desc": "Gun › Clone Gun 'A' at center of region 'B'"
+  },
+  "495": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Save shoot intention of Character slot-value variable 'B' to variable 'A'"
+  },
+  "496": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Save horizontal movement intention of Character slot-value variable 'B' to variable 'A'"
+  },
+  "497": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Save vertical movement intention of Character slot-value variable 'B' to variable 'A'"
+  },
+  "498": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set Character slot-value variable 'A' current and max hit points to value 'B'"
+  },
+  "499": {
+   "a": "region",
+   "b": "string",
+   "desc": "Region › Initiate region 'A' using Character slot-value variable 'B' as initiator"
+  },
+  "500": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Gameplay › Set game speed to variable 'A' frames per second (default game speed is 30. Does not influence rendering)"
+  },
+  "505": {
+   "a": "character",
+   "b": "string",
+   "desc": "Character › Change team of Character 'A' to variable 'B'"
+  },
+  "506": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change team of Character slot-value variable 'A' to variable 'B'"
+  },
+  "507": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change team of Character slot-value variable 'A' to value 'B'"
+  },
+  "508": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Array › Get all active player slots and save result to Array 'A'"
+  },
+  "509": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Var › Set variable 'A' to length of Gun 'B'"
+  },
+  "510": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Var › Set variable 'A' to value of current framerate"
+  },
+  "511": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change the number of hit points of Character slot-value variable 'A' to varible 'B' percents"
+  },
+  "512": {
+   "a": "string",
+   "b": "region",
+   "desc": "Character › Kill all Characters at Region 'B' which are not allied to Character slot-value variable 'A'"
+  },
+  "513": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set current hit points of Character slot-value variable 'A' to value of variable 'B' hit points (not set points of each limb)"
+  },
+  "514": {
+   "a": "string",
+   "b": "region",
+   "desc": "Character › Clone Character slot-value variable 'A' and spawn it in the centre of Region 'B'"
+  },
+  "515": {
+   "a": "string",
+   "b": "region",
+   "desc": "Character › Clone Character slot-value variable 'A' and spawn it in random place of Region 'B'"
+  },
+  "516": {
+   "a": "string",
+   "b": "region",
+   "desc": "Character › Force all enemies of Character slot-value variable 'A' who located in region 'B' hunt for Character slot-value variable 'A'"
+  },
+  "517": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set 'AI Behavior' parameter of computer-controlled Character slot-value variable 'A' to value 'B'"
+  },
+  "518": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change Character slot-value variable 'A' nickname to variable 'B'"
+  },
+  "519": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Force Character slot-value variable 'A' to drop all weapons"
+  },
+  "520": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Multiply Character slot-value variable 'A' speed by variable 'B'"
+  },
+  "521": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change Character slot-value variable 'A' mobility factor to variable 'B'"
+  },
+  "522": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change Character slot-value variable 'A' armor type to value 'B'"
+  },
+  "523": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change blood color of Character slot-value variable 'A' to HEX color 'B'"
+  },
+  "525": {
+   "a": "string",
+   "b": "region",
+   "desc": "Character › Force Character slot-value variable 'A' to look at random point in Region 'B'"
+  },
+  "526": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Force Character slot-value variable 'A' to hunt Character slot-value variable 'B'"
+  },
+  "527": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Damage Character slot-value variable 'A' head hitpoints by variable 'B'"
+  },
+  "528": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Damage Character slot-value variable 'A' arms hitpoints by variable 'B'"
+  },
+  "529": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Damage Character slot-value variable 'A' body hitpoints by variable 'B'"
+  },
+  "530": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Damage Character slot-value variable 'A' legs hitpoints by variable 'B'"
+  },
+  "531": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Save inventory info of Character slot-value variable 'B' to variable 'A'"
+  },
+  "532": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Spawn all weapons stored in variable 'A' at position of Character slot-value variable 'B'"
+  },
+  "533": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set Character slot-value variable 'A' scale to variable 'B'"
+  },
+  "534": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Heal Character slot-value variable 'A' by variable 'B'"
+  },
+  "535": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set intensity of entity pushing force for Character slot-value variable 'A' to variable 'B' (default 0)"
+  },
+  "536": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set radius of entity pushing force for Character slot-value variable 'A' to variable 'B'"
+  },
+  "537": {
+   "a": "string",
+   "b": "voice_preset",
+   "desc": "Character › Set Character slot-value variable 'A' voice preset to 'B'"
+  },
+  "538": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Apply damage-over-time-effect to Character slot-value variable 'A' with power 'B' and duration 'B' (separated by commas)"
+  },
+  "539": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Remove all effects from Character slot-value variable 'A'"
+  },
+  "540": {
+   "a": "string",
+   "b": "region",
+   "desc": "Region › Spawn damage particles of Character slot-value variable 'A' at the center of Region 'B'"
+  },
+  "541": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set jump multiplier for Character slot-value variable 'A' to variable 'B'"
+  },
+  "542": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Character › Set Character slot-value variable 'A' active weapon to Gun 'B'"
+  },
+  "543": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Make Character slot-value variable 'A' drop weapon at current slot"
+  },
+  "544": {
+   "a": "string",
+   "b": "string",
+   "desc": "Var › Set variable 'A' to 1 if Character slot-value variable 'B' is dying"
+  },
+  "545": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Make Character slot-value variable 'A' unhittable"
+  },
+  "546": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Make Character slot-value variable 'A' hittable"
+  },
+  "547": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Disallow weapon drop for Character slot-value variable 'A'"
+  },
+  "548": {
+   "a": "string",
+   "b": "nochange",
+   "desc": "Character › Allow weapon drop for Character slot-value variable 'A'"
+  },
+  "550": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Show text bubble above Character slot-value variable 'B' with text 'A'"
+  },
+  "551": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set Character slot-value variable 'A' active weapon to slot 'B'"
+  },
+  "552": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set variable 'A' to active weapon of Character slot-value variable 'B'"
+  },
+  "553": {
+   "a": "string",
+   "b": "gun",
+   "desc": "Character › Make Character slot-value variable 'A' drop Gun 'B'"
+  },
+  "554": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Change Character slot-value variable 'A' sword life to variable 'B'"
+  },
+  "555": {
+   "a": "string",
+   "b": "string",
+   "desc": "Character › Set variable 'A' to active gun model of Character slot-value variable 'B'"
+  },
+  "556": {
+   "a": "string",
+   "b": "region",
+   "desc": "Character › Move Character slot-value variable 'A' to random place in Region 'B'"
+  },
+  "557": {
+   "a": "string",
+   "b": "region",
+   "desc": "Region › Teleport Character slot-value variable 'A' to Region 'B' and invert speed by X axis (used to avoid loop teleportation)"
+  },
+  "558": {
+   "a": "string",
+   "b": "region",
+   "desc": "Region › Teleport Character slot-value variable 'A' to Region 'B'"
+  },
+  "559": {
+   "a": "string",
+   "b": "region",
+   "desc": "Region › Silently teleport Character slot-value variable 'A' to Region 'B'"
+  },
+  "-1": {
+   "a": "nochange",
+   "b": "nochange",
+   "desc": "Do nothing"
+  }
+ }
+}
