@@ -21,6 +21,35 @@ on start {
 }
 ```
 
+## Map objects
+
+Declare each map object the program uses with its kind and uid:
+
+| Kind | Map element | Actions that take it (parameter kind in [actions.md](actions.md)) |
+|---|---|---|
+| `region` | region | region |
+| `door` | movable (door) | door |
+| `character` | player or enemy | character |
+| `gun` | gun | gun |
+| `barrel` | barrel | barrel |
+| `vehicle` | vehicle | vehicle |
+| `decor` | decoration | decor |
+| `pusher` | pusher | pushf |
+| `light` | light | lamp |
+| `water` | water | water |
+| `timer` | timer | timer |
+| `trigger` | a trigger of the host map | trigger (also `@function`) |
+
+- An object can only be an argument of `action(...)`, and only where that action takes its kind:
+  anything else is a compile error. Where an action takes an object, a variable is an error too;
+  uid text (`"#door*1"`) is still accepted, without the check.
+- `at x, y` is the position used if the compiler adds the object (below).
+- With `--into map.xml`, each declared object is looked up in the map: a missing one is added with
+  the editor's default settings (at `at x, y`, or in a row below the program's triggers), a uid
+  used by another kind is an error. Objects the map has are never changed. `--no-create` warns
+  instead of adding.
+- The kind words are not reserved: `var water = 1;` still works.
+
 ## Values and types
 
 The language has no type declarations, and a variable needs none. Every value is a game variable,
@@ -58,6 +87,7 @@ Collections:
 | `var list[];` | array (see below) |
 | `const NAME = 5;` | constant: a number, text, `true` or `false`; written into the actions |
 | `extern score;` / `extern s = "host name";` | a variable of the host map, used by its own name |
+| `water pool = "#water*1";` / `door gate = "#door*3" at 400, -120;` | a map object (see below) |
 | `function f(a, b) { ... }` | function; builtin names cannot be used |
 | `export function f() { ... }` | function with a stable uid `#<prefix>_f`, for the map's own triggers and regions |
 | `on start { ... }` | runs at map start (a start timer, before every other timer); several blocks run one after the other, each with its own scope (`return` ends only its block) |
@@ -165,9 +195,14 @@ program        = { declaration } ;
 declaration    = "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
                | "const" identifier "=" expression ";"
                | "extern" identifier [ "=" string ] ";"
+               | object-kind identifier "=" string [ "at" signed "," signed ] ";"
                | [ "export" ] "function" identifier "(" [ identifier { "," identifier } ] ")" block
                | "on" ( "start" | "join" | "chat" ) block
                | "every" number block ;
+
+object-kind    = "region" | "door" | "character" | "gun" | "barrel" | "vehicle" | "decor"
+               | "pusher" | "light" | "water" | "timer" | "trigger" ;
+signed         = [ "-" ] number ;
 
 block          = "{" { statement } "}" ;
 
@@ -221,6 +256,8 @@ keyword        = "var" | "const" | "let" | "extern" | "function" | "export" | "o
 Rules the grammar does not show:
 
 - The left side of an `assign-op` must be an `identifier` or `identifier "[" expression "]"`.
+- `object-kind` words are keywords only at the start of a declaration followed by a name; elsewhere
+  they are ordinary identifiers.
 - Binary operators of the same level group from the left: `a - b - c` is `(a - b) - c`.
 - `"@" identifier` (a function's trigger) is allowed only as an argument of `action(...)`.
 - In `every`, `wait` and `drop`, the number must be a whole number above 0 (for `drop`: any whole

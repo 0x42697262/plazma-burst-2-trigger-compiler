@@ -65,6 +65,7 @@ simulator runs.
 | `--at <x>,<y>` | where the first trigger goes in the map (default 0,0; then a grid of 10 per row, 60 apart) |
 | `--run`, `--frames <n>` | simulate the program for n frames and print variables, chat and errors |
 | `--no-sync-mark` | do not add the Var Sync engine mark that a program with sync actions needs (with `--into`, a map that has one keeps it and gets no second one) |
+| `--no-create` | with `--into`: do not add declared map objects the map lacks; warn instead |
 | `--help` | all options |
 
 ## Development
