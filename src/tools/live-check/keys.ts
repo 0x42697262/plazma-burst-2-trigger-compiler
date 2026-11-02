@@ -14,10 +14,13 @@ export const EXPRESSION = Object.freeze({
   openMap: (map: string): string => `window.postMessage(${JSON.stringify(`rt:local-${map}:sp`)}, "*")`,
   readVariables: (name: string): string => `JSON.stringify(Object.fromEntries(Object.entries(globalThis[${JSON.stringify(name)}] || {}).map(([key, value]) => [key, [Array.isArray(value) ? "array" : typeof value, Array.isArray(value) ? JSON.stringify(value.map(String)) : String(value)]])))`,
 });
-export const FRAME = Object.freeze({ menu: 'menu', gaming: 'gaming' });
+export const FRAME = Object.freeze({ menu: 'menu', gaming: 'gaming', namePrompt: 'name_prompt' });
+export const GUEST_NAME = 'ptc';
+export const ENTER_KEY = Object.freeze({ key: 'Enter', code: 'Enter' });
 export const METHOD = Object.freeze({
   evaluate: 'Runtime.evaluate',
   key: 'Input.dispatchKeyEvent',
+  insertText: 'Input.insertText',
 });
 export const KEY_EVENTS: readonly string[] = Object.freeze(['keyDown', 'keyUp']);
 export const SPACE_KEY = Object.freeze({ key: ' ', code: 'Space' });

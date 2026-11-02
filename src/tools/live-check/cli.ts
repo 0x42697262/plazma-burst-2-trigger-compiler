@@ -11,9 +11,9 @@ import { prefixFromFile } from '../../cli/main.ts';
 import { createNames } from '../../compiler/names.ts';
 import { CASES_DIRECTORY, GAME_NAMES_FILE, MAP_FILE, MAP_NAME, SANDBOX } from './paths.ts';
 import { prepareSandbox } from './sandbox.ts';
-import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
+import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
 import {
-  CLICK_ATTEMPTS, CLICK_PAUSE, CONSOLE_TIMEOUT, DEBUG_PORT, FIRST_USER_ARGUMENT, GAMING_TIMEOUT, LAUNCH_TIMEOUT, MENU_TIMEOUT, MILLISECONDS,
+  CLICK_ATTEMPTS, CLICK_PAUSE, CONSOLE_TIMEOUT, DEBUG_PORT, ENTER_KEY_CODE, FIRST_USER_ARGUMENT, GAMING_TIMEOUT, LAUNCH_TIMEOUT, MENU_TIMEOUT, MILLISECONDS,
   RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_PLAYERS, SPACE_KEY_CODE,
 } from './constants.ts';
 import { TEXT } from './text.ts';
@@ -68,7 +68,14 @@ async function readGameVariables(variablesName: string): Promise<Snapshot> {
     launcher.close();
     const game = await waitFor(() => findPage(DEBUG_PORT, EXPRESSION.hasGame), CONSOLE_TIMEOUT, TEXT.game);
     const frame = async (): Promise<unknown> => game.evaluate(EXPRESSION.frameLabel);
-    await waitFor(async () => (await frame()) === FRAME.menu, MENU_TIMEOUT, TEXT.menu);
+    await waitFor(async () => {
+      const label = await frame();
+      if (label === FRAME.namePrompt) {
+        await game.send(METHOD.insertText, { text: GUEST_NAME });
+        for (const type of KEY_EVENTS) await game.send(METHOD.key, { type, ...ENTER_KEY, windowsVirtualKeyCode: ENTER_KEY_CODE });
+      }
+      return label === FRAME.menu;
+    }, MENU_TIMEOUT, TEXT.menu);
     await sleep(SETTLE_MILLISECONDS);
     await game.evaluate(EXPRESSION.openMap(MAP_NAME));
     await sleep(SETTLE_MILLISECONDS);
