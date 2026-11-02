@@ -109,6 +109,18 @@ describe('compile CLI', () => {
     assert.equal(lines.out.filter((line) => line.includes('chat: 4')).length, 2);
   });
 
+  it('compiles to p-code with --target pcode and refuses unknown targets', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'v.ptc');
+    fs.writeFileSync(source, 'var total = 0;\non start { for (let i = 1; i <= 4; i += 1) { total += i; } say("total {total}"); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--run', '--target', 'pcode'], output), 0);
+    assert.ok(lines.out.some((line) => line.includes('chat: total 10')));
+    assert.match(fs.readFileSync(path.join(folder, 'v.xml'), 'utf8'), /#v:vm\.loop/);
+    assert.equal(main([source, '--out', folder, '--target', 'bytecode'], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /--target needs triggers or pcode/);
+  });
+
   it('adds declared objects the host map lacks, and only those', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'o.ptc');

@@ -14,8 +14,9 @@ export const FLAG = Object.freeze({
   noCreate: '--no-create',
   noNumberText: '--no-number-text',
   directIndex: '--direct-index',
+  target: '--target',
 });
-export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at]);
+export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at, FLAG.target]);
 export const POSITION_SEPARATOR = ',';
 export const ASSEMBLY_EXTENSION = '.pasm';
 export const FLAG_MARK = '--';

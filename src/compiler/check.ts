@@ -12,10 +12,11 @@ import { editorTurnsIntoNumber } from '../program/editor-text.ts';
 
 const isObjectParam = (kind: string | undefined): boolean => kind !== undefined && OBJECT_PARAM_KINDS.has(kind);
 
-export function checkTriggers(program: Program, externalUids: readonly string[]): string[] {
+export function checkTriggers(program: Program, externalUids: readonly string[], machineUids: ReadonlySet<string> = new Set()): string[] {
   const warnings: string[] = [];
   const known = new Set([...program.triggers.map((trigger) => trigger.uid), ...program.timers.map((timer) => timer.uid), ...externalUids]);
   for (const trigger of program.triggers) {
+    if (machineUids.has(trigger.uid)) continue;
     let textWarned = false;
     let entityWarned = false;
     trigger.actions.forEach((action, index) => {

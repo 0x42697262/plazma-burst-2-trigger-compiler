@@ -13,12 +13,16 @@ import { SYNC_ACTIONS } from '../opcodes/constants.ts';
 import { DEFAULT_LOOP_GUARD } from './constants.ts';
 import { START_TIMER_LABEL } from './keys.ts';
 import { TEXT } from './text.ts';
+import { buildPcode } from '../pcode/pcode.ts';
+import { DEFAULT_TARGET } from '../pcode/keys.ts';
+import type { Target } from '../pcode/keys.ts';
+import type { Trigger } from '../program/types.ts';
 
 export type VarSyncMark = 'add' | 'present' | 'off';
 
-export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[]; varSync: VarSyncMark; protectNumberText: boolean; directIndex: boolean };
+export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[]; varSync: VarSyncMark; protectNumberText: boolean; directIndex: boolean; target: Target };
 
-export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add', protectNumberText: true, directIndex: false });
+export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add', protectNumberText: true, directIndex: false, target: DEFAULT_TARGET });
 
 export type CompileResult = {
   program: Program;
@@ -31,9 +35,13 @@ export type CompileResult = {
 
 export function compileModule(module: Module, names: Names, options: CompileOptions = DEFAULT_OPTIONS): CompileResult {
   const guarded = options.loopGuard === null ? [...module.instructions] : addLoopGuard(module.instructions, names, options.loopGuard);
-  const laid = layout(lower(guarded, names), names);
+  const extraEntries = [...(module.start === null ? [] : [module.start]), ...module.timers.map((spec) => spec.target)];
+  const pcode = options.target === 'pcode' ? buildPcode(guarded, names, extraEntries) : null;
+  const laid = pcode === null ? layout(lower(guarded, names), names) : null;
+  const triggers: readonly Trigger[] = pcode?.triggers ?? laid?.triggers ?? [];
   const uidOf = (label: string): string => {
-    const uid = laid.labels.get(label);
+    if (pcode !== null) return pcode.uidOf(label);
+    const uid = laid?.labels.get(label);
     if (uid === undefined) throw new CompileError(TEXT.unknownLabel(label));
     return uid;
   };
@@ -44,8 +52,8 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
   timers.push(...module.timers.map((spec) => ({
     uid: names.triggerUid(spec.label), target: uidOf(spec.target), enabled: spec.enabled, maxCalls: spec.maxCalls, delay: spec.delay,
   })));
-  const usesSync = laid.triggers.some((trigger) => trigger.actions.some((action) => SYNC_ACTIONS.has(action.opcode)));
-  const program: Program = { triggers: laid.triggers, timers, varSyncMark: usesSync && options.varSync === 'add' };
+  const usesSync = triggers.some((trigger) => trigger.actions.some((action) => SYNC_ACTIONS.has(action.opcode)));
+  const program: Program = { triggers, timers, varSyncMark: usesSync && options.varSync === 'add' };
   checkProgram(program);
   const entries = new Map(module.instructions.flatMap((instruction) =>
     (instruction.kind === 'label' && instruction.entry ? [[instruction.label, uidOf(instruction.label)] as const] : [])));
@@ -54,8 +62,11 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
   if (usesSync && options.varSync === 'off') startWarning.push(TEXT.noVarSync);
   return {
     program,
-    warnings: [...(module.warnings ?? []), ...startWarning, ...laid.warnings, ...checkTriggers(program, [...options.externalUids, ...objects.map((object) => object.uid)])],
-    sourceMap: laid.sourceMap,
+    warnings: [
+      ...(module.warnings ?? []), ...startWarning, ...(laid?.warnings ?? []),
+      ...checkTriggers(program, [...options.externalUids, ...objects.map((object) => object.uid)], pcode?.vmUids ?? new Set()),
+    ],
+    sourceMap: laid?.sourceMap ?? [],
     entries,
     objects,
     exports: module.exports ?? [],

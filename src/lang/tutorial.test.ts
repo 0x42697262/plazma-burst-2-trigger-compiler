@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { compileSource } from './compile.ts';
+import type { CompileOptions } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
 import { OPCODE } from '../opcodes/constants.ts';
 
 const REPLACE_IN_VALUE = OPCODE.replaceInValue;
+const MODES: Record<string, Partial<CompileOptions>> = { '': {}, '--direct-index': { directIndex: true }, '--target pcode': { target: 'pcode' } };
 
 const FOLDER = path.resolve(import.meta.dirname, '..', '..', 'examples', 'tutorial');
 const PLAYERS = [
@@ -87,11 +89,11 @@ describe('tutorial programs', () => {
     assert.deepEqual(fs.readdirSync(FOLDER).filter((file) => file.endsWith('.ptc')).sort(), Object.keys(SCENARIOS).sort());
   });
 
-  for (const [file, scenario] of Object.entries(SCENARIOS)) for (const directIndex of [false, true]) {
-    it(directIndex ? `${file} with --direct-index` : file, () => {
+  for (const [file, scenario] of Object.entries(SCENARIOS)) for (const [mode, options] of Object.entries(MODES)) {
+    it(mode === '' ? file : `${file} with ${mode}`, () => {
       const fullPath = path.join(FOLDER, file);
-      const result = compileSource(fs.readFileSync(fullPath, 'utf8'), 'tut', { externalUids: EXTERNAL, directIndex }, { file: fullPath, read: (name) => fs.readFileSync(name, 'utf8') });
-      if (directIndex) assert.ok(!result.program.triggers.some((trigger) => trigger.actions.some((action) => action.opcode === REPLACE_IN_VALUE)));
+      const result = compileSource(fs.readFileSync(fullPath, 'utf8'), 'tut', { externalUids: EXTERNAL, ...options }, { file: fullPath, read: (name) => fs.readFileSync(name, 'utf8') });
+      if (options.directIndex) assert.ok(!result.program.triggers.some((trigger) => trigger.actions.some((action) => action.opcode === REPLACE_IN_VALUE)));
       assert.deepEqual(result.warnings, []);
       const simulation = new Simulation(result.program, { players: PLAYERS, initiatorSlot: 1 });
       simulation.tick();

@@ -15,6 +15,7 @@ import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
 import { stringOf } from '../sim/values.ts';
 import { parseArguments, lastValue, UsageError } from './arguments.ts';
+import { DEFAULT_TARGET, isTarget } from '../pcode/keys.ts';
 import { frontEndFor } from './frontends.ts';
 import { DEFAULT_OUT, DEFAULT_PREFIX, FILE_ENCODING, FLAG, LEADING_DIGITS, OUTPUT, POSITION_SEPARATOR, PREFIX_CLEANUP } from './keys.ts';
 import { DEFAULT_RUN_FRAMES, EXIT_FAILURE, JSON_INDENT, POSITION_PARTS } from './constants.ts';
@@ -43,7 +44,10 @@ const layoutOf = (value: string | null): Layout => {
 
 const optionsOf = (parsed: ReturnType<typeof parseArguments>, hostMap: string | null): Partial<CompileOptions> => {
   const guard = lastValue(parsed, FLAG.guard);
+  const target = lastValue(parsed, FLAG.target) ?? DEFAULT_TARGET;
+  if (!isTarget(target)) throw new UsageError(TEXT.badTarget(target));
   return {
+    target,
     loopGuard: parsed.flags.has(FLAG.noGuard) ? null : guard === null ? DEFAULT_OPTIONS.loopGuard : positiveInteger(guard, TEXT.badGuard),
     startTimer: !parsed.flags.has(FLAG.noStart),
     externalUids: parsed.values.get(FLAG.extern) ?? [],

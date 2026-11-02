@@ -46,5 +46,5 @@ export function compileSource(source: string, prefix: string, options: Partial<C
     throw error;
   }
   const merged: CompileOptions = { ...DEFAULT_OPTIONS, ...options };
-  return compileModule(generate(file, names, { protectNumberText: merged.protectNumberText, directIndex: merged.directIndex }), names, merged);
+  return compileModule(generate(file, names, { protectNumberText: merged.protectNumberText && merged.target !== 'pcode', directIndex: merged.directIndex || merged.target === 'pcode' }), names, merged);
 }
