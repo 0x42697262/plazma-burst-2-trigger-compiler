@@ -17,13 +17,15 @@ export const FLAG = Object.freeze({
   target: '--target',
   replace: '--replace',
   nameSeed: '--name-seed',
+  obfuscate: '--obfuscate',
+  obfuscateSeed: '--obfuscate-seed',
 });
-export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at, FLAG.target, FLAG.nameSeed]);
+export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at, FLAG.target, FLAG.nameSeed, FLAG.obfuscateSeed]);
 export const POSITION_SEPARATOR = ',';
 export const ASSEMBLY_EXTENSION = '.pasm';
 export const FLAG_MARK = '--';
 export const FILE_ENCODING = 'utf8';
-export const OUTPUT = Object.freeze({ xml: '.xml', text: '.txt', sourceMap: '.map.json', map: '-map.xml', build: '.build.json' });
+export const OUTPUT = Object.freeze({ xml: '.xml', text: '.txt', sourceMap: '.map.json', map: '-map.xml', build: '.build.json', names: '.names.json' });
 export const PREFIX_CLEANUP = /[^A-Za-z0-9]/g;
 export const LEADING_DIGITS = /^[0-9]+/;
 export const DEFAULT_PREFIX = 'ptc';

@@ -9,7 +9,7 @@ import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap, removeOwned } from '../emit/merge.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
-import { createNames, seededPrefix } from '../compiler/names.ts';
+import { createNames, describeLegend, seededPrefix } from '../compiler/names.ts';
 import { DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
@@ -40,6 +40,12 @@ const layoutOf = (value: string | null): Layout => {
   const [originX, originY] = parts;
   if (parts.length !== POSITION_PARTS || !Number.isInteger(originX) || !Number.isInteger(originY)) throw new UsageError(TEXT.badPosition(value));
   return { ...DEFAULT_LAYOUT, originX: originX ?? 0, originY: originY ?? 0 };
+};
+
+const obfuscationSeed = (parsed: ReturnType<typeof parseArguments>, defaultSeed: string): string | null => {
+  const seed = lastValue(parsed, FLAG.obfuscateSeed);
+  if (seed !== null) return seed;
+  return parsed.flags.has(FLAG.obfuscate) ? lastValue(parsed, FLAG.nameSeed) ?? defaultSeed : null;
 };
 
 const optionsOf = (parsed: ReturnType<typeof parseArguments>, hostMap: string | null): Partial<CompileOptions> => {
@@ -106,9 +112,12 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const nameSeed = lastValue(parsed, FLAG.nameSeed);
-    if (nameSeed !== null && lastValue(parsed, FLAG.prefix) !== null) throw new UsageError(TEXT.seedWithPrefix);
-    const prefix = nameSeed !== null ? seededPrefix(nameSeed) : lastValue(parsed, FLAG.prefix) ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
-    const result = frontEnd.compile(source, prefix, options, file);
+    const givenPrefix = lastValue(parsed, FLAG.prefix);
+    if (nameSeed !== null && givenPrefix !== null) throw new UsageError(TEXT.seedWithPrefix);
+    const plainPrefix = givenPrefix ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
+    const seed = obfuscationSeed(parsed, plainPrefix);
+    const prefix = nameSeed !== null ? seededPrefix(nameSeed) : givenPrefix ?? (seed === null ? plainPrefix : seededPrefix(seed));
+    const result = frontEnd.compile(source, prefix, { ...options, obfuscate: seed === null ? null : { seed } }, file);
     for (const warning of result.warnings) output.err(TEXT.warning(warning));
     const actions = result.program.triggers.reduce((total, trigger) => total + trigger.actions.length, 0);
     output.out(TEXT.summary(result.program.triggers.length, actions, result.program.timers.length));
@@ -130,12 +139,16 @@ export function main(argumentsList: readonly string[], output: Output): number {
     try {
       writeFile(base + OUTPUT.text, joinTextBlocks(emitText(result.program)), output);
       if (result.program.varSyncMark) output.err(TEXT.warning(TEXT.textNeedsVarSync));
+      if (result.obfuscation !== null) output.err(TEXT.warning(TEXT.textNeedsOrder));
       if (result.program.timers.length > 0) output.err(TEXT.warning(TEXT.textHasNoTimers(result.program.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)))));
     } catch (error) {
       fs.rmSync(base + OUTPUT.text, { force: true });
       output.err(TEXT.warning(TEXT.noText(error instanceof Error ? error.message : String(error))));
     }
     writeFile(base + OUTPUT.sourceMap, JSON.stringify(result.sourceMap, null, JSON_INDENT), output);
+    if (result.obfuscation !== null) {
+      writeFile(base + OUTPUT.names, JSON.stringify({ prefix, seed, names: describeLegend(prefix, result.obfuscation.legend) }, null, JSON_INDENT), output);
+    }
     if (hostMap !== null) {
       const names = createNames(prefix);
       const buildPath = base + OUTPUT.build;

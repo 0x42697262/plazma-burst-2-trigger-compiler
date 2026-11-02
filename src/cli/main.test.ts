@@ -114,6 +114,30 @@ describe('compile CLI', () => {
     assert.match(lines.err.at(-1) ?? '', /--name-seed and --prefix cannot be used together/);
   });
 
+  it('obfuscates with a seed, writes the name record and updates a map in place', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'o.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(host, '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n');
+    fs.writeFileSync(source, 'var counter = 0;\non start { while (counter < 3) { counter += 1; } say("counted {counter}"); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--obfuscate-seed', 'a', '--into', host, '--run'], output), 0, lines.err.join('\n'));
+    const xml = fs.readFileSync(path.join(folder, 'o.xml'), 'utf8');
+    assert.ok(!xml.includes('counter') && !xml.includes('counted') && !xml.includes('#o:'));
+    assert.ok(lines.out.includes('  chat: counted 3'));
+    assert.ok(lines.err.some((line) => line.includes('trigger order')));
+    const record = JSON.parse(fs.readFileSync(path.join(folder, 'o.names.json'), 'utf8')) as { prefix: string; names: { game: string; source: string }[] };
+    assert.ok(record.names.some((entry) => entry.source === `~${record.prefix}_counter`));
+    assert.equal(main([source, '--out', folder, '--obfuscate-seed', 'a'], output), 0);
+    assert.equal(fs.readFileSync(path.join(folder, 'o.xml'), 'utf8'), xml);
+    const manifest = JSON.parse(fs.readFileSync(path.join(folder, 'o.build.json'), 'utf8')) as { uids: string[] };
+    fs.copyFileSync(path.join(folder, 'o-map.xml'), host);
+    assert.equal(main([source, '--out', folder, '--obfuscate-seed', 'b', '--into', host, '--replace'], output), 0);
+    const merged = fs.readFileSync(path.join(folder, 'o-map.xml'), 'utf8');
+    assert.ok(merged.includes('#gate1'));
+    for (const uid of manifest.uids) assert.ok(!merged.includes(`"${uid}"`), `stale ${uid}`);
+  });
+
   it('records a build manifest and replaces across renamed builds', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'm.ptc');
