@@ -15,6 +15,8 @@ export const TEXT = Object.freeze({
   warning: (message: string): string => `warning: ${message}`,
   error: (message: string): string => `error: ${message}`,
   missingFile: 'No input file.',
+  noText: (reason: string): string => `no trigger text written: ${reason}`,
+  unknownFlag: (flag: string): string => `Unknown option ${flag}. See --help.`,
   missingValue: (flag: string): string => `${flag} needs a value.`,
   badGuard: (value: string): string => `--guard needs a positive whole number, got "${value}".`,
   summary: (triggers: number, actions: number, timers: number): string => `${triggers} triggers, ${actions} actions, ${timers} timers`,

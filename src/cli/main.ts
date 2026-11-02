@@ -70,14 +70,12 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const base = path.join(lastValue(parsed, FLAG.out) ?? DEFAULT_OUT, path.basename(file, path.extname(file)));
     const xml = emitXml(result.program);
     writeFile(base + OUTPUT.xml, xml, output);
-    const textBlocks = (() => {
-      try {
-        return joinTextBlocks(emitText(result.program));
-      } catch {
-        return null;
-      }
-    })();
-    if (textBlocks !== null) writeFile(base + OUTPUT.text, textBlocks, output);
+    try {
+      writeFile(base + OUTPUT.text, joinTextBlocks(emitText(result.program)), output);
+    } catch (error) {
+      fs.rmSync(base + OUTPUT.text, { force: true });
+      output.err(TEXT.warning(TEXT.noText(error instanceof Error ? error.message : String(error))));
+    }
     writeFile(base + OUTPUT.sourceMap, JSON.stringify(result.sourceMap, null, JSON_INDENT), output);
     const into = lastValue(parsed, FLAG.into);
     if (into !== null) writeFile(base + OUTPUT.map, appendToMap(fs.readFileSync(into, FILE_ENCODING), xml), output);

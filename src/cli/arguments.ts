@@ -1,4 +1,4 @@
-import { FLAG, VALUE_FLAGS } from './keys.ts';
+import { FLAG, FLAG_MARK, VALUE_FLAGS } from './keys.ts';
 import { TEXT } from './text.ts';
 
 export type Arguments = { files: string[]; values: Map<string, string[]>; flags: Set<string> };
@@ -16,6 +16,8 @@ export function parseArguments(list: readonly string[]): Arguments {
       position += 1;
     } else if (Object.values<string>(FLAG).includes(argument)) {
       parsed.flags.add(argument);
+    } else if (argument.startsWith(FLAG_MARK)) {
+      throw new UsageError(TEXT.unknownFlag(argument));
     } else {
       parsed.files.push(argument);
     }

@@ -36,5 +36,19 @@ describe('compile CLI', () => {
     assert.equal(main([], output), 1);
     assert.match(lines.err[0] ?? '', /No input file/);
     assert.equal(main(['x.pasm', '--guard', '0'], output), 1);
+    assert.equal(main(['x.pasm', '--noguard'], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /Unknown option --noguard/);
+  });
+
+  it('removes an old text file when the new program cannot be written as text', () => {
+    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'ptc-'));
+    const source = path.join(folder, 'c.pasm');
+    const { lines, output } = capture();
+    fs.writeFileSync(source, 'start:\n    say "v1"\n');
+    assert.equal(main([source, '--out', folder], output), 0);
+    fs.writeFileSync(source, 'start:\n    say "v2\\nline"\n');
+    assert.equal(main([source, '--out', folder], output), 0);
+    assert.equal(fs.existsSync(path.join(folder, 'c.txt')), false);
+    assert.ok(lines.err.some((line) => line.includes('no trigger text written')));
   });
 });
