@@ -4,9 +4,11 @@ import { createNames, CompileError } from '../compiler/names.ts';
 import type { Declaration, SourceFile } from './ast.ts';
 import { parseSource } from './parser.ts';
 import { generate } from './codegen.ts';
+import { checkSecrets, foldConstants } from './comptime.ts';
+import type { Folded } from './comptime.ts';
 import { SourceError } from './lexer.ts';
 import { TEXT } from './text.ts';
-import { directoryOf, relativePath, resolvePath } from './file-paths.ts';
+import { directoryOf, importTarget, isStandardLibrary, relativePath, resolvePath } from './file-paths.ts';
 
 export type SourceOrigin = { file: string; read: (file: string) => string };
 
@@ -17,7 +19,7 @@ function loadFiles(source: string, origin: SourceOrigin | null): SourceFile {
     const parsed = parseSource(text, label);
     for (const entry of parsed.imports) {
       if (origin === null || file === null) throw new SourceError(entry.location.line, TEXT.importNeedsFile, label);
-      const resolved = resolvePath(directoryOf(file), entry.path);
+      const resolved = importTarget(directoryOf(file), entry.path);
       if (seen.has(resolved)) continue;
       seen.add(resolved);
       let imported: string;
@@ -26,7 +28,7 @@ function loadFiles(source: string, origin: SourceOrigin | null): SourceFile {
       } catch {
         throw new SourceError(entry.location.line, TEXT.cannotImport(entry.path), label);
       }
-      visit(imported, resolved, relativePath(directoryOf(origin.file), resolved));
+      visit(imported, resolved, isStandardLibrary(resolved) ? resolved : relativePath(directoryOf(origin.file), resolved));
     }
     declarations.push(...parsed.declarations);
   };
@@ -46,5 +48,23 @@ export function compileSource(source: string, prefix: string, options: Partial<C
     throw error;
   }
   const merged: CompileOptions = { ...DEFAULT_OPTIONS, ...options };
-  return compileModule(generate(file, names, { protectNumberText: merged.protectNumberText && merged.target !== 'pcode', directIndex: merged.directIndex || merged.target === 'pcode' }), names, merged);
+  let folded: Folded;
+  try {
+    folded = foldConstants(file, merged.environment);
+  } catch (error) {
+    if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
+    throw error;
+  }
+  const generateOptions = {
+    protectNumberText: merged.protectNumberText && merged.target !== 'pcode', directIndex: merged.directIndex || merged.target === 'pcode', compileTimeFunctions: folded.compileTimeFunctions,
+  };
+  const result = compileModule(generate(folded.file, names, generateOptions), names, merged);
+  const lineOf = (uid: string, position: number): number | null => result.sourceMap.find((entry) => entry.uid === uid)?.lines[position] ?? null;
+  checkSecrets(folded.secrets, [
+    ...result.program.triggers.flatMap((trigger) => trigger.actions.flatMap((action, position) => [action.targetA, action.targetB].map((text) => ({
+      text, where: TEXT.leakPlace(trigger.uid, position + 1, lineOf(trigger.uid, position)),
+    })))),
+    ...result.program.timers.map((timer) => ({ text: timer.uid, where: TEXT.leakTimer(timer.uid) })),
+  ]);
+  return result;
 }

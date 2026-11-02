@@ -1,7 +1,7 @@
 import type { Declaration, Expression, Import, Location, MatchArm, ObjectTree, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
 import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
-import { COMPOUND_ASSIGNMENTS, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
+import { COMPOUND_ASSIGNMENTS, CONTEXTUAL, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
 import { isObjectKeyword } from '../objects/objects.ts';
 import { VALUE_GROUP_LIST, valueGroup } from '../opcodes/values.ts';
 
@@ -93,12 +93,14 @@ class Parser {
   private declaration(): Declaration {
     const location = this.location();
     if (this.accept(KEYWORD.var)) return this.variableDeclaration(location, false);
+    const secret = this.current.kind === 'identifier' && this.current.text === CONTEXTUAL.secret && this.peek(1).kind === 'keyword' && this.peek(1).text === KEYWORD.const;
+    if (secret) this.next();
     if (this.accept(KEYWORD.const)) {
       const name = this.identifier();
       this.expect(PUNCTUATOR.assign);
       const value = this.expression();
       this.expect(PUNCTUATOR.semicolon);
-      return { kind: 'const', name, value, location };
+      return { kind: 'const', name, value, secret, location };
     }
     if (this.accept(KEYWORD.extern)) {
       const name = this.identifier();

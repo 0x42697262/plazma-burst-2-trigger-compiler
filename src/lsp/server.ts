@@ -8,6 +8,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { complete, definition, diagnose, diagnoseAssembly, hover, symbols } from '../service/service.ts';
 import type { CompletionKind, ServiceDiagnostic, SymbolKind as ServiceSymbolKind } from '../service/service.ts';
 import { ASSEMBLY_EXTENSION, FILE_ENCODING, SERVER_NAME, TRIGGER_CHARACTERS } from './keys.ts';
+import { sourcePath } from '../cli/sources.ts';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -15,10 +16,10 @@ const documents = new TextDocuments(TextDocument);
 const pathOf = (uri: string): string => fileURLToPath(uri);
 
 const read = (file: string): string | null => {
-  const open = documents.get(pathToFileURL(file).href);
+  const open = documents.get(pathToFileURL(sourcePath(file)).href);
   if (open) return open.getText();
   try {
-    return fs.readFileSync(file, FILE_ENCODING);
+    return fs.readFileSync(sourcePath(file), FILE_ENCODING);
   } catch {
     return null;
   }
@@ -56,7 +57,7 @@ const toDiagnostic = (document: TextDocument, entry: ServiceDiagnostic): Diagnos
 
 const validate = (document: TextDocument): void => {
   const file = pathOf(document.uri);
-  const found = file.endsWith(ASSEMBLY_EXTENSION) ? diagnoseAssembly(document.getText()) : diagnose(document.getText(), file, read);
+  const found = file.endsWith(ASSEMBLY_EXTENSION) ? diagnoseAssembly(document.getText()) : diagnose(document.getText(), file, read, { environment: process.env });
   void connection.sendDiagnostics({ uri: document.uri, diagnostics: found.map((entry) => toDiagnostic(document, entry)) });
 };
 

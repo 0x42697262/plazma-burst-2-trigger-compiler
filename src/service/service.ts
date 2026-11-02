@@ -3,8 +3,8 @@ import { compileAssembly } from '../compiler/assemble.ts';
 import type { CompileOptions } from '../compiler/compile.ts';
 import { tokenize } from '../lang/lexer.ts';
 import type { Token } from '../lang/lexer.ts';
-import { BUILTIN, KEYWORD, KEYWORDS, PUNCTUATOR } from '../lang/keys.ts';
-import { directoryOf, resolvePath } from '../lang/file-paths.ts';
+import { BUILTIN, COMPILE_TIME_BUILTIN, CONTEXTUAL, KEYWORD, KEYWORDS, PUNCTUATOR } from '../lang/keys.ts';
+import { directoryOf, importTarget, isStandardLibrary } from '../lang/file-paths.ts';
 import { OPCODES, opcodeByName, opcodeByNumber, textName } from '../opcodes/table.ts';
 import { VALUE_GROUP_LIST, valueGroup } from '../opcodes/values.ts';
 import { OBJECT_KINDS } from '../objects/keys.ts';
@@ -95,7 +95,7 @@ function importedSources(source: string, file: string, read: SourceReader): { fi
   const result: { file: string; source: string }[] = [];
   const visit = (text: string, from: string): void => {
     for (const entry of importsOf(text)) {
-      const target = resolvePath(directoryOf(from), entry.path);
+      const target = importTarget(directoryOf(from), entry.path);
       if (seen.has(target)) continue;
       seen.add(target);
       const imported = read(target);
@@ -122,8 +122,8 @@ export function diagnoseAssembly(source: string, options: Partial<CompileOptions
 
 export function diagnose(source: string, file: string, read: SourceReader, options: Partial<CompileOptions> = {}): ServiceDiagnostic[] {
   const importLine = (label: string): number => {
-    const wanted = resolvePath(directoryOf(file), label);
-    return importsOf(source).find((entry) => resolvePath(directoryOf(file), entry.path) === wanted)?.line ?? 0;
+    const wanted = isStandardLibrary(label) ? label : importTarget(directoryOf(file), label);
+    return importsOf(source).find((entry) => importTarget(directoryOf(file), entry.path) === wanted)?.line ?? 0;
   };
   const toDiagnostic = (message: string, severity: Severity): ServiceDiagnostic => {
     const match = DIAGNOSTIC_LINE.exec(message);
@@ -161,7 +161,7 @@ const precedingWord = (text: string, before: number): string | null => {
   return start < before - 1 ? text.slice(start, before - 1) : null;
 };
 
-const BUILTIN_NAMES: readonly string[] = Object.values(BUILTIN);
+const BUILTIN_NAMES: readonly string[] = [...Object.values(BUILTIN), ...Object.values(COMPILE_TIME_BUILTIN)];
 
 export function complete(source: string, position: Position, file: string, read: SourceReader): ServiceCompletion[] {
   const before = lineText(source, position.line).slice(0, position.column);
@@ -179,7 +179,7 @@ export function complete(source: string, position: Position, file: string, read:
     });
   }
   const items: ServiceCompletion[] = [];
-  for (const keyword of KEYWORDS) items.push({ label: keyword, kind: COMPLETION_KIND.keyword, detail: '', documentation: TEXT.keywords[keyword] ?? '', insertText: keyword });
+  for (const keyword of [...KEYWORDS, ...Object.values(CONTEXTUAL)]) items.push({ label: keyword, kind: COMPLETION_KIND.keyword, detail: '', documentation: TEXT.keywords[keyword] ?? '', insertText: keyword });
   for (const name of BUILTIN_NAMES) {
     const [signature, description] = TEXT.builtins[name] ?? [name, ''];
     items.push({ label: name, kind: COMPLETION_KIND.function, detail: signature, documentation: description, insertText: name });

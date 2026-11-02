@@ -20,9 +20,11 @@ import type { Trigger } from '../program/types.ts';
 
 export type VarSyncMark = 'add' | 'present' | 'off';
 
-export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[]; varSync: VarSyncMark; protectNumberText: boolean; directIndex: boolean; target: Target };
+export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[]; varSync: VarSyncMark; protectNumberText: boolean; directIndex: boolean; target: Target;
+  environment: Readonly<Record<string, string | undefined>>;
+};
 
-export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add', protectNumberText: true, directIndex: false, target: DEFAULT_TARGET });
+export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add', protectNumberText: true, directIndex: false, target: DEFAULT_TARGET, environment: {} });
 
 export type CompileResult = {
   program: Program;

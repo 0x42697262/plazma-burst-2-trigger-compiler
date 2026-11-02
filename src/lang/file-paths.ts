@@ -1,4 +1,4 @@
-import { CURRENT_SEGMENT, PARENT_SEGMENT, PATH_SEPARATOR } from './keys.ts';
+import { CURRENT_SEGMENT, PARENT_SEGMENT, PATH_SEPARATOR, STD_IMPORT, STD_SCHEME } from './keys.ts';
 
 const segmentsOf = (file: string): string[] => file.split(PATH_SEPARATOR);
 
@@ -26,3 +26,8 @@ export function relativePath(fromDirectory: string, to: string): string {
   while (shared < from.length && shared < target.length && from[shared] === target[shared]) shared += 1;
   return [...from.slice(shared).map(() => PARENT_SEGMENT), ...target.slice(shared)].join(PATH_SEPARATOR);
 }
+
+export const isStandardLibrary = (file: string): boolean => file.startsWith(STD_SCHEME);
+
+export const importTarget = (directory: string, importPath: string): string =>
+  (importPath.startsWith(STD_IMPORT) ? `${STD_SCHEME}${importPath.slice(STD_IMPORT.length)}` : resolvePath(directory, importPath));

@@ -1,0 +1,37 @@
+// Standard library: hash(text) turns text into "a-b-c", three numbers that cannot be turned back
+// into the text. Use it to check a password without writing the password into the map:
+//
+//   import "std/hash.ptc";
+//   secret const PASSWORD = env("MAP_PASSWORD");
+//   const PASSWORD_HASH = hash(PASSWORD);
+//   on chat { if (hash(chatText()) == PASSWORD_HASH) { say("welcome"); } }
+//
+// Letters, digits, spaces and the signs !#$%'()*+,-./:;=?@[\]^_`{|}~ count as themselves.
+// & < > " and characters outside this list all count as one same character, so leave them out
+// of passwords. Each character costs about 30 actions.
+
+const HASH_ALPHABET = " !#$%'()*+,-./0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz\{|\}~";
+var hashCodes[];
+var hashReady = 0;
+
+function hashSetup() {
+  if (hashReady == 1) { return; }
+  for (let i = 0; i < len(HASH_ALPHABET); i += 1) { hashCodes[charAt(HASH_ALPHABET, i)] = i + 1; }
+  hashReady = 1;
+}
+
+function hash(text) {
+  hashSetup();
+  let first = 7;
+  let second = 11;
+  let third = 13;
+  for (let i = 0; i < len(text); i += 1) {
+    let character = charAt(text, i);
+    let code = 0;
+    if (contains(HASH_ALPHABET, character)) { code = hashCodes[character]; }
+    first = (first * 31 + code) % 67108859;
+    second = (second * 37 + code) % 67108837;
+    third = (third * 41 + code) % 67108819;
+  }
+  return "{first}-{second}-{third}";
+}

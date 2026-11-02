@@ -7,6 +7,12 @@ export const KEYWORD = Object.freeze({
   if: 'if', else: 'else', while: 'while', for: 'for', player: 'player', break: 'break', continue: 'continue', return: 'return',
   true: 'true', false: 'false', wait: 'wait', import: 'import', match: 'match',
 } as const);
+export const CONTEXTUAL = Object.freeze({ secret: 'secret' } as const);
+export const COMPILE_TIME_BUILTIN = Object.freeze({ env: 'env' } as const);
+export const STD_IMPORT = 'std/';
+export const STD_SCHEME = 'std:';
+export const COMPILE_TIME_PREFIX = 'comptime';
+export const COMPILE_TIME_RESULT = 'comptimeResult';
 export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat' } as const);
 export const PUNCTUATORS: readonly string[] = Object.freeze([
   '..=', '+=', '-=', '*=', '/=', '%=', '=>', '==', '!=', '<=', '>=', '&&', '||', '..',

@@ -37,7 +37,7 @@ export type MatchArm = { patterns: Expression[] | null; body: Statement[]; locat
 
 export type Declaration =
   | { kind: 'var'; name: string; array: boolean; value: Expression | null; exported: boolean; location: Location }
-  | { kind: 'const'; name: string; value: Expression; location: Location }
+  | { kind: 'const'; name: string; value: Expression; secret: boolean; location: Location }
   | { kind: 'extern'; name: string; hostName: string; location: Location }
   | { kind: 'object'; keyword: string; name: string; uid: string; x: number | null; y: number | null; tree: ObjectTree[] | null; location: Location }
   | { kind: 'function'; name: string; params: string[]; body: Statement[]; exported: boolean; location: Location }

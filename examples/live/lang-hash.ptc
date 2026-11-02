@@ -1,0 +1,17 @@
+// Compile-time constants and std/hash.ptc: the hash the compiler computes equals the game's.
+import "std/hash.ptc";
+
+const PLAIN = hash("Open Sesame 42!");
+const SIGNS = hash("a~b[c]d\{e\}f\\g`h|i #$%'()*+,-./:;=?@^_");
+const SQUARES = "{3 * 3} {4 * 4}";
+var plainInGame = "";
+var signsInGame = "";
+var same = 0;
+var squares = SQUARES;
+
+on start {
+  plainInGame = hash("Open Sesame 42!");
+  signsInGame = hash("a~b[c]d\{e\}f\\g`h|i #$%'()*+,-./:;=?@^_");
+  if (plainInGame == PLAIN) { same += 1; }
+  if (signsInGame == SIGNS) { same += 1; }
+}

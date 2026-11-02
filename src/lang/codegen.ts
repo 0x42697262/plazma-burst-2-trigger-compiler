@@ -25,7 +25,7 @@ import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
 import { callGraph, reachable, usedFunctions, writtenNames } from './calls.ts';
 
-export type GenerateOptions = { protectNumberText: boolean; directIndex: boolean };
+export type GenerateOptions = { protectNumberText: boolean; directIndex: boolean; compileTimeFunctions?: ReadonlySet<string> };
 
 const DEFAULT_GENERATE: GenerateOptions = Object.freeze({ protectNumberText: true, directIndex: false });
 
@@ -170,6 +170,7 @@ export class Generator {
   private readonly names: Names;
   private readonly protectNumberText: boolean;
   private readonly directIndex: boolean;
+  private readonly compileTimeFunctions: ReadonlySet<string>;
   private readonly textConstants = new Map<string, string>();
   private readonly globals = new Map<string, SymbolEntry>();
   private readonly functions = new Map<string, FunctionInfo>();
@@ -190,6 +191,7 @@ export class Generator {
     this.names = names;
     this.protectNumberText = options.protectNumberText;
     this.directIndex = options.directIndex;
+    this.compileTimeFunctions = options.compileTimeFunctions ?? new Set();
     this.frame = new Frame(names, EMPTY_TEXT, false);
     const graph = callGraph(file);
     this.reach = reachable(graph);
@@ -278,7 +280,7 @@ export class Generator {
       if (declaration.kind !== 'function') continue;
       const section = this.functionSection(declaration);
       if (this.used.has(declaration.name)) sections.push(section);
-      else if (declaration.location.file === undefined) this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
+      else if (declaration.location.file === undefined && !this.compileTimeFunctions.has(declaration.name)) this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
     this.setTextConstants(sections);
     return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects, exports: this.exports };
