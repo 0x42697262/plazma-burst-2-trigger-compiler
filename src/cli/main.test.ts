@@ -1,9 +1,19 @@
-import { describe, it } from 'node:test';
+import { after, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { main, prefixFromFile } from './main.ts';
+
+const folders: string[] = [];
+const tempFolder = (): string => {
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'ptc-test-'));
+  folders.push(folder);
+  return folder;
+};
+after(() => {
+  for (const folder of folders) fs.rmSync(folder, { recursive: true, force: true });
+});
 
 const capture = () => {
   const lines = { out: [] as string[], err: [] as string[] };
@@ -18,7 +28,7 @@ describe('compile CLI', () => {
   });
 
   it('writes XML, text, source map and the merged map, and runs the simulator', () => {
-    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'ptc-'));
+    const folder = tempFolder();
     const source = path.join(folder, 'demo.pasm');
     const map = path.join(folder, 'host.xml');
     fs.writeFileSync(source, 'start:\n    set $x, 2\n    say "x={$x}"\n');
@@ -43,7 +53,7 @@ describe('compile CLI', () => {
   });
 
   it('places triggers with --at, checks --frames and notes missing timers in the text', () => {
-    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'ptc-'));
+    const folder = tempFolder();
     const source = path.join(folder, 'p.pasm');
     fs.writeFileSync(source, 'start:\n    ret\n');
     const { lines, output } = capture();
@@ -56,7 +66,7 @@ describe('compile CLI', () => {
   });
 
   it('removes an old text file when the new program cannot be written as text', () => {
-    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'ptc-'));
+    const folder = tempFolder();
     const source = path.join(folder, 'c.pasm');
     const { lines, output } = capture();
     fs.writeFileSync(source, 'start:\n    say "v1"\n');
