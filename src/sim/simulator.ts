@@ -295,7 +295,7 @@ export class Simulation {
         vars[nameA] = this.playerName(toIndex(valueB));
         break;
       case OPCODE.playerNameBySlotVariable:
-        vars[nameA] = this.playerName(vars[nameB] as number);
+        vars[nameA] = this.playerName(toNumber(vars[nameB]));
         break;
       case OPCODE.loadIndirect:
         vars[nameA] = vars[vars[nameB] as string];
@@ -306,6 +306,9 @@ export class Simulation {
         break;
       case OPCODE.replaceInVariable:
         vars[nameA] = replaceVariables(vars[nameB], vars);
+        break;
+      case OPCODE.randomFloatVariable:
+        vars[nameA] = this.random() * toFloat(vars[nameB]);
         break;
       case OPCODE.storeIndirect:
         vars[vars[nameA] as string] = vars[nameB];

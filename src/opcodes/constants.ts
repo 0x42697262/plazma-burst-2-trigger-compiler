@@ -44,6 +44,7 @@ export const OPCODE = Object.freeze({
   replaceTemplate: 295,
   replaceInVariable: 325,
   replaceInValue: 326,
+  randomFloatVariable: 327,
   storeIndirect: 342,
   timeSinceStart: 348,
   splitByValue: 349,
