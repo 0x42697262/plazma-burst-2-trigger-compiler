@@ -502,12 +502,16 @@ export class Generator {
       return;
     }
     const array = this.arrayOf(target.array, location);
-    if (isLiteralExpression(target.index)) {
-      const element = elementName(this.names, array.base, normalizeIndex(literalText(target.index)));
+    const fixedIndex = this.staticIndex(target.index);
+    if (fixedIndex !== null) {
+      const element = elementName(this.names, array.base, fixedIndex);
       const elementExpression: Expression = { kind: 'index', array: target.array, index: target.index, location };
-      this.into(statement.operator
+      const value: Expression = statement.operator
         ? { kind: 'binary', operator: statement.operator, left: elementExpression, right: statement.value, location }
-        : statement.value, element);
+        : statement.value;
+      const work = this.workTarget(element, this.readsArrayByVariable(value, target.array) || hasCall(value));
+      this.into(value, work);
+      if (work !== element) this.act(OPCODE.copyVariable, element, work);
       return;
     }
     const indexName = this.stableVariable(target.index, hasCall(statement.value));
@@ -533,13 +537,26 @@ export class Generator {
     return this.asVariable(value);
   }
 
-  private storeElement(base: string, index: Expression, source: string): void {
-    if (isLiteralExpression(index)) {
-      this.act(OPCODE.copyVariable, elementName(this.names, base, normalizeIndex(literalText(index))), source);
-      return;
+  private staticIndex(index: Expression): string | null {
+    const text = this.compileTimeText(index);
+    return text === null ? null : normalizeIndex(text);
+  }
+
+  private readsArrayByVariable(expression: Expression, array: string): boolean {
+    switch (expression.kind) {
+      case 'index':
+        return (expression.array === array && this.staticIndex(expression.index) === null) || this.readsArrayByVariable(expression.index, array);
+      case 'call':
+        return expression.args.some((argument) => this.readsArrayByVariable(argument, array));
+      case 'unary':
+        return this.readsArrayByVariable(expression.operand, array);
+      case 'binary':
+        return this.readsArrayByVariable(expression.left, array) || this.readsArrayByVariable(expression.right, array);
+      case 'string':
+        return expression.parts.some((part) => part.kind === 'expression' && this.readsArrayByVariable(part.expression, array));
+      default:
+        return false;
     }
-    const address = this.addressOf(base, index);
-    this.act(OPCODE.storeIndirect, address, source);
   }
 
   private addressOf(base: string, index: Expression): string {
@@ -561,7 +578,8 @@ export class Generator {
       }
       case 'index': {
         const array = this.arrayOf(expression.array, expression.location);
-        if (isLiteralExpression(expression.index)) return variable(elementName(this.names, array.base, normalizeIndex(literalText(expression.index))));
+        const fixedIndex = this.staticIndex(expression.index);
+        if (fixedIndex !== null) return variable(elementName(this.names, array.base, fixedIndex));
         break;
       }
       case 'call':
@@ -607,12 +625,14 @@ export class Generator {
         const entry = this.frame.lookup(expression.name) ?? this.globals.get(expression.name);
         return entry?.kind === 'variable' && entry.name === name;
       }
-      case 'index':
-        if (isLiteralExpression(expression.index)) {
+      case 'index': {
+        const fixedIndex = this.staticIndex(expression.index);
+        if (fixedIndex !== null) {
           const entry = this.frame.lookup(expression.array) ?? this.globals.get(expression.array);
-          if (entry?.kind === 'array' && elementName(this.names, entry.base, normalizeIndex(literalText(expression.index))) === name) return true;
+          if (entry?.kind === 'array' && elementName(this.names, entry.base, fixedIndex) === name) return true;
         }
         return this.mentions(expression.index, name);
+      }
       case 'call':
         return expression.args.some((argument) => this.mentions(argument, name));
       case 'unary':
@@ -638,7 +658,7 @@ export class Generator {
         return;
       case 'index': {
         const array = this.arrayOf(expression.array, expression.location);
-        if (isLiteralExpression(expression.index)) {
+        if (this.staticIndex(expression.index) !== null) {
           this.move(this.value(expression), destination);
           return;
         }
@@ -743,7 +763,7 @@ export class Generator {
       return;
     }
     const startsWithDestination = first.kind === 'name' && this.mentions(first, destination);
-    const risky = rest.some((part) => this.mentions(part, destination) || hasCall(part)) || (!startsWithDestination && this.mentions(first, destination));
+    const risky = merged.some(hasCall) || rest.some((part) => this.mentions(part, destination)) || (!startsWithDestination && this.mentions(first, destination));
     const work = this.workTarget(destination, risky);
     let remaining = merged;
     if (startsWithDestination && work === destination) {
@@ -918,6 +938,7 @@ export class Generator {
       case BUILTIN.floor:
       case BUILTIN.round:
         this.into(first(), destination);
+        if (!isNumeric(first())) this.act(OPCODE.addValue, destination, FALSE_TEXT);
         this.act(name === BUILTIN.floor ? OPCODE.floor : OPCODE.round, destination);
         return;
       case BUILTIN.number:

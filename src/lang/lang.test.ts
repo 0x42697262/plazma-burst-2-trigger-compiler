@@ -366,6 +366,37 @@ on start { list[0] = "4x"; let k = 0; list[k] *= 2; }
   });
 });
 
+describe('language: review round 2', () => {
+  it('does not write a fixed element before reading it through a variable index', () => {
+    const { get } = run(`
+var list[]; var k = 0; var a = ""; var b = ""; var d = "";
+on start {
+  list[0] = 10; list[0] = 1 - list[k]; a = list[0];
+  list[0] = "p"; list[0] = "a" .. list[k]; b = list[0];
+  list[0] = 3; list[0] = 2 * list[k] + list[k]; d = list[0];
+}
+`);
+    assert.deepEqual(['a', 'b', 'd'].map(get), [-9, 'ap', 9]);
+  });
+
+  it('runs a call at the start of a join before clearing the destination', () => {
+    const { get } = run(`
+var x = "old"; var y = "old"; var list[]; var c = "";
+function fx() { return x; }
+function fy() { return y; }
+function g() { return list[0]; }
+on start { x = "{fx()}"; y = fy() .. 1 .. 2; list[0] = "q"; list[0] = g() .. "!"; c = list[0]; }
+`);
+    assert.deepEqual(['x', 'y', 'c'].map(get), ['old', 'old12', 'q!']);
+  });
+
+  it('reads text like parseFloat in floor and round, and uses constant indexes directly', () => {
+    const { get, program } = run('const I = 1;\nvar list[];\nvar f = floor("4.7x");\nvar r = round("2.5y");\non start { list[I] = 5; }');
+    assert.deepEqual(['f', 'r', 'list[1]'].map(get), [4, 3, 5]);
+    assert.ok(!program.triggers.some((trigger) => trigger.actions.some((action) => action.opcode === 326)));
+  });
+});
+
 describe('language: errors', () => {
   const error = (source: string, pattern: RegExp) => assert.throws(() => compileSource(source, 't'), pattern);
 
