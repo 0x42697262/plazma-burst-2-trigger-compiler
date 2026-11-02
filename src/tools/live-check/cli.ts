@@ -11,7 +11,7 @@ import { prefixFromFile } from '../../cli/main.ts';
 import { createNames } from '../../compiler/names.ts';
 import { CASES_DIRECTORIES, GAME_NAMES_FILE, REPOSITORY_ROOT, MAP_FILE, MAP_NAME, SANDBOX } from './paths.ts';
 import { prepareSandbox } from './sandbox.ts';
-import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
+import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, DIRECT_INDEX_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
 import {
   CLICK_ATTEMPTS, CLICK_PAUSE, CONSOLE_TIMEOUT, DEBUG_PORT, ENTER_KEY_CODE, FIRST_USER_ARGUMENT, GAMING_TIMEOUT, LAUNCH_TIMEOUT, MENU_TIMEOUT, MILLISECONDS,
   RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_PLAYERS, SPACE_KEY_CODE,
@@ -27,7 +27,7 @@ const print = (line: string): void => {
   process.stdout.write(line + TEXT.lineEnd);
 };
 
-function loadCases(): Case[] {
+function loadCases(directIndex: boolean): Case[] {
   const files = CASES_DIRECTORIES.flatMap((folder) => fs.readdirSync(folder)
     .filter((file) => CASE_EXTENSIONS.includes(path.extname(file))).sort()
     .map((file) => path.join(folder, file)));
@@ -35,7 +35,7 @@ function loadCases(): Case[] {
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(file);
-    const result = frontEnd.compile(source, prefix, {}, file);
+    const result = frontEnd.compile(source, prefix, { directIndex }, file);
     const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS });
     simulation.tick(SIMULATED_FRAMES);
     return { name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), simulated: encodeVariables(simulation.variables), errors: simulation.errors };
@@ -96,7 +96,7 @@ async function readGameVariables(variablesName: string): Promise<Snapshot> {
 
 async function main(): Promise<number> {
   const flags = process.argv.slice(FIRST_USER_ARGUMENT);
-  const cases = loadCases();
+  const cases = loadCases(flags.includes(DIRECT_INDEX_FLAG));
   prepareSandbox(flags.includes(REBUILD_FLAG), print);
   const map = cases.reduce((combined, entry) => appendToMap(combined, entry.xml), BASE_MAP);
   fs.writeFileSync(MAP_FILE, map);

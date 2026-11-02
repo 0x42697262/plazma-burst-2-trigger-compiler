@@ -30,3 +30,4 @@ export const SIMULATE_FLAG = '--simulate-only';
 export const NPM = 'npm';
 export const BUILD_COMMAND: string[] = ['run', 'build'];
 export const REBUILD_FLAG = '--rebuild';
+export const DIRECT_INDEX_FLAG = '--direct-index';
