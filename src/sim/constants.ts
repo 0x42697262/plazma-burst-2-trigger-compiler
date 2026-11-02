@@ -1,0 +1,11 @@
+export const MAX_FRAMES = 2048;
+export const DEFAULT_MAX_STEPS = 1000000;
+export const NOT_FOUND = -1;
+export const UNLIMITED = -1;
+export const DECIMAL = 10;
+export const RANDOM_SEED = 12345;
+export const RANDOM_MULTIPLIER = 1103515245;
+export const RANDOM_INCREMENT = 12345;
+export const RANDOM_MODULUS = 2147483648;
+export const TRUE_FLAG = 1;
+export const FALSE_FLAG = 0;
