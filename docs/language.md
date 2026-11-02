@@ -93,8 +93,8 @@ result is silently wrong. A function that nothing calls (and is not exported) is
 ## Timing
 
 `wait(frames)` stops the block and continues `frames` or `frames - 1` frames later (a timer per
-`wait`; the game ticks timers in element order, so a wait started by an earlier timer in the same
-frame is counted once at once). A `wait` in one `on start` block also delays the later ones. It
+`wait`; the game ticks timers in element order, so when a `wait` starts while an earlier timer
+runs, its own timer already counts that frame). A `wait` in one `on start` block also delays the later ones. It
 works only in `on` and `every` blocks, not in functions. If the block runs again while it waits
 (an `every` shorter than the wait, a second join), the wait starts over and the first run does
 not continue. Everything else in a block runs in one
