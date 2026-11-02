@@ -5,7 +5,8 @@ import { emitText, joinTextBlocks } from '../../emit/trigger-text-emitter.ts';
 import { appendToMap } from '../../emit/merge.ts';
 import { HELLO } from '../../samples/hello.fixture.ts';
 import { GAME_MAPS_DIRECTORY, MAP_FILE, OUTPUT_DIRECTORY, TEXT_FILE, XML_FILE } from './paths.ts';
-import { BASE_MAP, FILE_ENCODING, GAME_MAP_FLAG, HELP_FLAG, INTO_FLAG } from './keys.ts';
+import { FILE_ENCODING, GAME_MAP_FLAG, HELP_FLAG, INTO_FLAG } from './keys.ts';
+import { BASE_MAP } from '../../emit/keys.ts';
 import { FIRST_USER_ARGUMENT, FLAG_VALUE_OFFSET } from './constants.ts';
 import { TEXT } from './text.ts';
 

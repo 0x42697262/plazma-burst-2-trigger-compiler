@@ -1,0 +1,16 @@
+export const DEBUG_PORT = 9333;
+export const POLL_MILLISECONDS = 500;
+export const LAUNCH_TIMEOUT = 60000;
+export const CONSOLE_TIMEOUT = 90000;
+export const MENU_TIMEOUT = 60000;
+export const GAMING_TIMEOUT = 60000;
+export const SETTLE_MILLISECONDS = 2000;
+export const CLICK_ATTEMPTS = 10;
+export const CLICK_PAUSE = 2000;
+export const SPACE_KEY_CODE = 32;
+export const RUN_SECONDS = 8;
+export const FRAMES_PER_SECOND = 30;
+export const SIMULATED_FRAMES = 200;
+export const MILLISECONDS = 1000;
+export const SOCKET_OPEN = 1;
+export const FIRST_USER_ARGUMENT = 2;

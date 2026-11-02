@@ -10,6 +10,7 @@ export type Names = {
   triggerUid: (label: string) => string;
   freshLabel: (hint: string) => string;
   continuationLabel: (label: string, part: number) => string;
+  ownsVariable: (name: string) => boolean;
 };
 
 const isInternal = (name: string): boolean => name.startsWith(INTERNAL_MARK);
@@ -28,5 +29,6 @@ export function createNames(prefix: string): Names {
       return `${INTERNAL_MARK}${hint}${counter}`;
     },
     continuationLabel: (label, part) => `${label}${CONTINUATION_SEPARATOR}${part}`,
+    ownsVariable: (name) => [USER_SEPARATOR, INTERNAL_MARK].some((mark) => name.startsWith(`${VARIABLE_MARK}${prefix}${mark}`)),
   };
 }

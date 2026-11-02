@@ -11,6 +11,7 @@
     "snapshot-opcodes": "node src/tools/snapshot-opcodes/cli.ts",
     "compile": "node src/cli/cli.ts",
     "emit-sample": "node src/tools/emit-sample/cli.ts",
+    "live-check": "node src/tools/live-check/cli.ts",
     "check": "tsc --noEmit -p .",
     "lint": "eslint --max-warnings 0 src",
     "test": "node --test 'src/**/*.test.ts'",
