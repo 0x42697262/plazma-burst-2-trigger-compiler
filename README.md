@@ -90,6 +90,7 @@ simulator runs.
 | `--run`, `--frames <n>` | simulate the program for n frames and print variables, chat and errors |
 | `--no-sync-mark` | do not add the Var Sync engine mark that a program with sync actions needs (with `--into`, a map that has one keeps it and gets no second one) |
 | `--no-create` | with `--into`: do not add declared map objects the map lacks; warn instead |
+| `--objects` | without `--into`: add every declared map object to the XML, for a new map (the web page's "objects" box). A map that already has one would get it twice, so the uids are listed |
 | `--replace` | with `--into`: remove this program's old triggers and timers from the map first, to update it in place |
 | `--name-seed <s>` | derive the name prefix from a seed: reproducible, source-independent names. Pair with `--replace` to update a map across renamed builds (a `.build.json` next to the output records the uids) |
 | `--obfuscate`, `--obfuscate-seed <s\|random>` | shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check that turns a changed copy of the map off; about 3× slower ([docs/obfuscation.md](docs/obfuscation.md)) |
