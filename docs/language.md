@@ -50,6 +50,26 @@ Declare each map object the program uses with its kind and uid:
   instead of adding.
 - The kind words are not reserved: `var water = 1;` still works.
 
+## Fixed values
+
+Some places need a value the game reads from the action itself, not from a variable: the color
+of `say`, the count of `drop`, the sync mode, and the number, color or team parameters of
+`action(...)`. There you can write:
+
+- a literal: `say("hi", "#FF0000")`
+- a constant: `const RED = "#FF0000";`
+- a variable that never changes: `var RED = "#FF0000";` or `let size = 450;`, with a fixed value
+  and never assigned again anywhere (not exported, not written by an `action`). The compiler
+  writes its value into the action.
+
+A variable that can change there is a compile error: the game would get the variable's name, not
+its value. Where an action reads a variable (`action(VarAddValue, hits, 10)`), the name is passed
+as before. For text parameters whose role the action list leaves unclear, a changing variable
+passes its name with a warning.
+
+An array index that is fixed this way also picks the element when compiling: `list[i]` with a
+never-changing `i` is as cheap as `list[2]`.
+
 ## Files and visibility
 
 - `import "file.ptc";` pulls in another file's declarations, as if they were written in this one.
@@ -140,11 +160,11 @@ Text escapes: `\" \\ \n \{ \}`.
 
 | Builtin | Gives |
 |---|---|
-| `say(text)` / `say(text, color)` | shows text in the chat; color as in action 42 (a literal or constant) |
+| `say(text)` / `say(text, color)` | shows text in the chat; color 0–4 or `"#rrggbb"`, as in action 42 (a fixed value: see below) |
 | `len(x)` | length of text, or the element count of an array |
 | `contains(text, part)` | 1 or 0 |
 | `charAt(text, i)` | the character at `i` |
-| `drop(text, n)` | text without the first `n` characters (`n` < 0: without the last); `n` must be a whole-number literal or constant |
+| `drop(text, n)` | text without the first `n` characters (`n` < 0: without the last); `n` must be a fixed whole number |
 | `text(x)`, `number(x)` | x as text, x as a number |
 | `floor(x)`, `round(x)`, `random(n)` | `random(n)`: whole number 0 .. n-1 |
 | `slot()`, `initiator()`, `name(slot)`, `time()` | current player slot, player-initiator slot, displayed name, milliseconds since 1970 (a wall clock: compare two readings) |
