@@ -13,6 +13,7 @@ sent anywhere. Files are kept in the browser's local storage.
 - "site editor" (on by default): keeps text like `"007"` as text when the map is saved in the
   website editor (F36 in `docs/game-facts.md`). Untick it for other map editors; same as
   `--no-number-text`.
+- "direct index" (off by default): same as `--direct-index`, for maps with many variables.
 - Several files: `+` adds one (for `import`); an example loads with the files it imports.
 - Compile (Ctrl+Enter): XML, trigger text, and problems. Run (Ctrl+Shift+Enter): the simulator's
   chat lines and variables.

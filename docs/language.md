@@ -241,6 +241,13 @@ named `~<prefix>_list[i]~`, so they can be set and read with any index; an index
 (an unset index makes a different element name), and it is used as text: `list[k]` with `k = "1.0"`
 is not `list[1]`. Arrays are global and cannot be passed as values.
 
+With a changing index, the element name is built at run time. By default one action does it
+(326, which scans every variable name in the map, F9 and F37). `--direct-index` (web page: "direct
+index") builds it from pieces instead: 2 more actions per access, but the cost no longer grows
+with the number of variables, and a host map variable name inside an index cannot be replaced by
+mistake. The same goes for `push`, `pop` and the recursion stack. `charAt` and `for (c of text)`
+still use action 350, which scans either way.
+
 ## Functions
 
 Parameters and locals are game variables of their own (`~<prefix>_f.a~`), so a function's
