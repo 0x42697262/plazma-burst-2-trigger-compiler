@@ -27,9 +27,9 @@ on start {
 | `var list[];` | array (see below) |
 | `const NAME = 5;` | constant: a number, text, `true` or `false`; written into the actions |
 | `extern score;` / `extern s = "host name";` | a variable of the host map, used by its own name |
-| `function f(a, b) { ... }` | function |
+| `function f(a, b) { ... }` | function; builtin names cannot be used |
 | `export function f() { ... }` | function with a stable uid `#<prefix>_f`, for the map's own triggers and regions |
-| `on start { ... }` | runs at map start (a start timer); several blocks run in order |
+| `on start { ... }` | runs at map start (a start timer, before every other timer); several blocks run one after the other, each with its own scope (`return` ends only its block) |
 | `on join { ... }` | runs each time a player joins (action 228) |
 | `every 30 { ... }` | runs every 30 frames (a timer) |
 
@@ -43,27 +43,30 @@ on start {
 
 | Operators | Meaning |
 |---|---|
-| `+ - * / %` | numbers (text is read as a number, like `parseFloat`) |
+| `+ - * / %` | numbers; text is read like `parseFloat` (`"4x"` is 4, `""` is NaN) |
 | `..` | joins text: `"a" .. 1` is `"a1"` |
 | `== !=` | compare as text: `5 == "5"` is true |
-| `< <= > >=` | compare as numbers; text that is no number compares false for `<` and `>` |
+| `< <= > >=` | compare as numbers; with text that is no number `<` and `>` are false, so `<=` and `>=` ("not greater", "not less") are true |
 | `&& \|\| !` | logic with short-circuit |
 | `"x = {x + 1}"` | text with values inside `{ }` |
 
 A condition is false when its value is `0` or empty text. Comparisons used as values give 1 or 0.
+Number literals are written in their shortest form (`5.0` is `5`).
+A variable declared without a value (`var x;`, `let x;`) has no value until set: `x + 1` is NaN,
+`x .. "a"` is `"undefineda"`, and `if (x)` is true.
 
 ## Builtins
 
 | Builtin | Gives |
 |---|---|
-| `say(text)` / `say(text, color)` | shows text in the chat; color as in action 42 |
+| `say(text)` / `say(text, color)` | shows text in the chat; color as in action 42 (a literal or constant) |
 | `len(x)` | length of text, or the element count of an array |
 | `contains(text, part)` | 1 or 0 |
 | `charAt(text, i)` | the character at `i` |
-| `drop(text, n)` | text without the first `n` characters (`n` < 0: without the last); `n` must be a number literal |
+| `drop(text, n)` | text without the first `n` characters (`n` < 0: without the last); `n` must be a whole-number literal or constant |
 | `text(x)`, `number(x)` | x as text, x as a number |
 | `floor(x)`, `round(x)`, `random(n)` | `random(n)`: whole number 0 .. n-1 |
-| `slot()`, `initiator()`, `name(slot)`, `time()` | current player slot, player-initiator slot, displayed name, milliseconds since the game started (the simulator counts frames) |
+| `slot()`, `initiator()`, `name(slot)`, `time()` | current player slot, player-initiator slot, displayed name, milliseconds since 1970 (a wall clock: compare two readings) |
 | `push(list, value)` | adds to the end of an array |
 | `action(op, a, b)` | any action, by number or alias. A name argument gives that variable's game name, `@f` gives function `f`'s uid, text gives itself; `{x}` inside text gives x's game name |
 
@@ -83,7 +86,9 @@ per call, both ways). Calls deeper than 2048 are skipped by the game (F3).
 ## Timing
 
 `wait(frames)` stops the block and continues after that many frames (a timer per `wait`). It
-works only in `on` and `every` blocks, not in functions. Everything else in a block runs in one
+works only in `on` and `every` blocks, not in functions. If the block runs again while it waits
+(an `every` shorter than the wait, a second join), the wait starts over and the first run does
+not continue. Everything else in a block runs in one
 game frame. Each event may jump back at most `--guard` times (default 100000); then its loops stop.
 
 ## Limits
@@ -93,3 +98,6 @@ game frame. Each event may jump back at most `--guard` times (default 100000); t
 - A game variable whose name appears inside a text that is shown, or used with `{ }`, is replaced
   by its value (F9). Avoid short variable names in the host map.
 - Whole numbers written as text load as numbers; `"007"` stays text (F18).
+- The game reads `& < > "` and line breaks in literal text as XML entities (`&amp; &lt; &gt; &quot; &#10;`, F26);
+  `say` shows `< > "` correctly. The compiler warns about such values.
+- An array index is used as text: `list[k]` with `k = "1.0"` is not `list[1]`.

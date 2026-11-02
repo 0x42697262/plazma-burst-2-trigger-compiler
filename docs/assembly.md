@@ -43,7 +43,11 @@ done:
 | `.start label` | where the start timer starts (default: the first label) |
 | `.entry label ...` | labels the map calls itself; they get a stable uid |
 | `.extern #uid ...` | uids of the host map |
-| `.timer name @label delay [calls] [disabled]` | a timer element |
+| `.timer name @label delay [calls] [disabled]` | a timer element (calls default 1, `-1` = unlimited); its name must not be a label |
+
+A raw skip action (`op361`, `op364`, `op365`, `op123`) skips the next action. It may come before
+an action, `jmp`, `call` or `ret`, not before a label, a conditional jump or `add $x, $y`
+(those are several actions).
 
 Every label that is jumped to starts a new trigger. Code longer than 100 actions continues in
 the next trigger; a skip action is never separated from the action it skips.

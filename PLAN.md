@@ -6,7 +6,7 @@ Output, the end goal, both from the same compile:
 1. **XML**: `<trigger …/>` elements a player appends to a downloaded map XML, then loads with the editor's "replace map with XML" (F13).
 2. **Trigger text**: one block per trigger, in the map editor's "Edit trigger as text" format, to copy and paste.
 
-Status: M0–M5 done in code (2026-11-02). `npm run live-check`: 15 of 15 test programs give the same variables in the game and in the simulator. Left: the website-editor checks of M1 (§4), which need the user.
+Status: M0–M5 done in code (2026-11-02). `npm run live-check`: 16 of 16 test programs give the same variables in the game and in the simulator. Left: the website-editor checks of M1 (§4), which need the user.
 
 **New session? Read this file, then `AGENTS.md`, `README.md` and `docs/`, then continue from Status.** Everything learned so far is in here; nothing else carries over.
 
@@ -43,6 +43,9 @@ Each was checked in the game client (`plazma-burst-2/game/scripts/actions.js`, `
 | F23 | A frame starts only if its trigger is enabled and has calls left (-1 = unlimited); calls drop by 1 when a frame ends normally, not when 363 replaces it | runner in `actions.js` | `maxcalls -1` on every compiled trigger |
 | F24 | Timers: each frame, in element order, an enabled timer with calls left adds the game speed to its counter; at counter ≥ delay it resets to 0, drops a call (disabled at 0) and runs its target. 44 resets the counter | `frame2.js` timer loop, case 44 | `wait(n)`: 44 + 25 on a disabled timer, the continuation runs 26 first |
 | F25 | 508 lists no slot in single player, also 60 frames after start; it checks a per-character field against two values | live `lang-players.ptc`; case 508 | `for player` works in multiplayer only |
+| F26 | The game's XML reader copies attribute text as it is, without decoding entities; only ShowText turns `&lt; &gt; &quot;` back into `< > "` for display. A value typed as `a<b&c` in the editor is `a&lt;b&amp;c` (11 characters) in the game | `libs/xml.js` (attribute loop), `libs/tools.js:554` (`$оeoce`); live `entities.pasm` | The simulator loads XML-escaped text; the compiler warns about such values |
+| F27 | 348 gives `Date.now()` (milliseconds since 1970), not time since start | case 348, `flash.js` (`getTimer=()=>Date.now()`) | `time()` is a wall clock |
+| F28 | 185 gives `"Empty"` for an inactive slot; 188 reads `chars[vars[B]]` with no active check (an unknown slot throws, and the frame is dropped) | cases 185/188, `_strings.js` | Simulator matches |
 
 Action numbers: always the client's. The gitbook manual is off by one around 348–365.
 
@@ -74,7 +77,7 @@ Language for the tool: TypeScript on Node (≥ 22.18, runs `.ts` directly), `nod
 1. **Unit + golden files**: parser, lowering, layout, both emitters.
 2. **Simulator**: small interpreter of the trigger runner for the actions we emit (frames, 99 push, 363 replace, skip, template replace). Fast tests without the game.
 3. **Live check**: `npm run live-check` compiles every program in `examples/live/`, appends all of them to one map, runs it in the game, reads the map variables object (`PB2_NAMES.mapVars` from `plazma-burst-2/data/names.js`) through CDP, and compares every variable of every program with the simulator (type and value). `--simulate-only` skips the game.
-4. The simulator must agree with the live check on every test program. Last run: 15 of 15 (2026-11-02).
+4. The simulator must agree with the live check on every test program. Last run: 16 of 16 (2026-11-02).
 
 ---
 
