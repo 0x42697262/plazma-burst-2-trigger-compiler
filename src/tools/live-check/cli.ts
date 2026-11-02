@@ -14,7 +14,7 @@ import { prepareSandbox } from './sandbox.ts';
 import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
 import {
   CLICK_ATTEMPTS, CLICK_PAUSE, CONSOLE_TIMEOUT, DEBUG_PORT, FIRST_USER_ARGUMENT, GAMING_TIMEOUT, LAUNCH_TIMEOUT, MENU_TIMEOUT, MILLISECONDS,
-  RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SPACE_KEY_CODE,
+  RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_PLAYERS, SPACE_KEY_CODE,
 } from './constants.ts';
 import { TEXT } from './text.ts';
 import { Session, listTargets, sleep, waitFor } from './cdp.ts';
@@ -35,7 +35,7 @@ function loadCases(): Case[] {
     const frontEnd = frontEndFor(file);
     const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(file);
     const result = frontEnd.compile(source, prefix, {});
-    const simulation = new Simulation(result.program);
+    const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS });
     simulation.tick(SIMULATED_FRAMES);
     return { name: file, prefix, xml: emitXml(result.program), simulated: encodeVariables(simulation.variables), errors: simulation.errors };
   });

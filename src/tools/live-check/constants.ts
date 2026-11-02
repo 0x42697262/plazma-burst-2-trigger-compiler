@@ -14,3 +14,4 @@ export const SIMULATED_FRAMES = 200;
 export const MILLISECONDS = 1000;
 export const SOCKET_OPEN = 1;
 export const FIRST_USER_ARGUMENT = 2;
+export const SIMULATED_PLAYERS: readonly { slot: number; name: string; active: boolean }[] = Object.freeze([]);

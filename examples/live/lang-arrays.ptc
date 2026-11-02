@@ -1,0 +1,13 @@
+// Arrays backed by variables, loops over them.
+var list[];
+var out = "";
+var count = 0;
+on start {
+  push(list, 4);
+  push(list, 5);
+  push(list, "six");
+  list[1] += 10;
+  list[0] = list[0] * 2;
+  for (let i = 0; i < len(list); i += 1) { out = out .. list[i] .. ";"; }
+  count = len(list);
+}

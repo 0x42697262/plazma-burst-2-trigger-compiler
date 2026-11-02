@@ -1,0 +1,17 @@
+// Loops, break, continue and the loop guard.
+var sum = 0;
+var evens = 0;
+var stopped = 0;
+var spins = 0;
+on start {
+  for (let i = 1; i <= 10; i += 1) { sum += i; }
+  let j = 0;
+  while (true) {
+    j += 1;
+    if (j > 100) { break; }
+    if (j % 2 == 1) { continue; }
+    evens += 1;
+  }
+  stopped = j;
+  while (true) { spins += 1; }
+}

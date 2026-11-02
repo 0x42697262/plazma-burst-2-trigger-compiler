@@ -1,0 +1,8 @@
+// Active player slots in single player, at start and 60 frames later.
+var slots = 0;
+var later = 0;
+on start {
+  for player p { slots += 1; }
+  wait(60);
+  for player p { later += 1; }
+}

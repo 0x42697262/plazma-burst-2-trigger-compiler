@@ -1,0 +1,18 @@
+// Arithmetic, comparisons, logic and text.
+var a = 1 + 2 * 3;
+var b = (1 + 2) * 3;
+var c = 10 - 4 - 3;
+var d = 7 % 3;
+var e = 7 / 2;
+var f = -a + 1;
+var mixed = "5.5" + 2;
+var minus = "5.5" - 2;
+var lt = 3 < 5;
+var eq = "abc" == "abc";
+var both = a > 1 && a < 10;
+var not = !(a == 7);
+var joined = "a" .. a .. "b";
+var template = "a={a}, twice={a * 2}";
+var length = len(12345);
+var has = contains("hello world", "o w");
+var rounded = round(7.5);

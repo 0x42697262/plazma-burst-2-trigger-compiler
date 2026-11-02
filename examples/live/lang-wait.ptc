@@ -1,0 +1,10 @@
+// Timers: every and wait.
+var ticks = 0;
+var steps = "";
+every 10 { if (ticks < 5) { ticks += 1; } }
+on start {
+  steps = "a";
+  wait(5);
+  steps ..= "b";
+  for (let i = 0; i < 2; i += 1) { wait(3); steps ..= i; }
+}
