@@ -13,17 +13,21 @@ import type { Declaration, Expression, Location, ObjectTree, SourceFile, Stateme
 import { SourceError } from './lexer.ts';
 import { editorTurnsIntoNumber } from '../program/editor-text.ts';
 import {
-  ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT, NUMBER_TEXT_MARK,
+  ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT, NUMBER_TEXT_MARK, TEXT_CONSTANT,
   WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND, ARRAY_INDEX_PLACEHOLDER, COLOR_KIND, KEY_SEPARATOR,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
 import { ACTION_ARGUMENTS, DEFAULT_SAY_COLOR, SAY_ARGUMENTS, SYNC_ARGUMENTS, UNLIMITED_TIMER_CALLS } from './constants.ts';
 import {
-  Frame, arrayLengthName, elementName, functionReturnName, parameterName, stackElementName,
+  ELEMENT_END, Frame, arrayLengthName, elementName, elementOpening, functionReturnName, parameterName, stackOpening,
 } from './symbols.ts';
 import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
 import { callGraph, reachable, usedFunctions, writtenNames } from './calls.ts';
+
+export type GenerateOptions = { protectNumberText: boolean; directIndex: boolean };
+
+const DEFAULT_GENERATE: GenerateOptions = Object.freeze({ protectNumberText: true, directIndex: false });
 
 type ObjectSelection = { keys: string[]; choices: { parts: string[]; operand: Operand }[] };
 
@@ -165,6 +169,8 @@ function terminates(statements: readonly Statement[]): boolean {
 export class Generator {
   private readonly names: Names;
   private readonly protectNumberText: boolean;
+  private readonly directIndex: boolean;
+  private readonly textConstants = new Map<string, string>();
   private readonly globals = new Map<string, SymbolEntry>();
   private readonly functions = new Map<string, FunctionInfo>();
   private readonly timers: TimerSpec[] = [];
@@ -180,9 +186,10 @@ export class Generator {
   private frame: Frame;
   private location: SourceLocation = { line: 0 };
 
-  constructor(names: Names, file: SourceFile, protectNumberText: boolean) {
+  constructor(names: Names, file: SourceFile, options: GenerateOptions) {
     this.names = names;
-    this.protectNumberText = protectNumberText;
+    this.protectNumberText = options.protectNumberText;
+    this.directIndex = options.directIndex;
     this.frame = new Frame(names, EMPTY_TEXT, false);
     const graph = callGraph(file);
     this.reach = reachable(graph);
@@ -273,6 +280,7 @@ export class Generator {
       if (this.used.has(declaration.name)) sections.push(section);
       else if (declaration.location.file === undefined) this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
+    this.setTextConstants(sections);
     return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects, exports: this.exports };
   }
 
@@ -344,6 +352,45 @@ export class Generator {
           break;
       }
     }
+  }
+
+  private textVariable(hint: string, text: string): string {
+    const name = this.names.internalVariable(hint);
+    this.textConstants.set(name, text);
+    return name;
+  }
+
+  private setTextConstants(sections: Instruction[][]): void {
+    if (this.textConstants.size === 0) return;
+    const byLabel = new Map<string, Instruction[]>();
+    for (const section of sections) if (section[0]?.kind === 'label') byLabel.set(section[0].label, section);
+    const operandsOf = (instruction: Instruction): Operand[] => (instruction.kind === 'action' ? [instruction.targetA, instruction.targetB] : []);
+    const needs = (section: Instruction[], seen: Set<Instruction[]>): boolean => {
+      if (seen.has(section)) return false;
+      seen.add(section);
+      return section.some((instruction) => {
+        if (instruction.kind === 'call') return needs(byLabel.get(instruction.label) ?? [], seen);
+        return operandsOf(instruction).some((operand) => (operand.kind === 'text' ? this.textConstants.has(operand.text) : needs(byLabel.get(operand.label) ?? [], seen)));
+      });
+    };
+    for (const section of sections) {
+      const [head] = section;
+      if (head?.kind !== 'label' || !head.entry || !needs(section, new Set())) continue;
+      const located = section.find((instruction): instruction is Exclude<Instruction, { kind: 'label' }> => instruction.kind !== 'label');
+      const location = located?.location ?? this.location;
+      const sets: Instruction[] = [...this.textConstants].map(([name, text]) => ({ kind: 'action', opcode: OPCODE.setVariable, targetA: textOperand(name), targetB: textOperand(text), location }));
+      section.splice(1, 0, ...sets);
+    }
+  }
+
+  private buildName(destination: string, opening: string, indexName: string): void {
+    if (!this.directIndex) {
+      this.act(OPCODE.replaceInValue, destination, `${opening}${indexName}${ELEMENT_END}`);
+      return;
+    }
+    this.act(OPCODE.setVariable, destination, opening);
+    this.act(OPCODE.appendString, destination, indexName);
+    this.act(OPCODE.appendString, destination, this.textVariable(TEXT_CONSTANT.elementEnd, ELEMENT_END));
   }
 
   private section(label: string, key: string, isFunction: boolean, body: () => void, entry = true): Instruction[] {
@@ -647,7 +694,7 @@ export class Generator {
     }
     const indexName = this.plainIndex(this.stableVariable(target.index, hasCall(statement.value)));
     const address = this.frame.temp();
-    this.act(OPCODE.replaceInValue, address, elementName(this.names, array.base, indexName));
+    this.buildName(address, elementOpening(this.names, array.base), indexName);
     if (!statement.operator) {
       this.act(OPCODE.storeIndirect, address, this.variableValue(statement.value));
       return;
@@ -690,7 +737,7 @@ export class Generator {
   }
 
   private plainIndex(name: string): string {
-    if (!name.includes(ELEMENT_OPEN)) return name;
+    if (this.directIndex || !name.includes(ELEMENT_OPEN)) return name;
     const temp = this.frame.temp();
     this.act(OPCODE.copyVariable, temp, name);
     return temp;
@@ -699,7 +746,7 @@ export class Generator {
   private addressOf(base: string, index: Expression): string {
     const indexName = this.plainIndex(this.variableValue(index));
     const address = this.frame.temp();
-    this.act(OPCODE.replaceInValue, address, elementName(this.names, base, indexName));
+    this.buildName(address, elementOpening(this.names, base), indexName);
     return address;
   }
 
@@ -1158,7 +1205,7 @@ export class Generator {
         const array = this.arrayOf(target.name, target.location);
         const address = this.frame.temp();
         this.act(OPCODE.addValue, array.length, negateLiteral(TRUE_TEXT));
-        this.act(OPCODE.replaceInValue, address, elementName(this.names, array.base, array.length));
+        this.buildName(address, elementOpening(this.names, array.base), array.length);
         this.act(OPCODE.loadIndirect, destination, address);
         return;
       }
@@ -1237,7 +1284,7 @@ export class Generator {
   private push(name: string): void {
     const pointer = this.names.internalVariable(STACK_POINTER);
     const address = this.names.internalVariable(ADDRESS_NAME);
-    this.act(OPCODE.replaceInValue, address, stackElementName(this.names, pointer));
+    this.buildName(address, stackOpening(this.names), pointer);
     this.act(OPCODE.storeIndirect, address, name);
     this.act(OPCODE.addValue, pointer, TRUE_TEXT);
   }
@@ -1246,7 +1293,7 @@ export class Generator {
     const pointer = this.names.internalVariable(STACK_POINTER);
     const address = this.names.internalVariable(ADDRESS_NAME);
     this.act(OPCODE.addValue, pointer, negateLiteral(TRUE_TEXT));
-    this.act(OPCODE.replaceInValue, address, stackElementName(this.names, pointer));
+    this.buildName(address, stackOpening(this.names), pointer);
     this.act(OPCODE.loadIndirect, name, address);
   }
 
@@ -1262,7 +1309,7 @@ export class Generator {
         const array = this.arrayOf(target.name, target.location);
         const source = this.variableValue(this.argument(expression, 1));
         const address = this.frame.temp();
-        this.act(OPCODE.replaceInValue, address, elementName(this.names, array.base, array.length));
+        this.buildName(address, elementOpening(this.names, array.base), array.length);
         this.act(OPCODE.storeIndirect, address, source);
         this.act(OPCODE.addValue, array.length, TRUE_TEXT);
         return;
@@ -1418,7 +1465,16 @@ export class Generator {
     let key: string | null = keys[0] ?? null;
     if (keys.length > 1) {
       key = this.frame.temp();
-      this.act(OPCODE.replaceInValue, key, keys.join(KEY_SEPARATOR));
+      if (this.directIndex) {
+        const separator = this.textVariable(TEXT_CONSTANT.keySeparator, KEY_SEPARATOR);
+        this.act(OPCODE.copyVariable, key, keys[0] ?? EMPTY_TEXT);
+        for (const part of keys.slice(1)) {
+          this.act(OPCODE.appendString, key, separator);
+          this.act(OPCODE.appendString, key, part);
+        }
+      } else {
+        this.act(OPCODE.replaceInValue, key, keys.join(KEY_SEPARATOR));
+      }
     }
     for (const first of choices[0] ?? []) {
       for (const second of choices[1] ?? []) {
@@ -1474,9 +1530,9 @@ export class Generator {
   }
 }
 
-export function generate(file: SourceFile, names: Names, protectNumberText = true): Module {
+export function generate(file: SourceFile, names: Names, options: GenerateOptions = DEFAULT_GENERATE): Module {
   try {
-    return new Generator(names, file, protectNumberText).generate(file);
+    return new Generator(names, file, options).generate(file);
   } catch (error) {
     if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
     throw error;

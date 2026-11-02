@@ -15,11 +15,15 @@ export type FunctionInfo = { name: string; params: string[]; paramVariables: str
 
 export type Loop = { breakLabel: string; continueLabel: string };
 
-export const elementName = (names: Names, base: string, indexText: string): string =>
-  `${VARIABLE_MARK}${names.prefix}${USER_SEPARATOR}${base}${ELEMENT_OPEN}${indexText}${ELEMENT_CLOSE}${VARIABLE_MARK}`;
+export const ELEMENT_END = `${ELEMENT_CLOSE}${VARIABLE_MARK}`;
 
-export const stackElementName = (names: Names, pointer: string): string =>
-  `${VARIABLE_MARK}${names.prefix}${INTERNAL_MARK}${STACK_NAME}${ELEMENT_OPEN}${pointer}${ELEMENT_CLOSE}${VARIABLE_MARK}`;
+export const elementOpening = (names: Names, base: string): string => `${VARIABLE_MARK}${names.prefix}${USER_SEPARATOR}${base}${ELEMENT_OPEN}`;
+
+export const stackOpening = (names: Names): string => `${VARIABLE_MARK}${names.prefix}${INTERNAL_MARK}${STACK_NAME}${ELEMENT_OPEN}`;
+
+export const elementName = (names: Names, base: string, indexText: string): string => `${elementOpening(names, base)}${indexText}${ELEMENT_END}`;
+
+export const stackElementName = (names: Names, pointer: string): string => `${stackOpening(names)}${pointer}${ELEMENT_END}`;
 
 export const arrayLengthName = (names: Names, base: string): string => names.variable(`${base}${LOCAL_SEPARATOR}${ARRAY_LENGTH}`);
 

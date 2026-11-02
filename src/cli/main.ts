@@ -49,6 +49,7 @@ const optionsOf = (parsed: ReturnType<typeof parseArguments>, hostMap: string | 
     externalUids: parsed.values.get(FLAG.extern) ?? [],
     varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : parsed.flags.has(FLAG.noSyncMark) ? 'off' : 'add',
     protectNumberText: !parsed.flags.has(FLAG.noNumberText),
+    directIndex: parsed.flags.has(FLAG.directIndex),
   };
 };
 

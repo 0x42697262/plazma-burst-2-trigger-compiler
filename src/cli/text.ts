@@ -14,6 +14,7 @@ export const TEXT = Object.freeze({
     '  --no-sync-mark    do not add the Var Sync engine mark when the program syncs variables',
     '  --no-create       with --into, do not add declared objects the map lacks; warn instead',
     '  --no-number-text  write number-like text such as "007" as it is (for map editors other than the website one)',
+    '  --direct-index    read and write array elements without scanning every variable (2 more actions each; faster in maps with many variables)',
   ].join('\n'),
   wrote: (file: string): string => `Wrote ${file}`,
   warning: (message: string): string => `warning: ${message}`,

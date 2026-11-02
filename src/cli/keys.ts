@@ -13,6 +13,7 @@ export const FLAG = Object.freeze({
   noSyncMark: '--no-sync-mark',
   noCreate: '--no-create',
   noNumberText: '--no-number-text',
+  directIndex: '--direct-index',
 });
 export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at]);
 export const POSITION_SEPARATOR = ',';

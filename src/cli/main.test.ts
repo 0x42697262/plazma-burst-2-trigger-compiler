@@ -97,6 +97,18 @@ describe('compile CLI', () => {
     assert.ok(lines.err.some((line) => line.includes('website editor turns the value "007"')));
   });
 
+  it('builds element names without scanning variables with --direct-index', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'd.ptc');
+    fs.writeFileSync(source, 'var list[];\non start { for (let i = 0; i < 3; i += 1) { push(list, i * 2); } say(list[len(list) - 1]); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--run'], output), 0);
+    assert.match(fs.readFileSync(path.join(folder, 'd.xml'), 'utf8'), /_type="326"/);
+    assert.equal(main([source, '--out', folder, '--run', '--direct-index'], output), 0);
+    assert.doesNotMatch(fs.readFileSync(path.join(folder, 'd.xml'), 'utf8'), /_type="326"/);
+    assert.equal(lines.out.filter((line) => line.includes('chat: 4')).length, 2);
+  });
+
   it('adds declared objects the host map lacks, and only those', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'o.ptc');

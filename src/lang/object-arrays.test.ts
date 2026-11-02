@@ -13,8 +13,8 @@ trigger flat[] = ["#t_a", "#t_b", "#t_c", "#t_d"];
 trigger grid[][] = [["#t_a", "#t_b"], ["#t_c", "#t_d"]];
 `;
 
-const run = (body: string) => {
-  const result = compileSource(`${HANDLERS}\non start { ${body} }`, 't');
+const run = (body: string, directIndex = false) => {
+  const result = compileSource(`${HANDLERS}\non start { ${body} }`, 't', { directIndex });
   const simulation = new Simulation(result.program);
   simulation.tick();
   return { result, simulation, log: simulation.variables['~t_log~'] };
@@ -30,6 +30,12 @@ describe('object arrays', () => {
   it('picks from nested arrays with two changing indexes, or one fixed', () => {
     const { log } = run('for (let x = 0; x < 2; x += 1) { for (let y = 0; y < 2; y += 1) { action(ExecTrigger, grid[y][x]); } } let k = 1; action(ExecTrigger, grid[1][k]);');
     assert.equal(log, 'acbdd');
+  });
+
+  it('picks from nested arrays with --direct-index, without replacing names in text', () => {
+    const { log, result } = run('for (let x = 0; x < 2; x += 1) { for (let y = 0; y < 2; y += 1) { action(ExecTrigger, grid[y][x]); } }', true);
+    assert.equal(log, 'acbd');
+    assert.ok(!result.program.triggers.some((trigger) => trigger.actions.some((action) => action.opcode === 326)));
   });
 
   it('writes a fixed element straight into the action', () => {

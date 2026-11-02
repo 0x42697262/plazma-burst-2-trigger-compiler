@@ -52,6 +52,7 @@ export const ARRAY_LENGTH = 'length';
 export const ELEMENT_OPEN = '[';
 export const ELEMENT_CLOSE = ']';
 export const ADDRESS_NAME = 'address';
+export const TEXT_CONSTANT = Object.freeze({ elementEnd: 'element-end', keySeparator: 'key-separator' });
 export const LABEL = Object.freeze({
   start: ':start', join: ':join', chat: ':chat', every: 'every', wait: 'wait', timer: 'timer', else: 'else', end: 'end', head: 'loop',
   next: 'next', skip: 'skip', arm: 'case',
