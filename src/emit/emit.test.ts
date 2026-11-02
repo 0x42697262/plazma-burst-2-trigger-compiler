@@ -58,19 +58,19 @@ describe('XML emitter', () => {
 
   it('places triggers on a grid', () => {
     const triggers = Array.from({ length: 12 }, (_, index) => trigger(`#t${index}`, [action(100, 'a', 'b')]));
-    const xml = emitXml({ triggers, startTimer: null }, { originX: 1000, originY: -500, spacing: 50, columns: 10 });
+    const xml = emitXml({ triggers, timers: [] }, { originX: 1000, originY: -500, spacing: 50, columns: 10 });
     assert.match(xml, /uid="#t9" x="1450" y="-500"/);
     assert.match(xml, /uid="#t10" x="1000" y="-450"/);
   });
 
   it('refuses more than 100 actions in one trigger', () => {
     const actions = Array.from({ length: 101 }, () => action(100, 'a', 'b'));
-    assert.throws(() => emitXml({ triggers: [trigger('#big', actions)], startTimer: null }), EmitError);
+    assert.throws(() => emitXml({ triggers: [trigger('#big', actions)], timers: [] }), EmitError);
   });
 
   it('refuses unknown actions and duplicate uids', () => {
-    assert.throws(() => emitXml({ triggers: [trigger('#a', [action(9999)])], startTimer: null }), /unknown action 9999/);
-    assert.throws(() => emitXml({ triggers: [trigger('#a', []), trigger('#a', [])], startTimer: null }), /used twice/);
+    assert.throws(() => emitXml({ triggers: [trigger('#a', [action(9999)])], timers: [] }), /unknown action 9999/);
+    assert.throws(() => emitXml({ triggers: [trigger('#a', []), trigger('#a', [])], timers: [] }), /used twice/);
   });
 });
 
@@ -108,7 +108,7 @@ describe('append to map', () => {
   });
 
   it('refuses a uid the map already uses', () => {
-    const clashing = emitXml({ triggers: [trigger('#trigger*1', [action(100, 'a', 'b')])], startTimer: null });
+    const clashing = emitXml({ triggers: [trigger('#trigger*1', [action(100, 'a', 'b')])], timers: [] });
     assert.throws(() => appendToMap(MAP, clashing), /already has an object with uid #trigger\*1/);
   });
 });

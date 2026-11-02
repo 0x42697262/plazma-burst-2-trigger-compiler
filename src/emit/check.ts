@@ -7,7 +7,7 @@ export class EmitError extends Error {}
 
 export function checkProgram(program: Program): void {
   const seen = new Set<string>();
-  const uids = [...program.triggers.map((trigger) => trigger.uid), ...(program.startTimer ? [program.startTimer.uid] : [])];
+  const uids = [...program.triggers.map((trigger) => trigger.uid), ...program.timers.map((timer) => timer.uid)];
   for (const uid of uids) {
     if (seen.has(uid)) throw new EmitError(TEXT.duplicateUid(uid));
     seen.add(uid);

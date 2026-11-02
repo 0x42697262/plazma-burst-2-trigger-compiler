@@ -28,7 +28,7 @@ describe('opcode table', () => {
 
   it('marks the actions whose B is template-replaced', () => {
     const marked = [...OPCODES.values()].filter((opcode) => opcode.templateReplacedB).map((opcode) => opcode.number);
-    assert.deepEqual(marked.sort((first, second) => first - second), [325, 326, 350, 352]);
+    assert.deepEqual(marked.sort((first, second) => first - second), [295, 325, 326, 350, 352]);
   });
 
   it('marks the actions whose A is template-replaced', () => {

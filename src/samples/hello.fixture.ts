@@ -1,4 +1,4 @@
-import { action, trigger } from '../program/build.ts';
+import { action, startTimer, trigger } from '../program/build.ts';
 import type { Program } from '../program/types.ts';
 
 export const HELLO_UID = Object.freeze({
@@ -37,5 +37,5 @@ export const HELLO: Program = {
       action(100, HELLO_VARIABLE.done, '1'),
     ]),
   ],
-  startTimer: { uid: HELLO_UID.start, target: HELLO_UID.main },
+  timers: [startTimer(HELLO_UID.start, HELLO_UID.main)],
 };

@@ -1,5 +1,5 @@
-import type { Action, Program, StartTimer, Trigger } from '../program/types.ts';
-import { DEFAULT_LAYOUT, FIRST_ACTION_NUMBER, START_TIMER } from './constants.ts';
+import type { Action, Program, Timer, Trigger } from '../program/types.ts';
+import { DEFAULT_LAYOUT, FIRST_ACTION_NUMBER } from './constants.ts';
 import { ATTRIBUTE_SEPARATOR, XML_ESCAPES, XML_LINE_END } from './keys.ts';
 import { TRIGGER_ATTRIBUTE } from './attributes.ts';
 import { TEXT } from './text.ts';
@@ -35,19 +35,19 @@ const triggerElement = (trigger: Trigger, position: Position): string => TEXT.xm
   ...trigger.actions.flatMap(actionAttributes),
 ].join(ATTRIBUTE_SEPARATOR));
 
-const timerElement = (timer: StartTimer, position: Position): string => TEXT.xmlTimer([
+const timerElement = (timer: Timer, position: Position): string => TEXT.xmlTimer([
   attribute(TRIGGER_ATTRIBUTE.uid, timer.uid),
   attribute(TRIGGER_ATTRIBUTE.x, position.x),
   attribute(TRIGGER_ATTRIBUTE.y, position.y),
-  attribute(TRIGGER_ATTRIBUTE.enabled, true),
-  attribute(TRIGGER_ATTRIBUTE.maxCalls, START_TIMER.maxCalls),
+  attribute(TRIGGER_ATTRIBUTE.enabled, timer.enabled),
+  attribute(TRIGGER_ATTRIBUTE.maxCalls, timer.maxCalls),
   attribute(TRIGGER_ATTRIBUTE.target, timer.target),
-  attribute(TRIGGER_ATTRIBUTE.delay, START_TIMER.delay),
+  attribute(TRIGGER_ATTRIBUTE.delay, timer.delay),
 ].join(ATTRIBUTE_SEPARATOR));
 
 export function emitXml(program: Program, layout: Layout = DEFAULT_LAYOUT): string {
   checkProgram(program);
   const elements = program.triggers.map((trigger, index) => triggerElement(trigger, positionOf(index, layout)));
-  if (program.startTimer) elements.push(timerElement(program.startTimer, positionOf(program.triggers.length, layout)));
+  program.timers.forEach((timer, index) => elements.push(timerElement(timer, positionOf(program.triggers.length + index, layout))));
   return elements.map((element) => element + XML_LINE_END).join('');
 }
