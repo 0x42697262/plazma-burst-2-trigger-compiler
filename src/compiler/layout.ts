@@ -165,7 +165,7 @@ const removeExitBlocks = (blocks: Block[], names: Names): Block[] => {
     if (block.fallsThrough && next && exits.has(next.label)) block.fallsThrough = false;
     block.actions = block.actions.map((action) =>
       (action.opcode === OPCODE.switchToTrigger && action.targetA.kind === 'label' && exits.has(action.targetA.label) ? stop : action));
-    if (isStop(block.actions.at(-1), stop)) block.fallsThrough = false;
+    if (isStop(block.actions.at(-1), stop) && !SKIPS_NEXT.has(block.actions.at(BEFORE_LAST)?.opcode ?? 0)) block.fallsThrough = false;
     while (isStop(block.actions[block.actions.length - 1], stop) && !SKIPS_NEXT.has(block.actions.at(BEFORE_LAST)?.opcode ?? 0)) {
       block.actions.pop();
     }

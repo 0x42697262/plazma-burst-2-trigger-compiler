@@ -192,6 +192,32 @@ end:
     assert.throws(() => compileAssembly('start:\n    op361 $a, $a\n    add $x, $y\n', 't'), /line 3: "add" here becomes several actions/);
   });
 
+  it('keeps the fallthrough after a conditional jump to an empty exit', () => {
+    for (const loopGuard of [null, 100000]) {
+      const { simulation } = run('start:\n    set $a, 1\n    set $b, 1\n    jeq $a, 7, @next\n    jne $a, $b, @done\nnext:\n    say "equal"\n    ret\ndone:\n    ret\n', { loopGuard });
+      assert.deepEqual(simulation.chat, ['equal'], String(loopGuard));
+    }
+    const { vars } = run('start:\n    set $a, 1\n    op361 $a, $a\n    ret\nnext:\n    set $after, 1\nother:\n    jmp @next\n');
+    assert.equal(vars['~t_after~'], 1);
+  });
+
+  it('keeps a chain of raw skips before a back edge together', () => {
+    for (const loopGuard of [null, 100000]) {
+      const { simulation } = run('start:\n    set $i, 0\n    set $one, 1\nloop:\n    add $i, 1\n    op361 $i, $one\n    op361 $one, $one\n    jmp @loop\n    say "done {$i}"\n', { loopGuard });
+      assert.deepEqual(simulation.chat, ['done 2'], String(loopGuard));
+    }
+  });
+
+  it('reports a raw skip before an entry label also with the guard', () => {
+    assert.throws(() => compileAssembly('.entry e\nstart:\n    set $a, 1\n    op361 $a, $a\ne:\n    say "e"\n', 't'), /before the label "e"/);
+  });
+
+  it('adds no jump into an entry that nothing can fall into', () => {
+    const { warnings, program } = compileAssembly('.entry e\nstart:\n    say "s"\n    ret\nu:\ne:\n    say "e"\n', 't');
+    assert.deepEqual(warnings, []);
+    assert.equal(program.triggers.length, 2);
+  });
+
   it('never writes a trigger without actions', () => {
     const { program } = compileAssembly('start:\n    call @f\n    ret\nf:\n    ret\n', 't');
     for (const trigger of program.triggers) assert.ok(trigger.actions.length > 0, trigger.uid);

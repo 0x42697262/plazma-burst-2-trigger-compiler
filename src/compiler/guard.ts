@@ -2,7 +2,6 @@ import { OPCODE, SKIPS_NEXT } from '../opcodes/constants.ts';
 import type { Instruction } from './ir.ts';
 import { textOperand } from './ir.ts';
 import { INTERNAL_VARIABLE, LABEL_HINT, STEP_VALUE, ZERO_VALUE } from './keys.ts';
-import { BEFORE_LAST } from './constants.ts';
 import type { Names } from './names.ts';
 
 type Redirectable = Extract<Instruction, { kind: 'jump' | 'branch' | 'call' }>;
@@ -12,10 +11,27 @@ const isRedirectable = (instruction: Instruction): instruction is Redirectable =
 
 const isSkip = (instruction: Instruction | undefined): boolean => instruction?.kind === 'action' && SKIPS_NEXT.has(instruction.opcode);
 
-const mayFallThrough = (last: Instruction | undefined, beforeLast: Instruction | undefined): boolean => {
-  if (last === undefined) return false;
-  if (last.kind !== 'jump' && last.kind !== 'return') return true;
-  return isSkip(beforeLast);
+const referencedLabels = (instructions: readonly Instruction[]): Set<string> => {
+  const labels = new Set<string>();
+  for (const instruction of instructions) {
+    if (isRedirectable(instruction)) labels.add(instruction.label);
+    if (instruction.kind !== 'action') continue;
+    for (const operand of [instruction.targetA, instruction.targetB]) if (operand.kind === 'label') labels.add(operand.label);
+  }
+  return labels;
+};
+
+const mayFallThrough = (guarded: readonly Instruction[], referenced: ReadonlySet<string>): boolean => {
+  for (let position = guarded.length - 1; position >= 0; position--) {
+    const instruction = guarded[position] as Instruction;
+    if (instruction.kind === 'label') {
+      if (referenced.has(instruction.label)) return true;
+      continue;
+    }
+    if (instruction.kind !== 'jump' && instruction.kind !== 'return') return true;
+    return isSkip(guarded[position - 1]);
+  }
+  return false;
 };
 
 const entryBodies = (instructions: readonly Instruction[], names: Names): Map<string, string> => {
@@ -29,6 +45,7 @@ const entryBodies = (instructions: readonly Instruction[], names: Names): Map<st
 export function addLoopGuard(instructions: readonly Instruction[], names: Names, limit: number): Instruction[] {
   const steps = textOperand(names.internalVariable(INTERNAL_VARIABLE.steps));
   const bodies = entryBodies(instructions, names);
+  const referenced = referencedLabels(instructions);
   const guarded: Instruction[] = [];
   const defined = new Set<string>();
   for (const original of instructions) {
@@ -39,12 +56,13 @@ export function addLoopGuard(instructions: readonly Instruction[], names: Names,
         { kind: 'action', opcode: OPCODE.addValue, targetA: steps, targetB: textOperand(STEP_VALUE), location },
         { kind: 'action', opcode: OPCODE.continueIfLessValue, targetA: steps, targetB: textOperand(String(limit)), location },
       ];
-      const skip = isSkip(guarded.at(-1)) ? guarded.pop() : undefined;
-      guarded.push(...counting, ...(skip ? [skip] : []));
+      const skips: Instruction[] = [];
+      while (isSkip(guarded.at(-1))) skips.unshift(guarded.pop() as Instruction);
+      guarded.push(...counting, ...skips);
     }
     const body = instruction.kind === 'label' ? bodies.get(instruction.label) : undefined;
     if (instruction.kind === 'label' && body !== undefined) {
-      if (mayFallThrough(guarded.at(-1), guarded.at(BEFORE_LAST))) guarded.push({ kind: 'jump', label: body, location: null });
+      if (!isSkip(guarded.at(-1)) && mayFallThrough(guarded, referenced)) guarded.push({ kind: 'jump', label: body, location: null });
       guarded.push(
         instruction,
         { kind: 'action', opcode: OPCODE.setVariable, targetA: steps, targetB: textOperand(ZERO_VALUE), location: null },
