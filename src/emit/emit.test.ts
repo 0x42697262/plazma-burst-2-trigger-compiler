@@ -145,4 +145,9 @@ describe('replace in map', () => {
     const clean = '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n';
     assert.equal(removeOwned(clean, owns), clean);
   });
+
+  it('removes whole lines on a CRLF map, leaving no blank lines', () => {
+    const crlf = '<player x="0" y="0" />\r\n<trigger uid="#p:start" x="0" y="0" />\r\n<door uid="#g" x="0" y="0" />\r\n';
+    assert.equal(removeOwned(crlf, owns), '<player x="0" y="0" />\r\n<door uid="#g" x="0" y="0" />\r\n');
+  });
 });
