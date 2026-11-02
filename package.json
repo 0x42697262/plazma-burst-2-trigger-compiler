@@ -1,0 +1,25 @@
+{
+  "name": "pb2-trigger-compiler",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Compiles source code into Plazma Burst 2 map triggers (XML and editor text)",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "snapshot-opcodes": "node src/tools/snapshot-opcodes/cli.ts",
+    "emit-sample": "node src/tools/emit-sample/cli.ts",
+    "check": "tsc --noEmit -p .",
+    "lint": "eslint --max-warnings 0 src",
+    "test": "node --test 'src/**/*.test.ts'",
+    "verify": "npm run lint && npm run check && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1"
+  }
+}
