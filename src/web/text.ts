@@ -25,6 +25,7 @@ export const TEXT = Object.freeze({
   removeFile: (name: string): string => `Remove ${name}?`,
   closeMark: '×',
   addFile: '+',
+  randomSeed: (seed: string): string => `Obfuscation seed: ${seed}. Put it in the seed box to build the same again.`,
   textNeedsOrder: 'Obfuscated: the jumps depend on trigger order. Paste the text blocks into new triggers in the listed order, after all other triggers; the XML keeps the order by itself.',
   textNeedsTimers: (list: string): string => `The trigger text holds no timers; add these in the editor: ${list}`,
   separator: '\n',

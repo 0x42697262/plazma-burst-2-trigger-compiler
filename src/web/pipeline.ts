@@ -9,6 +9,7 @@ import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { checkObjects, objectElement } from '../objects/objects.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames, seededPrefix } from '../compiler/names.ts';
+import { isRandomSeed, resolveSeed } from '../obfuscate/random.ts';
 import { Simulation } from '../sim/simulator.ts';
 import { stringOf } from '../sim/values.ts';
 import { diagnose, diagnoseAssembly } from '../service/service.ts';
@@ -68,7 +69,8 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const source = workspace.get(file) ?? '';
   const nameSeed = options.nameSeed.trim();
   const plainPrefix = options.prefix === '' ? prefixFor(file) : options.prefix;
-  const seed = options.obfuscate ? options.obfuscateSeed.trim() || nameSeed || plainPrefix : null;
+  const givenSeed = options.obfuscateSeed.trim();
+  const seed = options.obfuscate ? resolveSeed(givenSeed) || nameSeed || plainPrefix : null;
   const prefix = nameSeed !== '' ? seededPrefix(nameSeed) : options.prefix !== '' || seed === null ? plainPrefix : seededPrefix(seed);
   const compileOptions: Partial<CompileOptions> = {
     loopGuard: options.guard > 0 ? options.guard : null,
@@ -97,6 +99,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   try {
     text = joinTextBlocks(emitText(result.program));
     if (result.obfuscation !== null) notes.push(TEXT.textNeedsOrder);
+    if (seed !== null && isRandomSeed(givenSeed)) notes.push(TEXT.randomSeed(seed));
     if (result.program.timers.length > 0) {
       notes.push(TEXT.textNeedsTimers(result.program.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)).join(TEXT.listSeparator)));
     }

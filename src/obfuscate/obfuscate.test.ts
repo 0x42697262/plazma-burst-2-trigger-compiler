@@ -12,6 +12,7 @@ import { EDITOR_SAVED_ACTIONS } from '../program/constants.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import type { Program, Trigger } from '../program/types.ts';
 import { TEXT } from './text.ts';
+import { isRandomSeed, randomSeed, resolveSeed } from './random.ts';
 
 const EXAMPLES = path.resolve(import.meta.dirname, '..', '..', 'examples');
 const FOLDERS = ['live', 'tutorial', 'syntax'];
@@ -138,6 +139,14 @@ describe('obfuscation', () => {
     const handler = result.program.triggers.find((trigger) => trigger.actions.some((action) => action.opcode === OPCODE.addValue)) as Trigger;
     const tampered = simulate({ ...result.program, triggers: result.program.triggers.filter((trigger) => trigger !== handler) });
     assert.deepEqual(tampered.chat, [TEXT.alarm]);
+  });
+
+  it('makes random seeds on request', () => {
+    const seeds = new Set(Array.from({ length: 20 }, () => randomSeed()));
+    assert.equal(seeds.size, 20);
+    assert.ok(isRandomSeed(' Random ') && !isRandomSeed('randomly'));
+    assert.notEqual(resolveSeed('random'), 'random');
+    assert.equal(resolveSeed('release-3'), 'release-3');
   });
 
   it('works with a trigger added after the program', () => {

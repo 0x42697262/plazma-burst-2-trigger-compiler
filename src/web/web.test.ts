@@ -62,6 +62,19 @@ describe('web page logic', () => {
     assert.ok(second.notes.some((note) => note.includes('trigger order')));
   });
 
+  it('picks a random seed when asked and shows it', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'var n = 0;\non start { n += 1; say("n {n}"); }\n');
+    workspace.activate('/work/main.ptc');
+    const first = build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: 'random' }, null);
+    const second = build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: 'Random' }, null);
+    const seed = /Obfuscation seed: (\S+)\./.exec(first.notes.join('\n'))?.[1] ?? '';
+    assert.notEqual(seed, '');
+    assert.notEqual(first.xml, second.xml);
+    assert.equal(build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: seed }, null).xml, first.xml);
+    assert.equal(simulate(first.result!, 1)[0], 'chat: n 1');
+  });
+
   it('replaces an older build of the program in the host map when asked', () => {
     const workspace = new Workspace(null);
     workspace.set('/work/main.ptc', 'var n = 0;\non start { n += 1; say("later"); }\n');

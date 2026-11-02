@@ -25,7 +25,8 @@
     <label title="When adding to a map that already has this program, remove its old triggers and timers first (update in place)"><input id="replace" type="checkbox"> replace</label>
     <label title="Derive the name prefix from a seed: reproducible, source-independent names. Use with replace to update in place.">name seed <input id="name-seed" size="8" placeholder="off"></label>
     <label title="Shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check; about 3 times slower (--obfuscate)"><input id="obfuscate" type="checkbox"> obfuscate</label>
-    <label title="Seed for obfuscate: the same seed gives the same build, a new seed changes every generated name (--obfuscate-seed). Empty: the name seed or the prefix">seed <input id="obfuscate-seed" size="8" placeholder="auto"></label>
+    <label title="Seed for obfuscate: the same seed gives the same build, a new seed changes every generated name (--obfuscate-seed). Empty: the name seed or the prefix. random: a new seed at every compile, shown in the problems">seed <input id="obfuscate-seed" size="8" placeholder="auto"></label>
+    <button id="new-seed" title="Put a new random seed in the seed box">new seed</button>
     <button id="environment-button" title="Values for env(&quot;NAME&quot;) in constants, one NAME=value per line. Kept only until the page is closed">env…</button>
     <div id="environment-panel" hidden>
       <label for="environment">env() values, one <code>NAME=value</code> per line. Not saved: gone when the page closes.</label>

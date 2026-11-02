@@ -22,6 +22,7 @@ export const ELEMENT = Object.freeze({
   nameSeed: 'name-seed',
   obfuscate: 'obfuscate',
   obfuscateSeed: 'obfuscate-seed',
+  newSeed: 'new-seed',
   outputTabs: 'output-tabs',
   output: 'output',
   copy: 'copy',

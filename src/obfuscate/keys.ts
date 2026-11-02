@@ -30,6 +30,7 @@ export const LEADING_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 export const SEPARATOR_CANDIDATES: readonly string[] = Object.freeze(['\u241F', '\u241E', '\u241D', '\u241C', '\u2420']);
 export const SPLIT_CHARACTERS = '';
 export const EMPTY = '';
+export const RANDOM_SEED = 'random';
 export const ZERO = '0';
 export const ONE = '1';
 export const READY_MARK = '1';

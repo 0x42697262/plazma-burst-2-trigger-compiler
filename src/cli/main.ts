@@ -10,6 +10,7 @@ import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap, removeOwned } from '../emit/merge.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames, describeLegend, seededPrefix } from '../compiler/names.ts';
+import { isRandomSeed, resolveSeed } from '../obfuscate/random.ts';
 import { DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
@@ -44,7 +45,7 @@ const layoutOf = (value: string | null): Layout => {
 
 const obfuscationSeed = (parsed: ReturnType<typeof parseArguments>, defaultSeed: string): string | null => {
   const seed = lastValue(parsed, FLAG.obfuscateSeed);
-  if (seed !== null) return seed;
+  if (seed !== null) return resolveSeed(seed);
   return parsed.flags.has(FLAG.obfuscate) ? lastValue(parsed, FLAG.nameSeed) ?? defaultSeed : null;
 };
 
@@ -116,6 +117,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     if (nameSeed !== null && givenPrefix !== null) throw new UsageError(TEXT.seedWithPrefix);
     const plainPrefix = givenPrefix ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
     const seed = obfuscationSeed(parsed, plainPrefix);
+    if (seed !== null && isRandomSeed(lastValue(parsed, FLAG.obfuscateSeed) ?? '')) output.out(TEXT.randomSeed(seed));
     const prefix = nameSeed !== null ? seededPrefix(nameSeed) : givenPrefix ?? (seed === null ? plainPrefix : seededPrefix(seed));
     const result = frontEnd.compile(source, prefix, { ...options, obfuscate: seed === null ? null : { seed } }, file);
     for (const warning of result.warnings) output.err(TEXT.warning(warning));

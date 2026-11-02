@@ -18,4 +18,5 @@ export const INVALID_BASE = -1000000000;
 export const DECOY_CHARACTERS = 6;
 export const RADIX = 10;
 export const FIRST_OFFSET = 1;
+export const RANDOM_SEED_WORDS = 2;
 export const CODE_CHARACTERS = Object.freeze({ low: 0xe000, high: 0xf8ff });

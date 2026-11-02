@@ -138,6 +138,22 @@ describe('compile CLI', () => {
     for (const uid of manifest.uids) assert.ok(!merged.includes(`"${uid}"`), `stale ${uid}`);
   });
 
+  it('picks a random seed when asked, prints it and builds the same again with it', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'r.ptc');
+    fs.writeFileSync(source, 'var counter = 0;\non start { counter += 1; say("hi {counter}"); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--obfuscate-seed', 'random'], output), 0, lines.err.join('\n'));
+    const record = JSON.parse(fs.readFileSync(path.join(folder, 'r.names.json'), 'utf8')) as { seed: string };
+    assert.notEqual(record.seed, 'random');
+    assert.ok(lines.out.some((line) => line.includes(`Obfuscation seed: ${record.seed}`)));
+    const first = fs.readFileSync(path.join(folder, 'r.xml'), 'utf8');
+    assert.equal(main([source, '--out', folder, '--obfuscate-seed', record.seed], output), 0);
+    assert.equal(fs.readFileSync(path.join(folder, 'r.xml'), 'utf8'), first);
+    assert.equal(main([source, '--out', folder, '--obfuscate-seed', 'random'], output), 0);
+    assert.notEqual(fs.readFileSync(path.join(folder, 'r.xml'), 'utf8'), first);
+  });
+
   it('records a build manifest and replaces across renamed builds', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'm.ptc');

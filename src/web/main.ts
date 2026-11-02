@@ -9,6 +9,7 @@ import { TEXT } from './text.ts';
 import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { DEFAULT_TARGET, isTarget } from '../pcode/keys.ts';
 import { isStandardLibrary } from '../lang/file-paths.ts';
+import { randomSeed } from '../obfuscate/random.ts';
 
 type OutputName = (typeof OUTPUT)[keyof typeof OUTPUT];
 
@@ -38,6 +39,7 @@ const replaceInput = element<HTMLInputElement>(ELEMENT.replace);
 const nameSeedInput = element<HTMLInputElement>(ELEMENT.nameSeed);
 const obfuscateInput = element<HTMLInputElement>(ELEMENT.obfuscate);
 const obfuscateSeedInput = element<HTMLInputElement>(ELEMENT.obfuscateSeed);
+const newSeedButton = element<HTMLButtonElement>(ELEMENT.newSeed);
 const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
 const environmentButton = element<HTMLButtonElement>(ELEMENT.environmentButton);
 const environmentPanel = element<HTMLDivElement>(ELEMENT.environmentPanel);
@@ -252,6 +254,12 @@ for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInp
     editor.relint();
   });
 }
+newSeedButton.addEventListener(EVENT.click, () => {
+  obfuscateSeedInput.value = randomSeed();
+  obfuscateInput.checked = true;
+  options();
+  editor.relint();
+});
 for (const input of [nameSeedInput, obfuscateSeedInput]) {
   input.addEventListener(EVENT.input, () => {
     options();
