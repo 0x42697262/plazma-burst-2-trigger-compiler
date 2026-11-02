@@ -1,0 +1,11 @@
+// Shared by tutorials 26 and 27: the key of an account is hash("<salt>:<login>").
+// The salt is secret: the map gets only the hash of "<salt>:" and finishes it with the login
+// (hashContinue). For a real map: secret const KEY_SALT = env("KEY_SALT");
+import "std/hash.ptc";
+
+secret const KEY_SALT = "pb2 tutorial salt";
+const KEY_START = hash("{KEY_SALT}:");
+
+function endKey(login) {
+  return hashContinue(KEY_START, login);
+}

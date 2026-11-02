@@ -1,0 +1,65 @@
+// Admin login: "-login <name> <password>", then "-announce <text>" and "-logout".
+// The map holds only hash("name:password") of each admin, so two admins with the same password
+// still have different hashes, and a name alone is worth nothing.
+import "std/hash.ptc";
+
+secret const ALICE_PASSWORD = "correct horse";
+secret const BOB_PASSWORD = "battery staple";
+const ALICE_HASH = hash("alice:{ALICE_PASSWORD}");
+const BOB_HASH = hash("bob:{BOB_PASSWORD}");
+var loggedIn[];
+var adminName[];
+
+function startsWith(text, prefix) {
+  for (let i = 0; i < len(prefix); i += 1) {
+    if (charAt(text, i) != charAt(prefix, i)) { return 0; }
+  }
+  return 1;
+}
+
+function slice(text, from, to) {
+  let part = "";
+  for (let i = from; i < to; i += 1) { part ..= charAt(text, i); }
+  return part;
+}
+
+function firstSpace(text) {
+  for (let i = 0; i < len(text); i += 1) {
+    if (charAt(text, i) == " ") { return i; }
+  }
+  return len(text);
+}
+
+function accountHash(user) {
+  if (user == "alice") { return ALICE_HASH; }
+  if (user == "bob") { return BOB_HASH; }
+  return "";
+}
+
+on chat {
+  let text = chatText();
+  let who = talker();
+  if (startsWith(text, "-login ")) {
+    let rest = slice(text, 7, len(text));
+    let space = firstSpace(rest);
+    let user = slice(rest, 0, space);
+    let password = slice(rest, space + 1, len(rest));
+    let expected = accountHash(user);
+    if (expected != "" && hash("{user}:{password}") == expected) {
+      loggedIn[who] = 1;
+      adminName[who] = user;
+      say("{talkerName()} is admin {user} now");
+    } else {
+      say("{talkerName()}: wrong name or password");
+    }
+  } else if (text == "-logout") {
+    loggedIn[who] = 0;
+    say("{talkerName()} is not admin any more");
+  } else if (startsWith(text, "-announce ")) {
+    if (loggedIn[who] == 1) {
+      say("[{adminName[who]}] {slice(text, 10, len(text))}", Color.CivilSecurity);
+    } else {
+      say("{talkerName()}: admins only");
+    }
+  }
+}

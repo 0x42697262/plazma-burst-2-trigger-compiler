@@ -1,0 +1,16 @@
+// Checks a key from tutorial 26 while compiling, with the same salt:
+//   LOGIN=bob KEY=123-456-789 npm run compile -- examples/tutorial/27-verify-key.ptc --run
+import "lib/end-key.ptc";
+
+const LOGIN = env("LOGIN", "bob");
+const KEY = env("KEY", "");
+const EXPECTED = endKey(LOGIN);
+const VALID = KEY == EXPECTED;
+
+on start {
+  if (VALID) {
+    say("{LOGIN}: the key is valid");
+  } else {
+    say("{LOGIN}: the key should be {EXPECTED}");
+  }
+}

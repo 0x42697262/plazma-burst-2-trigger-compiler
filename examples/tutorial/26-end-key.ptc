@@ -1,0 +1,14 @@
+// A key for reaching the end of the map, different for every account. The exit region runs
+// reachedEnd. The map runs on every player's game, and slot() is the player of that game, so
+// only the player who got there sees the key.
+import "lib/end-key.ptc";
+
+var finishers = 0;
+
+export function reachedEnd() {
+  let who = initiator();
+  finishers += 1;
+  if (slot() == who) {
+    say("you finished! your key: {endKey(login(who))}");
+  }
+}

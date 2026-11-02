@@ -5,6 +5,8 @@ import path from 'node:path';
 import { compileSource } from './compile.ts';
 import type { CompileOptions } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
+import type { SimulationOptions } from '../sim/simulator.ts';
+import { readSourceFile } from '../cli/sources.ts';
 import { OPCODE } from '../opcodes/constants.ts';
 
 const REPLACE_IN_VALUE = OPCODE.replaceInValue;
@@ -19,7 +21,10 @@ const PLAYERS = [
 ];
 const EXTERNAL: string[] = [];
 
-type Scenario = { chat?: [number, string][]; uids?: string[]; frames?: number; expect: string[]; variables?: Record<string, unknown> };
+type Scenario = {
+  chat?: [number, string][]; uids?: string[]; frames?: number; expect: string[]; variables?: Record<string, unknown>;
+  simulation?: Partial<SimulationOptions>; environment?: Record<string, string>;
+};
 
 const SCENARIOS: Record<string, Scenario> = {
   '01-hello.ptc': { expect: ['count is 1', 'count is 2', 'count is 3', 'done!'] },
@@ -64,6 +69,22 @@ const SCENARIOS: Record<string, Scenario> = {
   '22-dsa-binary-tree.ptc': {
     expect: ['in order: 20 30 35 40 50 60 70 80 ', 'pre order: 50 30 20 40 35 70 60 80 ', 'height 4, has 35: 1, has 36: 0', 'mirrored, in order: 80 70 60 50 40 35 30 20 '],
   },
+  '24-password.ptc': {
+    chat: [[1, '-open sesame'], [1, '-open open sesame!'], [2, '-open a'], [2, '-open b'], [2, '-open c'], [2, '-open open sesame'], [1, '-open open sesame'], [3, '-open x'], [1, 'hello']],
+    expect: [
+      'bob: wrong password (2 left)', 'bob: wrong password (1 left)', 'cy: wrong password (2 left)', 'cy: wrong password (1 left)', 'cy: wrong password (0 left)',
+      'cy: no tries left', 'bob opened the vault', 'the vault is already open',
+    ],
+  },
+  '25-admin-login.ptc': {
+    chat: [[1, '-announce hi'], [1, '-login alice battery staple'], [1, '-login carol x'], [1, '-login alice correct horse'], [1, '-announce meeting at 8'], [2, '-announce me too'], [1, '-logout'], [1, '-announce again']],
+    expect: [
+      'bob: admins only', 'bob: wrong name or password', 'bob: wrong name or password', 'bob is admin alice now', '[alice] meeting at 8', 'cy: admins only',
+      'bob is not admin any more', 'bob: admins only',
+    ],
+  },
+  '26-end-key.ptc': { uids: ['#tut_reachedEnd'], simulation: { currentSlot: 1 }, expect: ['you finished! your key: 62740094-7145360-3565303'], variables: { finishers: 1 } },
+  '27-verify-key.ptc': { environment: { LOGIN: 'bob', KEY: '62740094-7145360-3565303' }, expect: ['bob: the key is valid'] },
   '23-dsa-more-sorting.ptc': {
     expect: ['input:     529156380742', 'selection: 012234556789', 'merge:     012234556789', 'counting:  012234556789', 'shell:     012234556789'],
   },
@@ -92,10 +113,10 @@ describe('tutorial programs', () => {
   for (const [file, scenario] of Object.entries(SCENARIOS)) for (const [mode, options] of Object.entries(MODES)) {
     it(mode === '' ? file : `${file} with ${mode}`, () => {
       const fullPath = path.join(FOLDER, file);
-      const result = compileSource(fs.readFileSync(fullPath, 'utf8'), 'tut', { externalUids: EXTERNAL, ...options }, { file: fullPath, read: (name) => fs.readFileSync(name, 'utf8') });
+      const result = compileSource(fs.readFileSync(fullPath, 'utf8'), 'tut', { externalUids: EXTERNAL, environment: scenario.environment ?? {}, ...options }, { file: fullPath, read: readSourceFile });
       if (options.directIndex) assert.ok(!result.program.triggers.some((trigger) => trigger.actions.some((action) => action.opcode === REPLACE_IN_VALUE)));
       assert.deepEqual(result.warnings, []);
-      const simulation = new Simulation(result.program, { players: PLAYERS, initiatorSlot: 1 });
+      const simulation = new Simulation(result.program, { players: PLAYERS, initiatorSlot: 1, ...scenario.simulation });
       simulation.tick();
       for (const [slot, text] of scenario.chat ?? []) simulation.playerSays(slot, text);
       for (const uid of scenario.uids ?? []) simulation.runUid(uid);
