@@ -79,6 +79,7 @@ simulator runs.
 | `--run`, `--frames <n>` | simulate the program for n frames and print variables, chat and errors |
 | `--no-sync-mark` | do not add the Var Sync engine mark that a program with sync actions needs (with `--into`, a map that has one keeps it and gets no second one) |
 | `--no-create` | with `--into`: do not add declared map objects the map lacks; warn instead |
+| `--target <name>` | `triggers` (default) compiles to triggers; `pcode` compiles to p-code run by a fixed set of triggers: about 20× slower, experimental ([docs/pcode.md](docs/pcode.md)) |
 | `--direct-index` | build array element names from pieces instead of scanning every variable: 2 more actions per array access, faster in maps with many variables (F37) |
 | `--no-number-text` | write number-like text such as `"007"` as it is, for map editors other than the website one; by default it is kept safe from the website editor, which turns it into a number (F36) |
 | `--help` | all options |
@@ -88,7 +89,7 @@ simulator runs.
 | Command | What it does |
 |---|---|
 | `npm run verify` | lint, type check, tests |
-| `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator (`-- --direct-index` compiles them with that flag) |
+| `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator (`-- --direct-index` or `-- --pcode` compiles them that way; `-- --only <name>` picks some) |
 | `npm run web` | builds the web page into `site/` |
 | `npm run lsp` | starts the language server on stdio |
 | `npm run actions-doc` | rebuilds `docs/actions.md` from the action table |

@@ -20,6 +20,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | CLI | `src/cli/` | `npm run compile` |
 | Language service | `src/service/` | Diagnostics, completion, hover, definitions, symbols; shared by the language server and the web page |
 | Language server | `src/lsp/`, `bin/ptc-lsp.js` | LSP over stdio for any editor; Neovim files in `editors/nvim/` |
+| P-code target | `src/pcode/` | `--target pcode`: instructions as text plus one trigger per kind of instruction ([pcode.md](pcode.md)) |
 | Web page | `src/web/`, `src/tools/build-web/` | CodeMirror editor (Vim mode), compiler and simulator in the browser; built into `site/` |
 | Tools | `src/tools/` | `live-check`, `snapshot-opcodes`, `actions-doc` (writes `docs/actions.md`), `emit-sample` (the hand-built M1 sample), the repository's lint rules |
 

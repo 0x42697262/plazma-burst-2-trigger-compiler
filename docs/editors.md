@@ -14,6 +14,7 @@ sent anywhere. Files are kept in the browser's local storage.
   website editor (F36 in `docs/game-facts.md`). Untick it for other map editors; same as
   `--no-number-text`.
 - "direct index" (off by default): same as `--direct-index`, for maps with many variables.
+- "target": `triggers` (default) or `pcode`, same as `--target` ([pcode.md](pcode.md)).
 - Several files: `+` adds one (for `import`); an example loads with the files it imports.
 - Compile (Ctrl+Enter): XML, trigger text, and problems. Run (Ctrl+Shift+Enter): the simulator's
   chat lines and variables.
