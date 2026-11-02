@@ -16,8 +16,9 @@
     <label title="Vim key bindings"><input id="vim" type="checkbox"> Vim</label>
     <button id="compile" title="Ctrl+Enter">Compile</button>
     <button id="run" title="Ctrl+Shift+Enter">Run</button>
-    <label class="file" title="A map XML downloaded from the editor: the program is appended to it">map XML <input id="host-map" type="file" accept=".xml,.txt"></label>
-    <span id="host-map-name"></span>
+    <input id="host-map" type="file" accept=".xml,.txt" hidden>
+    <button id="host-map-button" title="A map XML downloaded from the editor: the program is appended to it">map XML…</button>
+    <span id="host-map-name" class="muted">no map</span>
     <a href="https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md" target="_blank" rel="noopener">docs</a>
   </header>
   <main>

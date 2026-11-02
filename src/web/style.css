@@ -8,7 +8,8 @@ header input[type=number] { width: 7em; }
 button { cursor: pointer; }
 button:hover { border-color: var(--accent); }
 #compile { border-color: var(--accent); }
-label.file input { width: 12em; }
+.muted { color: var(--muted); }
+#examples { max-width: 22em; }
 a { color: var(--accent); }
 main { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); height: calc(100% - 46px); }
 section { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); }

@@ -20,7 +20,10 @@ const storage = ((): Storage | null => {
 })();
 
 const workspace = new Workspace(storage);
-if (workspace.isEmpty) workspace.loadExample(examples, STARTER_EXAMPLE);
+if (workspace.isEmpty) {
+  workspace.loadExample(examples, STARTER_EXAMPLE);
+  storage?.setItem(STORAGE.example, STARTER_EXAMPLE);
+}
 
 const prefixInput = element<HTMLInputElement>(ELEMENT.prefix);
 const guardInput = element<HTMLInputElement>(ELEMENT.guard);
@@ -191,15 +194,16 @@ for (const file of Object.keys(examples).sort()) {
   }
   const option = document.createElement(TAG.option);
   option.value = file;
-  option.textContent = parts[parts.length - 1] ?? file;
+  option.textContent = TEXT.exampleName(folder, parts[parts.length - 1] ?? file);
   group.append(option);
 }
+examplesSelect.value = storage?.getItem(STORAGE.example) ?? '';
 examplesSelect.addEventListener(EVENT.change, () => {
   if (examplesSelect.value === '') return;
   workspace.loadExample(examples, examplesSelect.value);
+  storage?.setItem(STORAGE.example, examplesSelect.value);
   editor.reload();
   renderTabs();
-  examplesSelect.value = '';
   last = null;
   show(OUTPUT.problems);
 });
@@ -235,6 +239,7 @@ element(ELEMENT.download).addEventListener(EVENT.click, () => {
   link.click();
   URL.revokeObjectURL(link.href);
 });
+element(ELEMENT.hostMapButton).addEventListener(EVENT.click, () => element<HTMLInputElement>(ELEMENT.hostMap).click());
 element<HTMLInputElement>(ELEMENT.hostMap).addEventListener(EVENT.change, (event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;

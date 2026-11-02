@@ -30,4 +30,5 @@ export const TEXT = Object.freeze({
   timerTarget: (uid: string, target: string): string => `${uid} -> ${target}`,
   listSeparator: ', ',
   exampleGroup: (folder: string): string => folder,
+  exampleName: (folder: string, file: string): string => `${folder}/${file}`,
 });
