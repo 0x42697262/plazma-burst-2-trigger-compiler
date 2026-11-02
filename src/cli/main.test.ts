@@ -60,9 +60,11 @@ describe('compile CLI', () => {
     assert.equal(main([source, '--out', folder, '--at', '1000,-500'], output), 0);
     assert.match(fs.readFileSync(path.join(folder, 'p.xml'), 'utf8'), /x="1000" y="-500"/);
     assert.ok(lines.err.some((line) => line.includes('the trigger text has no timers')));
-    assert.equal(main([source, '--run', '--frames', '0'], output), 1);
+    const empty = tempFolder();
+    assert.equal(main([source, '--out', empty, '--run', '--frames', '0'], output), 1);
     assert.match(lines.err.at(-1) ?? '', /--frames needs/);
-    assert.equal(main([source, '--at', '5'], output), 1);
+    assert.equal(main([source, '--out', empty, '--at', '5'], output), 1);
+    assert.deepEqual(fs.readdirSync(empty), []);
   });
 
   it('removes an old text file when the new program cannot be written as text', () => {

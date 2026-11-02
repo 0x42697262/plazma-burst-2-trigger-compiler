@@ -73,15 +73,21 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const file = parsed.files[0];
     if (file === undefined) throw new UsageError(TEXT.missingFile);
     if (parsed.files.length > 1) throw new UsageError(TEXT.oneFile);
+    const layout = layoutOf(lastValue(parsed, FLAG.at));
+    const framesText = lastValue(parsed, FLAG.frames);
+    const frames = framesText === null ? DEFAULT_RUN_FRAMES : positiveInteger(framesText, TEXT.badFrames);
+    const options = optionsOf(parsed);
+    const into = lastValue(parsed, FLAG.into);
+    const hostMap = into === null ? null : fs.readFileSync(into, FILE_ENCODING);
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = lastValue(parsed, FLAG.prefix) ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
-    const result = frontEnd.compile(source, prefix, optionsOf(parsed));
+    const result = frontEnd.compile(source, prefix, options);
     for (const warning of result.warnings) output.err(TEXT.warning(warning));
     const actions = result.program.triggers.reduce((total, trigger) => total + trigger.actions.length, 0);
     output.out(TEXT.summary(result.program.triggers.length, actions, result.program.timers.length));
     const base = path.join(lastValue(parsed, FLAG.out) ?? DEFAULT_OUT, path.basename(file, path.extname(file)));
-    const xml = emitXml(result.program, layoutOf(lastValue(parsed, FLAG.at)));
+    const xml = emitXml(result.program, layout);
     writeFile(base + OUTPUT.xml, xml, output);
     try {
       writeFile(base + OUTPUT.text, joinTextBlocks(emitText(result.program)), output);
@@ -91,16 +97,11 @@ export function main(argumentsList: readonly string[], output: Output): number {
       output.err(TEXT.warning(TEXT.noText(error instanceof Error ? error.message : String(error))));
     }
     writeFile(base + OUTPUT.sourceMap, JSON.stringify(result.sourceMap, null, JSON_INDENT), output);
-    const into = lastValue(parsed, FLAG.into);
-    if (into !== null) {
-      const hostMap = fs.readFileSync(into, FILE_ENCODING);
+    if (hostMap !== null) {
       for (const warning of checkHostNames(result.program, hostMap)) output.err(TEXT.warning(warning));
       writeFile(base + OUTPUT.map, appendToMap(hostMap, xml), output);
     }
-    if (parsed.flags.has(FLAG.run)) {
-      const frames = lastValue(parsed, FLAG.frames);
-      simulate(result, frames === null ? DEFAULT_RUN_FRAMES : positiveInteger(frames, TEXT.badFrames), output);
-    }
+    if (parsed.flags.has(FLAG.run)) simulate(result, frames, output);
     return 0;
   } catch (error) {
     output.err(TEXT.error(error instanceof Error ? error.message : String(error)));
