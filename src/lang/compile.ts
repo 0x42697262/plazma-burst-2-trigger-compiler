@@ -1,4 +1,3 @@
-import path from 'node:path';
 import { compileModule, DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { createNames, CompileError } from '../compiler/names.ts';
@@ -7,6 +6,7 @@ import { parseSource } from './parser.ts';
 import { generate } from './codegen.ts';
 import { SourceError } from './lexer.ts';
 import { TEXT } from './text.ts';
+import { directoryOf, relativePath, resolvePath } from './file-paths.ts';
 
 export type SourceOrigin = { file: string; read: (file: string) => string };
 
@@ -17,7 +17,7 @@ function loadFiles(source: string, origin: SourceOrigin | null): SourceFile {
     const parsed = parseSource(text, label);
     for (const entry of parsed.imports) {
       if (origin === null || file === null) throw new SourceError(entry.location.line, TEXT.importNeedsFile, label);
-      const resolved = path.resolve(path.dirname(file), entry.path);
+      const resolved = resolvePath(directoryOf(file), entry.path);
       if (seen.has(resolved)) continue;
       seen.add(resolved);
       let imported: string;
@@ -26,11 +26,11 @@ function loadFiles(source: string, origin: SourceOrigin | null): SourceFile {
       } catch {
         throw new SourceError(entry.location.line, TEXT.cannotImport(entry.path), label);
       }
-      visit(imported, resolved, path.relative(path.dirname(origin.file), resolved));
+      visit(imported, resolved, relativePath(directoryOf(origin.file), resolved));
     }
     declarations.push(...parsed.declarations);
   };
-  const main = origin === null ? null : path.resolve(origin.file);
+  const main = origin === null ? null : resolvePath('', origin.file);
   if (main !== null) seen.add(main);
   visit(source, main, undefined);
   return { declarations, imports: [] };

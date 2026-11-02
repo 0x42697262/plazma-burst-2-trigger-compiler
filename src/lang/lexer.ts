@@ -8,9 +8,9 @@ import { ESCAPE_LENGTH } from './constants.ts';
 export type StringPart = { kind: 'text'; text: string } | { kind: 'source'; source: string; line: number };
 
 export type Token =
-  | { kind: 'identifier' | 'keyword' | 'number' | 'punctuator'; text: string; line: number }
-  | { kind: 'string'; text: string; parts: StringPart[]; line: number }
-  | { kind: 'end'; text: string; line: number };
+  | { kind: 'identifier' | 'keyword' | 'number' | 'punctuator'; text: string; line: number; column: number }
+  | { kind: 'string'; text: string; parts: StringPart[]; line: number; column: number }
+  | { kind: 'end'; text: string; line: number; column: number };
 
 export class SourceError extends Error {
   readonly line: number;
@@ -23,13 +23,16 @@ export class SourceError extends Error {
   }
 }
 
-type Cursor = { source: string; position: number; line: number };
+type Cursor = { source: string; position: number; line: number; lineStart: number };
 
 const peek = (cursor: Cursor, offset = 0): string => cursor.source[cursor.position + offset] ?? '';
 
 const advance = (cursor: Cursor, count = 1): void => {
   for (let step = 0; step < count; step++) {
-    if (peek(cursor) === NEWLINE) cursor.line += 1;
+    if (peek(cursor) === NEWLINE) {
+      cursor.line += 1;
+      cursor.lineStart = cursor.position + 1;
+    }
     cursor.position += 1;
   }
 };
@@ -82,6 +85,7 @@ const readInterpolation = (cursor: Cursor): StringPart => {
 
 const readString = (cursor: Cursor): Token => {
   const line = cursor.line;
+  const column = cursor.position - cursor.lineStart;
   const start = cursor.position;
   advance(cursor);
   const parts: StringPart[] = [];
@@ -111,18 +115,19 @@ const readString = (cursor: Cursor): Token => {
     }
   }
   flush();
-  return { kind: 'string', text: cursor.source.slice(start, cursor.position), parts, line };
+  return { kind: 'string', text: cursor.source.slice(start, cursor.position), parts, line, column };
 };
 
 export function tokenize(source: string, firstLine = 1): Token[] {
-  const cursor: Cursor = { source, position: 0, line: firstLine };
+  const cursor: Cursor = { source, position: 0, line: firstLine, lineStart: 0 };
   const tokens: Token[] = [];
   for (;;) {
     skipSpaceAndComments(cursor);
     const line = cursor.line;
+    const column = cursor.position - cursor.lineStart;
     const character = peek(cursor);
     if (character === '') {
-      tokens.push({ kind: 'end', text: '', line });
+      tokens.push({ kind: 'end', text: '', line, column });
       return tokens;
     }
     if (character === QUOTE) {
@@ -135,18 +140,18 @@ export function tokenize(source: string, firstLine = 1): Token[] {
         text += peek(cursor);
         advance(cursor);
       }
-      tokens.push({ kind: KEYWORDS.has(text) ? 'keyword' : 'identifier', text, line });
+      tokens.push({ kind: KEYWORDS.has(text) ? 'keyword' : 'identifier', text, line, column });
       continue;
     }
     if (DIGIT.test(character)) {
       const text = NUMBER.exec(source.slice(cursor.position))?.[0] ?? character;
       advance(cursor, text.length);
-      tokens.push({ kind: 'number', text, line });
+      tokens.push({ kind: 'number', text, line, column });
       continue;
     }
     const punctuator = PUNCTUATORS.find((candidate) => source.startsWith(candidate, cursor.position));
     if (punctuator === undefined) throw new SourceError(line, TEXT.unexpectedCharacter(character));
     advance(cursor, punctuator.length);
-    tokens.push({ kind: 'punctuator', text: punctuator, line });
+    tokens.push({ kind: 'punctuator', text: punctuator, line, column });
   }
 }
