@@ -7,6 +7,7 @@ import { ATTRIBUTE, CLASS, EMPTY_OBJECT, ENTER, FOLDER_POSITION, KEYDOWN, LIBRAR
 import { DEFAULT_FRAMES, DEFAULT_GUARD, STATUS_TIME } from './constants.ts';
 import { TEXT } from './text.ts';
 import { PATH_SEPARATOR } from '../lang/keys.ts';
+import { DEFAULT_TARGET, isTarget } from '../pcode/keys.ts';
 
 type OutputName = (typeof OUTPUT)[keyof typeof OUTPUT];
 
@@ -31,6 +32,7 @@ const framesInput = element<HTMLInputElement>(ELEMENT.frames);
 const vimInput = element<HTMLInputElement>(ELEMENT.vim);
 const numberTextInput = element<HTMLInputElement>(ELEMENT.numberText);
 const directIndexInput = element<HTMLInputElement>(ELEMENT.directIndex);
+const targetSelect = element<HTMLSelectElement>(ELEMENT.target);
 const output = element<HTMLPreElement>(ELEMENT.output);
 const status = element<HTMLDivElement>(ELEMENT.status);
 const tabs = element<HTMLElement>(ELEMENT.tabs);
@@ -41,6 +43,7 @@ guardInput.value = String(savedOptions.guard ?? DEFAULT_GUARD);
 framesInput.value = String(savedOptions.frames ?? DEFAULT_FRAMES);
 numberTextInput.checked = savedOptions.numberText ?? true;
 directIndexInput.checked = savedOptions.directIndex ?? false;
+targetSelect.value = savedOptions.target ?? DEFAULT_TARGET;
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 
 let hostMap: string | null = null;
@@ -51,7 +54,7 @@ let shown: OutputName = OUTPUT.problems;
 let statusTimer = 0;
 
 const options = (): Options => {
-  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked };
+  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   return value;
 };
@@ -177,7 +180,7 @@ const editor = new CodeEditor(element(ELEMENT.editor), workspace, {
     }
     editor.select(location.line, location.column);
   },
-  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked),
+  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target),
 }, vimInput.checked);
 
 const examplesSelect = element<HTMLSelectElement>(ELEMENT.examples);
@@ -213,7 +216,7 @@ examplesSelect.addEventListener(EVENT.change, () => {
   show(OUTPUT.problems);
 });
 
-for (const input of [numberTextInput, directIndexInput]) {
+for (const input of [numberTextInput, directIndexInput, targetSelect]) {
   input.addEventListener(EVENT.change, () => {
     options();
     editor.relint();

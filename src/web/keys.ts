@@ -9,6 +9,7 @@ export const ELEMENT = Object.freeze({
   frames: 'frames',
   numberText: 'number-text',
   directIndex: 'direct-index',
+  target: 'target',
   compile: 'compile',
   run: 'run',
   hostMap: 'host-map',

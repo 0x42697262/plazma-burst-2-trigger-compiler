@@ -17,8 +17,9 @@ import { ASSEMBLY_EXTENSION, DEFAULT_PREFIX, EXTENSION, LEADING_DIGITS, PREFIX_C
 import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { TEXT } from './text.ts';
 import type { Workspace } from './workspace.ts';
+import type { Target } from '../pcode/keys.ts';
 
-export type Options = { prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean };
+export type Options = { prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target };
 export type Problem = ServiceDiagnostic & { file: string };
 export type Build = {
   result: CompileResult | null;
@@ -35,7 +36,7 @@ export const prefixFor = (file: string): string => {
   return cleaned === '' ? DEFAULT_PREFIX : cleaned;
 };
 
-export const checkOptions = (numberText: boolean, directIndex: boolean): Partial<CompileOptions> => ({ protectNumberText: numberText, directIndex });
+export const checkOptions = (numberText: boolean, directIndex: boolean, target: Target): Partial<CompileOptions> => ({ protectNumberText: numberText, directIndex, target });
 
 export function problemsOf(workspace: Workspace, file: string, options: Partial<CompileOptions> = {}): Problem[] {
   const source = workspace.get(file) ?? '';
@@ -44,7 +45,7 @@ export function problemsOf(workspace: Workspace, file: string, options: Partial<
 }
 
 export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null): Build {
-  const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex));
+  const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex, options.target));
   const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [] };
   if (problems.some((entry) => entry.severity === 'error')) return empty;
   const source = workspace.get(file) ?? '';
@@ -52,7 +53,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const compileOptions: Partial<CompileOptions> = {
     loopGuard: options.guard > 0 ? options.guard : null,
     varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : 'add',
-    ...checkOptions(options.numberText, options.directIndex),
+    ...checkOptions(options.numberText, options.directIndex, options.target),
   };
   let result: CompileResult;
   try {

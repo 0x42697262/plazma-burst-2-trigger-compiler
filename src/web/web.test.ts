@@ -6,7 +6,7 @@ import { collectExamples } from '../tools/build-web/build.ts';
 import path from 'node:path';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
