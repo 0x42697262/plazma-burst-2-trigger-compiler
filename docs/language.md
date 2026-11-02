@@ -50,6 +50,29 @@ Declare each map object the program uses with its kind and uid:
   instead of adding.
 - The kind words are not reserved: `var water = 1;` still works.
 
+### Object arrays
+
+```
+region spawns[] = ["#SPAWN1", "#SPAWN2", "#SPAWN3"];
+decor board[][] = [["#c00", "#c01"], ["#c10", "#c11"]];
+
+action(TeleportInitiatorFromTo, zone, spawns[random(len(spawns))]);
+action(299, board[row][column], 1);
+```
+
+- Indexes start at 0. `len(spawns)` and `len(board[0])` are known when compiling.
+- A fixed index (literal, constant, never-changing variable) puts that element's uid straight into
+  the action.
+- A changing index cannot pick an object while the map runs (targets are fixed at load), so the
+  compiler writes one guarded copy of the action per element, and only the matching one runs. With
+  several changing indexes, or object arrays in both parameters, it combines the indexes into one
+  key, so each copy is checked once. Cost: 2 actions per element, no extra triggers; keep arrays
+  small where an index changes.
+- An index outside the array does nothing; a fixed one outside is a compile error.
+- The element kind is checked like a single object, and create-if-missing adds each missing
+  element (named `spawns[0]`, `board[1][0]`...).
+- Object arrays work only as `action(...)` arguments and in `len`.
+
 ## Named values
 
 The editor's value lists are named values, written `Group.Name`: `Color.NoirLime` is `2`,
@@ -134,6 +157,7 @@ Collections:
 | `const NAME = 5;` | constant: a number, text, `true` or `false`; written into the actions |
 | `extern score;` / `extern s = "host name";` | a variable of the host map, used by its own name |
 | `water pool = "#water*1";` / `door gate = "#door*3" at 400, -120;` | a map object (see below) |
+| `region spawns[] = ["#S1", "#S2"];` / `decor grid[][] = [["#a", "#b"], ["#c", "#d"]];` | an array of map objects, nested to any depth |
 | `export var score = 0;` / `export var list[];` | a variable meant for the host map or other programs: listed after compiling; with `--into`, using a non-exported one from the host map is warned about |
 | `import "lib/tools.ptc";` | adds every declaration of that file (path relative to this file; each file once) |
 | `function f(a, b) { ... }` | function; builtin names cannot be used |
@@ -262,6 +286,7 @@ declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) 
                | "const" identifier "=" expression ";"
                | "extern" identifier [ "=" string ] ";"
                | object-kind identifier "=" string [ "at" signed "," signed ] ";"
+               | object-kind identifier "[" "]" { "[" "]" } "=" uid-list ";"
                | [ "export" ] "function" identifier "(" [ identifier { "," identifier } ] ")" block
                | "on" ( "start" | "join" | "chat" ) block
                | "every" number block ;
@@ -269,6 +294,7 @@ declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) 
 object-kind    = "region" | "door" | "character" | "gun" | "barrel" | "vehicle" | "decor"
                | "pusher" | "light" | "water" | "timer" | "trigger" ;
 signed         = [ "-" ] number ;
+uid-list       = "[" [ ( string | uid-list ) { "," ( string | uid-list ) } ] "]" ;
 
 block          = "{" { statement } "}" ;
 
@@ -305,7 +331,7 @@ primary        = number
                | "@" identifier
                | "(" expression ")"
                | identifier "(" [ expression { "," expression } ] ")"
-               | identifier "[" expression "]"
+               | identifier "[" expression "]" { "[" expression "]" }
                | identifier "." identifier
                | identifier ;
 
