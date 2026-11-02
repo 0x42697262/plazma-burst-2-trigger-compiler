@@ -52,6 +52,8 @@ A raw skip action (`op361`, `op364`, `op365`, `op123`) skips the next action. It
 an action, `jmp`, `call` or `ret`, not before a label, a conditional jump or `add $x, $y`
 (those are several actions).
 
+A program that uses a sync action (`op223` to `op227`) gets a Var Sync engine mark in its XML (F30).
+
 Every label that is jumped to starts a new trigger. Code longer than 100 actions continues in
 the next trigger; a skip action is never separated from the action it skips.
 

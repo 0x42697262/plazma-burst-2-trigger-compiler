@@ -33,6 +33,12 @@ The `.txt` output (for "Edit trigger as text") holds triggers only, not timers: 
 timers in the editor yourself (the CLI prints them). If one value cannot be written as text, no
 `.txt` is written; use the XML.
 
+## Which actions
+
+Every one of the game's 531 actions can be used: in `.ptc` with `action(op, a, b)`, in `.pasm` by
+alias or `op<N>`. The language has builtins for variables, text, arrays, timing, players and
+sync; the simulator runs 63 actions (all the compiler emits) and skips the others, listing them.
+
 ## Two source languages
 
 - `.ptc`: a small C-like language. Reference: [docs/language.md](docs/language.md).
@@ -49,6 +55,7 @@ timers in the editor yourself (the CLI prints them). If one value cannot be writ
 | `--out <dir>` | output folder |
 | `--at <x>,<y>` | where the first trigger goes in the map (default 0,0; then a grid of 10 per row, 60 apart) |
 | `--run`, `--frames <n>` | simulate the program for n frames and print variables, chat and errors |
+| `--no-sync-mark` | do not add the Var Sync engine mark that a program with sync actions needs (with `--into`, a map that has one keeps it and gets no second one) |
 | `--help` | all options |
 
 ## Development

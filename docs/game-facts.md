@@ -39,6 +39,7 @@ Action numbers are always the client's. The community manual is off by one aroun
 | F27 | 348 gives `Date.now()` (milliseconds since 1970), not time since start | case 348, `flash.js` (`getTimer=()=>Date.now()`) | `time()` is a wall clock |
 | F28 | 185 gives `"Empty"` for an inactive slot; 188 reads `chars[vars[B]]` with no active check (an unknown slot throws, and the frame is dropped) | cases 185/188, `_strings.js` | Simulator matches |
 | F29 | In 22 saved maps (765 variable names), map makers mostly name variables `var_name` (333); none wrap names in `~…~`; 44 names lie inside other names (`~level` in `~levelBox`) | `plazma-burst-2/data/maps/*.xml`, 2026-11-02 | `~<prefix>_name~` cannot lie inside a host name, but a plain host name (`level`) can lie inside ours: with `--into` the compiler warns about that |
+| F30 | Sync actions 223–227 throw when the map has no Var Sync engine mark (`<inf mark="var_sync">`; the flag is set by the loader and never cleared), so the rest of the trigger is dropped. With the mark they send the variable only in multiplayer; a name or value over 2048 characters also throws. 6 of the 22 saved maps use them, each with one mark | `actions.js` cases 223–227, `frame2.js:12062`; saved maps; live `lang-sync.ptc` (with the mark the trigger goes on) | The XML gets the mark when a program syncs; the simulator throws without it |
 
 ## Open checks (need a player)
 
@@ -50,6 +51,7 @@ Action numbers are always the client's. The community manual is off by one aroun
 3. Website path for `& < > "`: does the editor and server round-trip keep them as the game sees
    them in local maps (F26)?
 4. `for player` (action 508) in a multiplayer match with 2 or more players (F25).
+5. `sync(x)` in a multiplayer match: the other players get the value (F30).
 
 ## Where things are in the client
 

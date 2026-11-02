@@ -72,6 +72,7 @@ Text escapes: `\" \\ \n \{ \}`.
 | `text(x)`, `number(x)` | x as text, x as a number |
 | `floor(x)`, `round(x)`, `random(n)` | `random(n)`: whole number 0 .. n-1 |
 | `slot()`, `initiator()`, `name(slot)`, `time()` | current player slot, player-initiator slot, displayed name, milliseconds since 1970 (a wall clock: compare two readings) |
+| `sync(x)` / `sync(x, mode)` | sends variable (or fixed array element) `x` to every player in a multiplayer match. Modes: `replace` (default, 223), `default` (224, only where unset), `max` (225), `min` (226), `longest` (227). The map needs a Var Sync engine mark: the XML output adds one (F30) |
 | `push(list, value)` | writes `value` at index `len(list)` and adds 1 to the length |
 | `action(op, a, b)` | any action, by number or alias. A name argument gives that variable's game name, `@f` gives function `f`'s uid, text gives itself; `{x}` inside text gives x's game name |
 
