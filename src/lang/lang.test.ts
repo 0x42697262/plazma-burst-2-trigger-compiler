@@ -471,6 +471,10 @@ on start {
       assert.equal(get('value'), text);
       assert.ok(!program.triggers.some((trigger) => trigger.actions.some((action) => action.targetB === text)));
     }
+    const raw = run('var value = "007";\non start { say(value); }', 1, { protectNumberText: false });
+    assert.equal(raw.get('value'), '007');
+    assert.ok(raw.program.triggers.some((trigger) => trigger.actions.some((action) => action.targetB === '007')));
+    assert.ok(raw.warnings.some((warning) => warning.includes('--no-number-text')));
     const { program } = run('var value = "12";\non start { say(value); }');
     assert.ok(program.triggers.some((trigger) => trigger.actions.some((action) => action.targetB === '12')));
   });

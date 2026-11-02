@@ -16,9 +16,9 @@ import { TEXT } from './text.ts';
 
 export type VarSyncMark = 'add' | 'present' | 'off';
 
-export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[]; varSync: VarSyncMark };
+export type CompileOptions = { loopGuard: number | null; startTimer: boolean; externalUids: readonly string[]; varSync: VarSyncMark; protectNumberText: boolean };
 
-export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add' });
+export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add', protectNumberText: true });
 
 export type CompileResult = {
   program: Program;

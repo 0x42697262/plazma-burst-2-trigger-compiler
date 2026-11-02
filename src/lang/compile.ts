@@ -45,5 +45,6 @@ export function compileSource(source: string, prefix: string, options: Partial<C
     if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
     throw error;
   }
-  return compileModule(generate(file, names), names, { ...DEFAULT_OPTIONS, ...options });
+  const merged: CompileOptions = { ...DEFAULT_OPTIONS, ...options };
+  return compileModule(generate(file, names, merged.protectNumberText), names, merged);
 }

@@ -164,6 +164,7 @@ function terminates(statements: readonly Statement[]): boolean {
 
 export class Generator {
   private readonly names: Names;
+  private readonly protectNumberText: boolean;
   private readonly globals = new Map<string, SymbolEntry>();
   private readonly functions = new Map<string, FunctionInfo>();
   private readonly timers: TimerSpec[] = [];
@@ -179,8 +180,9 @@ export class Generator {
   private frame: Frame;
   private location: SourceLocation = { line: 0 };
 
-  constructor(names: Names, file: SourceFile) {
+  constructor(names: Names, file: SourceFile, protectNumberText: boolean) {
     this.names = names;
+    this.protectNumberText = protectNumberText;
     this.frame = new Frame(names, EMPTY_TEXT, false);
     const graph = callGraph(file);
     this.reach = reachable(graph);
@@ -195,7 +197,7 @@ export class Generator {
 
   private act(opcode: number, targetA: string | Operand, targetB: string | Operand = FALSE_TEXT): void {
     const operand = (value: string | Operand): Operand => (typeof value === 'string' ? textOperand(value) : value);
-    if (opcode === OPCODE.setVariable && typeof targetA === 'string' && typeof targetB === 'string' && editorTurnsIntoNumber(targetB)) {
+    if (this.protectNumberText && opcode === OPCODE.setVariable && typeof targetA === 'string' && typeof targetB === 'string' && editorTurnsIntoNumber(targetB)) {
       this.emit({ kind: 'action', opcode, targetA: operand(targetA), targetB: operand(NUMBER_TEXT_MARK + targetB), location: this.location });
       this.emit({ kind: 'action', opcode: OPCODE.removeStart, targetA: operand(String(NUMBER_TEXT_MARK.length)), targetB: operand(targetA), location: this.location });
       return;
@@ -204,7 +206,7 @@ export class Generator {
   }
 
   private protectedValue(value: Value): Value {
-    if (value.kind !== 'literal' || !editorTurnsIntoNumber(value.text)) return value;
+    if (!this.protectNumberText || value.kind !== 'literal' || !editorTurnsIntoNumber(value.text)) return value;
     const temp = this.frame.temp();
     this.act(OPCODE.setVariable, temp, value.text);
     return variable(temp);
@@ -1472,9 +1474,9 @@ export class Generator {
   }
 }
 
-export function generate(file: SourceFile, names: Names): Module {
+export function generate(file: SourceFile, names: Names, protectNumberText = true): Module {
   try {
-    return new Generator(names, file).generate(file);
+    return new Generator(names, file, protectNumberText).generate(file);
   } catch (error) {
     if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
     throw error;

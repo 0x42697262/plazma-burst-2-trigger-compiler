@@ -85,6 +85,18 @@ describe('compile CLI', () => {
     assert.ok(lines.err.some((line) => line.includes('no Var Sync engine mark is added')));
   });
 
+  it('writes number-like text as it is with --no-number-text', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'n.ptc');
+    fs.writeFileSync(source, 'var code = "007";\non start { say(code); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder], output), 0);
+    assert.match(fs.readFileSync(path.join(folder, 'n.xml'), 'utf8'), /"_007"/);
+    assert.equal(main([source, '--out', folder, '--no-number-text'], output), 0);
+    assert.match(fs.readFileSync(path.join(folder, 'n.xml'), 'utf8'), /"007"/);
+    assert.ok(lines.err.some((line) => line.includes('website editor turns the value "007"')));
+  });
+
   it('adds declared objects the host map lacks, and only those', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'o.ptc');
