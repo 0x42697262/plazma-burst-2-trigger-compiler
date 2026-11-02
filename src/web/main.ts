@@ -234,7 +234,7 @@ examplesSelect.addEventListener(EVENT.change, () => {
   if (examplesSelect.value === '') return;
   workspace.loadExample(examples, examplesSelect.value);
   storage?.setItem(STORAGE.example, examplesSelect.value);
-  editor.reload();
+  editor.open(workspace.active);
   renderTabs();
   last = null;
   show(OUTPUT.problems);

@@ -57,6 +57,7 @@ export const ENVIRONMENT_ASSIGN = '=';
 export const ENVIRONMENT_COMMENT = '#';
 export const LINE_BREAK = /\r?\n/;
 export const LEADING_SLASH = /^\//;
+export const COPY_SEPARATOR = '-';
 export const HIGHLIGHT = Object.freeze({
   lineComment: '//',
   blockStart: '/*',

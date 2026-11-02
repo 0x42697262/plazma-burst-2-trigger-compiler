@@ -1,5 +1,7 @@
 import { directoryOf, resolvePath } from '../lang/file-paths.ts';
-import { DEFAULT_FILE, EXAMPLES_ROOT, IMPORT_STATEMENT, LEADING_SLASH, STORAGE, WORKSPACE_ROOT } from './keys.ts';
+import { COPY_SEPARATOR, DEFAULT_FILE, EXAMPLES_ROOT, EXTENSION, IMPORT_STATEMENT, LEADING_SLASH, STORAGE, WORKSPACE_ROOT } from './keys.ts';
+import { FIRST_COPY_NUMBER } from './constants.ts';
+import { PATH_SEPARATOR } from '../lang/keys.ts';
 
 export class Workspace {
   private readonly files = new Map<string, string>();
@@ -64,9 +66,21 @@ export class Workspace {
       for (const match of text.matchAll(IMPORT_STATEMENT)) visit(resolvePath(directoryOf(file), match[1] ?? ''));
     };
     visit(path);
-    this.files.clear();
-    for (const [file, text] of copies) this.files.set(WORKSPACE_ROOT + file.slice(root.length + 1), text);
-    this.current = WORKSPACE_ROOT + path.slice(root.length + 1);
+    const relative = (file: string): string => file.slice(root.length + PATH_SEPARATOR.length);
+    const fits = (folder: string): boolean => [...copies].every(([file, text]) => {
+      const existing = this.files.get(folder + relative(file));
+      return existing === undefined || existing === text;
+    });
+    const name = (relative(path).split(PATH_SEPARATOR).pop() ?? relative(path)).replace(EXTENSION, '');
+    const folders = function* (): Generator<string> {
+      yield WORKSPACE_ROOT;
+      yield WORKSPACE_ROOT + name + PATH_SEPARATOR;
+      for (let number = FIRST_COPY_NUMBER; ; number++) yield WORKSPACE_ROOT + name + COPY_SEPARATOR + number + PATH_SEPARATOR;
+    };
+    let folder = WORKSPACE_ROOT;
+    for (folder of folders()) if (fits(folder)) break;
+    for (const [file, text] of copies) this.files.set(folder + relative(file), text);
+    this.current = folder + relative(path);
     this.save();
   }
 

@@ -19,6 +19,27 @@ describe('web page logic', () => {
     assert.equal(workspace.active, '/work/11-infix.ptc');
   });
 
+  it('opens examples next to the open files and never overwrites a changed file', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'on start { say("mine"); }\n');
+    workspace.loadExample(examples, '/examples/tutorial/11-infix.ptc');
+    workspace.loadExample(examples, '/examples/tutorial/01-hello.ptc');
+    assert.deepEqual(workspace.list(), ['/work/01-hello.ptc', '/work/11-infix.ptc', '/work/lib/tokenizer.ptc', '/work/main.ptc']);
+    assert.equal(workspace.active, '/work/01-hello.ptc');
+    workspace.loadExample(examples, '/examples/tutorial/11-infix.ptc');
+    assert.equal(workspace.list().length, 4);
+    assert.equal(workspace.active, '/work/11-infix.ptc');
+    workspace.set('/work/11-infix.ptc', '// my changes\n');
+    workspace.loadExample(examples, '/examples/tutorial/11-infix.ptc');
+    assert.equal(workspace.get('/work/11-infix.ptc'), '// my changes\n');
+    assert.equal(workspace.active, '/work/11-infix/11-infix.ptc');
+    assert.ok(workspace.get('/work/11-infix/lib/tokenizer.ptc'));
+    workspace.set('/work/11-infix/11-infix.ptc', '// more changes\n');
+    workspace.loadExample(examples, '/examples/tutorial/11-infix.ptc');
+    assert.equal(workspace.active, '/work/11-infix-2/11-infix.ptc');
+    assert.equal(workspace.get('/work/main.ptc'), 'on start { say("mine"); }\n');
+  });
+
   it('compiles, runs and appends to a map in the browser pipeline', () => {
     const workspace = new Workspace(null);
     workspace.loadExample(examples, '/examples/tutorial/11-infix.ptc');
