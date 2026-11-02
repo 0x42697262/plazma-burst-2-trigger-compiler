@@ -19,7 +19,9 @@ import { TEXT } from './text.ts';
 import type { Workspace } from './workspace.ts';
 import type { Target } from '../pcode/keys.ts';
 
-export type Options = { prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string };
+export type Options = {
+  prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string;
+};
 export type Problem = ServiceDiagnostic & { file: string };
 export type Build = {
   result: CompileResult | null;
@@ -64,11 +66,15 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [], uids: [] };
   if (problems.some((entry) => entry.severity === 'error')) return empty;
   const source = workspace.get(file) ?? '';
-  const prefix = options.nameSeed.trim() !== '' ? seededPrefix(options.nameSeed.trim()) : options.prefix === '' ? prefixFor(file) : options.prefix;
+  const nameSeed = options.nameSeed.trim();
+  const plainPrefix = options.prefix === '' ? prefixFor(file) : options.prefix;
+  const seed = options.obfuscate ? options.obfuscateSeed.trim() || nameSeed || plainPrefix : null;
+  const prefix = nameSeed !== '' ? seededPrefix(nameSeed) : options.prefix !== '' || seed === null ? plainPrefix : seededPrefix(seed);
   const compileOptions: Partial<CompileOptions> = {
     loopGuard: options.guard > 0 ? options.guard : null,
     varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : 'add',
     ...checkOptions(options.numberText, options.directIndex, options.target, environment),
+    obfuscate: seed === null ? null : { seed },
   };
   let result: CompileResult;
   try {
@@ -90,6 +96,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   let text = '';
   try {
     text = joinTextBlocks(emitText(result.program));
+    if (result.obfuscation !== null) notes.push(TEXT.textNeedsOrder);
     if (result.program.timers.length > 0) {
       notes.push(TEXT.textNeedsTimers(result.program.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)).join(TEXT.listSeparator)));
     }

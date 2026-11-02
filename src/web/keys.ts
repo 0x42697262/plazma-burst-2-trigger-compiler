@@ -20,6 +20,8 @@ export const ELEMENT = Object.freeze({
   hostMapButton: 'host-map-button',
   replace: 'replace',
   nameSeed: 'name-seed',
+  obfuscate: 'obfuscate',
+  obfuscateSeed: 'obfuscate-seed',
   outputTabs: 'output-tabs',
   output: 'output',
   copy: 'copy',

@@ -7,7 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '' };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '' };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -43,6 +43,23 @@ describe('web page logic', () => {
     const second = build(workspace, '/work/main.ptc', { ...OPTIONS, nameSeed: '2', replace: true }, withBuild, {}, first.uids);
     assert.ok(second.map.includes('#gate1') && second.map.includes('"v2"') && !second.map.includes('"v1"'));
     for (const uid of first.uids) assert.ok(!second.map.includes(uid), `stale ${uid}`);
+  });
+
+  it('obfuscates with a seed and updates the map in place across seeds', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'var n = 0;\non start { while (n < 3) { n += 1; } say("count {n}"); }\n');
+    workspace.activate('/work/main.ptc');
+    const host = '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n';
+    const first = build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: 'a' }, host);
+    assert.deepEqual(first.problems, []);
+    assert.equal(simulate(first.result!, 1)[0], 'chat: count 3');
+    assert.ok(!first.xml.includes('count'));
+    const second = build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: 'b', replace: true }, first.map, {}, first.uids);
+    assert.equal(simulate(second.result!, 1)[0], 'chat: count 3');
+    for (const uid of first.uids) assert.ok(!second.map.includes(`"${uid}"`), `stale ${uid}`);
+    const order = [...second.map.matchAll(/<trigger uid="([^"]+)"/g)].map((match) => match[1]);
+    assert.deepEqual(order, second.result!.program.triggers.map((trigger) => trigger.uid));
+    assert.ok(second.notes.some((note) => note.includes('trigger order')));
   });
 
   it('replaces an older build of the program in the host map when asked', () => {
