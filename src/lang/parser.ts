@@ -1,7 +1,7 @@
 import type { Declaration, Expression, Import, Location, MatchArm, ObjectTree, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
 import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
-import { COMPOUND_ASSIGNMENTS, CONTEXTUAL, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
+import { COMPOUND_ASSIGNMENTS, CONTEXTUAL, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, STATEMENT_KEYWORDS, UID_MARK, UID_RANGE } from './keys.ts';
 import { isObjectKeyword } from '../objects/objects.ts';
 import { VALUE_GROUP_LIST, valueGroup } from '../opcodes/values.ts';
 
@@ -9,6 +9,7 @@ const fail = (location: Location, message: string): never => {
   throw new SourceError(location.line, message, location.file);
 };
 import { TEXT } from './text.ts';
+import { MAX_UID_RANGE } from './constants.ts';
 
 class Parser {
   private readonly tokens: Token[];
@@ -141,6 +142,11 @@ class Parser {
       const frames = Number(this.next().text);
       return { kind: 'every', frames, body: this.block(), location };
     }
+    const word = this.current.text;
+    const after = this.peek(1);
+    const startsStatement = after.kind === 'punctuator' && (after.text === PUNCTUATOR.openParen || after.text === PUNCTUATOR.assign || after.text === PUNCTUATOR.openBracket || Object.hasOwn(COMPOUND_ASSIGNMENTS, after.text));
+    const statementLike = (this.current.kind === 'keyword' && STATEMENT_KEYWORDS.has(word)) || (this.current.kind === 'identifier' && startsStatement);
+    if (statementLike) throw new SourceError(this.current.line, TEXT.statementAtTopLevel(word), this.file);
     return this.fail(TEXT.topLevel);
   }
 
@@ -162,14 +168,20 @@ class Parser {
       dimensions += 1;
     }
     this.expect(PUNCTUATOR.assign);
+    if (dimensions === 1 && this.current.kind === 'string') {
+      const tree = this.uids(this.next(), name, location);
+      this.expect(PUNCTUATOR.semicolon);
+      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, location };
+    }
     if (dimensions > 0) {
       const tree = this.objectTree(dimensions, name, location);
       this.expect(PUNCTUATOR.semicolon);
       return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, location };
     }
     if (this.current.kind !== 'string') this.fail(TEXT.string);
-    const uid = this.stringText(this.next());
-    if (!uid.startsWith(UID_MARK)) throw new SourceError(location.line, TEXT.objectUid(name));
+    const expanded = this.uids(this.next(), name, location);
+    if (expanded.length !== 1) throw new SourceError(location.line, TEXT.uidRangeNeedsArray(name), this.file);
+    const uid = expanded[0] as string;
     let positionX: number | null = null;
     let positionY: number | null = null;
     if (this.isWord(OBJECT_AT)) {
@@ -191,14 +203,34 @@ class Parser {
           items.push(this.objectTree(depth - 1, name, location));
         } else {
           if (this.current.kind !== 'string') this.fail(TEXT.string);
-          const uid = this.stringText(this.next());
-          if (!uid.startsWith(UID_MARK)) throw new SourceError(location.line, TEXT.objectUid(name), this.file);
-          items.push(uid);
+          items.push(...this.uids(this.next(), name, location));
         }
       } while (this.accept(PUNCTUATOR.comma));
     }
     this.expect(PUNCTUATOR.closeBracket);
     return items;
+  }
+
+  private uids(token: Token, name: string, location: Location): string[] {
+    if (token.kind !== 'string') return this.fail(TEXT.string);
+    let uids = [''];
+    for (const part of token.parts) {
+      if (part.kind === 'text') {
+        uids = uids.map((uid) => uid + part.text);
+        continue;
+      }
+      const range = UID_RANGE.exec(part.source);
+      if (range === null) throw new SourceError(location.line, TEXT.uidRange(part.source.trim()), this.file);
+      const first = Number(range[1]);
+      const last = Number(range[2]);
+      const step = first <= last ? 1 : -1;
+      const count = Math.abs(last - first) + 1;
+      if (uids.length * count > MAX_UID_RANGE) throw new SourceError(location.line, TEXT.uidRangeTooLong(name, uids.length * count), this.file);
+      const numbers = Array.from({ length: count }, (_, index) => String(first + step * index));
+      uids = uids.flatMap((uid) => numbers.map((number) => uid + number));
+    }
+    if (uids.some((uid) => !uid.startsWith(UID_MARK))) throw new SourceError(location.line, TEXT.objectUid(name), this.file);
+    return uids;
   }
 
   private isWord(word: string): boolean {

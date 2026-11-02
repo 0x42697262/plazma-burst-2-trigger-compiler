@@ -1,3 +1,4 @@
+import { MAX_UID_RANGE } from './constants.ts';
 export const TEXT = Object.freeze({
   where: (line: number, message: string, file?: string): string => (file === undefined ? `line ${line}: ${message}` : `${file} line ${line}: ${message}`),
   exportable: '"function" or "var"',
@@ -52,6 +53,10 @@ export const TEXT = Object.freeze({
   unusedFunction: (name: string): string => `the function "${name}" is never called; it was left out`,
   syncTarget: 'sync(...) needs a variable or an array element with a fixed index',
   syncMode: (modes: readonly string[]): string => `the sync mode must be one of ${modes.join(', ')}`,
+  uidRange: (source: string): string => `{${source}} in a uid must be a range of whole numbers, like {0..15}`,
+  uidRangeTooLong: (name: string, count: number): string => `the uid ranges of "${name}" make ${count} objects; at most ${MAX_UID_RANGE} are allowed`,
+  uidRangeNeedsArray: (name: string): string => `a uid with a range makes several objects: declare "${name}" as an array, like ${name}[]`,
+  statementAtTopLevel: (word: string): string => `"${word}" is a statement: put it inside on start { } or a function`,
   objectUid: (name: string): string => `the uid of "${name}" must start with #, like "#water*1"`,
   objectAsValue: (name: string): string => `"${name}" is a map object; use it as an argument of action(...)`,
   wrongObject: (action: number, side: string, expected: string, name: string, keyword: string): string =>
