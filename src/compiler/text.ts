@@ -1,4 +1,5 @@
 export const TEXT = Object.freeze({
+  keptTooLate: (stem: string): string => `Internal error: "${stem}" was named before it was marked as kept.`,
   badPrefix: (prefix: string): string => `The prefix "${prefix}" must start with a letter and hold only letters and digits.`,
   noStartLabel: 'The program must start with a label.',
   unknownLabel: (label: string): string => `Unknown label "${label}".`,

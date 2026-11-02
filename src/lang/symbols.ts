@@ -1,8 +1,8 @@
 import type { Names } from '../compiler/names.ts';
-import type { ObjectTree } from './ast.ts';
+import type { Declaration, ObjectTree } from './ast.ts';
 import { ARRAY_LENGTH, ELEMENT_CLOSE, ELEMENT_OPEN, LOCAL_SEPARATOR, RETURN_NAME, SHADOW_SEPARATOR, STACK_NAME, TEMP_NAME } from './keys.ts';
 import { FIRST_SHADOW } from './constants.ts';
-import { VARIABLE_MARK, INTERNAL_MARK, USER_SEPARATOR } from '../compiler/keys.ts';
+import { VARIABLE_MARK, INTERNAL_MARK, TOKEN_SPACE, USER_SEPARATOR } from '../compiler/keys.ts';
 
 export type SymbolEntry =
   | { kind: 'variable'; name: string; constant: false }
@@ -17,9 +17,9 @@ export type Loop = { breakLabel: string; continueLabel: string };
 
 export const ELEMENT_END = `${ELEMENT_CLOSE}${VARIABLE_MARK}`;
 
-export const elementOpening = (names: Names, base: string): string => `${VARIABLE_MARK}${names.prefix}${USER_SEPARATOR}${base}${ELEMENT_OPEN}`;
+export const elementOpening = (names: Names, base: string): string => `${VARIABLE_MARK}${names.prefix}${USER_SEPARATOR}${names.userStem(base)}${ELEMENT_OPEN}`;
 
-export const stackOpening = (names: Names): string => `${VARIABLE_MARK}${names.prefix}${INTERNAL_MARK}${STACK_NAME}${ELEMENT_OPEN}`;
+export const stackOpening = (names: Names): string => `${VARIABLE_MARK}${names.prefix}${INTERNAL_MARK}${names.internalStem(STACK_NAME)}${ELEMENT_OPEN}`;
 
 export const elementName = (names: Names, base: string, indexText: string): string => `${elementOpening(names, base)}${indexText}${ELEMENT_END}`;
 
@@ -31,6 +31,20 @@ export const functionReturnName = (names: Names, name: string): string => names.
 
 export const parameterName = (names: Names, functionName: string, parameter: string): string =>
   names.variable(`${functionName}${LOCAL_SEPARATOR}${parameter}`);
+
+export function keepExported(names: Names, declarations: readonly Declaration[]): void {
+  for (const declaration of declarations) {
+    if (declaration.kind === 'var' && declaration.exported) {
+      names.keep(TOKEN_SPACE.user, declaration.name);
+      if (declaration.array) names.keep(TOKEN_SPACE.user, `${declaration.name}${LOCAL_SEPARATOR}${ARRAY_LENGTH}`);
+    }
+    if (declaration.kind === 'function' && declaration.exported) {
+      names.keep(TOKEN_SPACE.userUid, declaration.name);
+      names.keep(TOKEN_SPACE.internal, `${declaration.name}${LOCAL_SEPARATOR}${RETURN_NAME}`);
+      for (const parameter of declaration.params) names.keep(TOKEN_SPACE.user, `${declaration.name}${LOCAL_SEPARATOR}${parameter}`);
+    }
+  }
+}
 
 export class Frame {
   readonly key: string;
