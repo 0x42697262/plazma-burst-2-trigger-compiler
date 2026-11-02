@@ -9,3 +9,5 @@ export const RANDOM_INCREMENT = 12345;
 export const RANDOM_MODULUS = 2147483648;
 export const TRUE_FLAG = 1;
 export const FALSE_FLAG = 0;
+export const CLOCK_START = 1767225600000;
+export const MILLISECONDS_PER_FRAME = 1000 / 30;

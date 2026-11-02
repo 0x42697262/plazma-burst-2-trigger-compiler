@@ -1,9 +1,10 @@
 import type { Program } from '../program/types.ts';
 import { OPCODE } from '../opcodes/constants.ts';
 import {
-  DEFAULT_MAX_STEPS, FALSE_FLAG, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
+  CLOCK_START, DEFAULT_MAX_STEPS, FALSE_FLAG, MILLISECONDS_PER_FRAME, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
 } from './constants.ts';
-import { UNKNOWN_PLAYER_NAME } from './keys.ts';
+import { EMPTY_SLOT_NAME, SHOWN_TEXT_ENTITIES } from './keys.ts';
+import { escapeXml } from '../emit/xml-emitter.ts';
 import { TEXT } from './text.ts';
 import { add, loadValue, replaceVariables, stringOf, toFloat, toIndex, toNumber } from './values.ts';
 import type { Registry } from './values.ts';
@@ -36,6 +37,7 @@ export class Simulation {
   readonly variables: Record<string, unknown> = {};
   readonly chat: string[] = [];
   readonly errors: string[] = [];
+  readonly unsimulated = new Set<number>();
   readonly triggers: LoadedTrigger[];
   readonly timers: LoadedTimer[];
   private readonly options: SimulationOptions;
@@ -55,8 +57,8 @@ export class Simulation {
       calls: trigger.maxCalls,
       actions: trigger.actions.map((action) => ({
         opcode: action.opcode,
-        targetA: loadValue(action.targetA, this.registry),
-        targetB: loadValue(action.targetB, this.registry),
+        targetA: loadValue(escapeXml(action.targetA), this.registry),
+        targetB: loadValue(escapeXml(action.targetB), this.registry),
       })),
     }));
     this.timers = program.timers.map((timer) => ({
@@ -168,7 +170,14 @@ export class Simulation {
 
   private playerName(slot: number): string {
     const player = this.options.players.find((entry) => entry.slot === slot);
-    return player?.active ? player.name : UNKNOWN_PLAYER_NAME;
+    return player?.active ? player.name : EMPTY_SLOT_NAME;
+  }
+
+  private characterName(slot: unknown): string {
+    const key = String(slot);
+    const player = this.options.players.find((entry) => String(entry.slot) === key);
+    if (!player) throw new Error(TEXT.noCharacter(key));
+    return player.name;
   }
 
   private activeSlots(): unknown {
@@ -192,7 +201,7 @@ export class Simulation {
     };
     switch (action.opcode) {
       case OPCODE.showText:
-        this.chat.push(replaceVariables(stringOf(action.targetA), vars));
+        this.chat.push(replaceVariables(SHOWN_TEXT_ENTITIES.reduce((text, [entity, character]) => text.split(entity).join(character), stringOf(action.targetA)), vars));
         break;
       case OPCODE.disableTrigger:
         this.triggerAt(action.targetA).enabled = false;
@@ -300,7 +309,7 @@ export class Simulation {
         vars[nameA] = this.playerName(toIndex(valueB));
         break;
       case OPCODE.playerNameBySlotVariable:
-        vars[nameA] = this.playerName(toNumber(vars[nameB]));
+        vars[nameA] = this.characterName(vars[nameB]);
         break;
       case OPCODE.onPlayerJoin:
         this.joinTrigger = toIndex(action.targetA);
@@ -322,7 +331,7 @@ export class Simulation {
         vars[vars[nameA] as string] = vars[nameB];
         break;
       case OPCODE.timeSinceStart:
-        vars[nameA] = this.frames;
+        vars[nameA] = Math.round(CLOCK_START + this.frames * MILLISECONDS_PER_FRAME);
         break;
       case OPCODE.splitByValue:
         vars[nameA] = STRING_GUARD(vars[nameA]).split(valueB as string);
@@ -369,7 +378,7 @@ export class Simulation {
         vars[nameA] = this.activeSlots();
         break;
       default:
-        throw new Error(TEXT.unsupported(action.opcode));
+        this.unsimulated.add(action.opcode);
     }
   }
 }

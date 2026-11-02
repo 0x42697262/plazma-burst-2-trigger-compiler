@@ -114,9 +114,29 @@ describe('simulator', () => {
     assert.equal(simulation.variables.joins, 2);
   });
 
-  it('reports unsupported actions as errors', () => {
-    const simulation = new Simulation(program(trigger('#a', [action(0, '1', '2')])));
+  it('skips actions it does not simulate and records them', () => {
+    const simulation = new Simulation(program(trigger('#a', [action(0, '1', '2'), action(100, 'after', '1')])));
     simulation.run(0);
-    assert.match(simulation.errors[0] ?? '', /Action 0 is not simulated/);
+    assert.deepEqual([...simulation.unsimulated], [0]);
+    assert.equal(simulation.variables.after, 1);
+  });
+
+  it('sees XML-escaped text like the game, and shows < > " decoded', () => {
+    const simulation = new Simulation(program(trigger('#a', [action(100, 'x', 'a<b & "c"'), action(42, 'say <"hi"> & bye', '0')])));
+    simulation.run(0);
+    assert.equal(simulation.variables.x, 'a&lt;b &amp; &quot;c&quot;');
+    assert.deepEqual(simulation.chat, ['say <"hi"> &amp; bye']);
+  });
+
+  it('names players like the game: Empty for an inactive slot, and no active check by variable', () => {
+    const players = [{ slot: 0, name: 'ann', active: true }, { slot: 1, name: 'old', active: false }];
+    const simulation = new Simulation(program(trigger('#a', [
+      action(185, 'inactive', '1'), action(100, 's', '1'), action(188, 'byVariable', 's'), action(100, 'bad', '0.0'), action(188, 'never', 'bad'),
+    ])), { players });
+    simulation.run(0);
+    assert.equal(simulation.variables.inactive, 'Empty');
+    assert.equal(simulation.variables.byVariable, 'old');
+    assert.equal(simulation.variables.never, undefined);
+    assert.equal(simulation.errors.length, 1);
   });
 });
