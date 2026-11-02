@@ -13,7 +13,7 @@ import { TEXT } from './text.ts';
 type PlacedAction = { opcode: number; targetA: Operand; targetB: Operand; location: SourceLocation | null };
 type Block = { label: string; entry: boolean; actions: PlacedAction[]; fallsThrough: boolean };
 
-export type SourceMapEntry = { uid: string; lines: number[] };
+export type SourceMapEntry = { uid: string; lines: number[]; files: (string | null)[] };
 export type LayoutResult = { triggers: Trigger[]; warnings: string[]; sourceMap: SourceMapEntry[]; labels: Map<string, string> };
 
 const referencedLabels = (items: readonly MachineItem[]): Set<string> => {
@@ -209,6 +209,7 @@ export function layout(items: readonly MachineItem[], names: Names): LayoutResul
   const sourceMap = chunks.map((chunk) => ({
     uid: names.triggerUid(chunk.label),
     lines: chunk.actions.map((action) => action.location?.line ?? 0),
+    files: chunk.actions.map((action) => action.location?.file ?? null),
   }));
   return { triggers, warnings, sourceMap, labels };
 }

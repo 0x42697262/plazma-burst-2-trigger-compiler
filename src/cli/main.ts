@@ -86,7 +86,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = lastValue(parsed, FLAG.prefix) ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
-    const result = frontEnd.compile(source, prefix, options);
+    const result = frontEnd.compile(source, prefix, options, file);
     for (const warning of result.warnings) output.err(TEXT.warning(warning));
     const actions = result.program.triggers.reduce((total, trigger) => total + trigger.actions.length, 0);
     output.out(TEXT.summary(result.program.triggers.length, actions, result.program.timers.length));

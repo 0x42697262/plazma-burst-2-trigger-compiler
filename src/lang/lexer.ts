@@ -14,10 +14,12 @@ export type Token =
 
 export class SourceError extends Error {
   readonly line: number;
+  file: string | undefined;
 
-  constructor(line: number, message: string) {
+  constructor(line: number, message: string, file?: string) {
     super(message);
     this.line = line;
+    this.file = file;
   }
 }
 

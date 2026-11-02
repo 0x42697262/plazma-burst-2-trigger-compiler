@@ -1,6 +1,6 @@
 import type { BinaryOperator } from './keys.ts';
 
-export type Location = { line: number };
+export type Location = { line: number; file?: string };
 
 export type TemplatePart = { kind: 'text'; text: string } | { kind: 'expression'; expression: Expression };
 
@@ -40,4 +40,6 @@ export type Declaration =
   | { kind: 'on'; event: 'start' | 'join' | 'chat'; body: Statement[]; location: Location }
   | { kind: 'every'; frames: number; body: Statement[]; location: Location };
 
-export type SourceFile = { declarations: Declaration[] };
+export type Import = { path: string; location: Location };
+
+export type SourceFile = { declarations: Declaration[]; imports: Import[] };

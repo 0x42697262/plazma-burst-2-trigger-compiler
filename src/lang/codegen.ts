@@ -37,7 +37,7 @@ const BUILTIN_ARITY: Readonly<Record<string, number>> = {
 };
 
 const fail = (location: Location, message: string): never => {
-  throw new SourceError(location.line, message);
+  throw new SourceError(location.line, message, location.file);
 };
 
 const isLiteralExpression = (expression: Expression): boolean =>
@@ -191,7 +191,7 @@ export class Generator {
   }
 
   private at(location: Location): void {
-    this.location = { line: location.line };
+    this.location = location.file === undefined ? { line: location.line } : { line: location.line, file: location.file };
   }
 
   generate(file: SourceFile): Module {
@@ -233,7 +233,7 @@ export class Generator {
       if (declaration.kind !== 'function') continue;
       const section = this.functionSection(declaration);
       if (this.used.has(declaration.name)) sections.push(section);
-      else this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
+      else if (declaration.location.file === undefined) this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
     return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects };
   }
@@ -1264,7 +1264,7 @@ export function generate(file: SourceFile, names: Names): Module {
   try {
     return new Generator(names, file).generate(file);
   } catch (error) {
-    if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message));
+    if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
     throw error;
   }
 }

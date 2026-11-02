@@ -1,4 +1,4 @@
-import type { Declaration, Expression, Location, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
+import type { Declaration, Expression, Import, Location, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
 import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
 import { COMPOUND_ASSIGNMENTS, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
@@ -7,10 +7,12 @@ import { TEXT } from './text.ts';
 
 class Parser {
   private readonly tokens: Token[];
+  private readonly file: string | undefined;
   private position = 0;
 
-  constructor(tokens: Token[]) {
+  constructor(tokens: Token[], file: string | undefined) {
     this.tokens = tokens;
+    this.file = file;
   }
 
   private peek(offset: number): Token {
@@ -22,7 +24,7 @@ class Parser {
   }
 
   private location(): Location {
-    return { line: this.current.line };
+    return this.file === undefined ? { line: this.current.line } : { line: this.current.line, file: this.file };
   }
 
   private describe(token: Token): string {
@@ -68,8 +70,19 @@ class Parser {
 
   sourceFile(): SourceFile {
     const declarations: Declaration[] = [];
-    while (!this.atEnd()) declarations.push(this.declaration());
-    return { declarations };
+    const imports: Import[] = [];
+    while (!this.atEnd()) {
+      if (this.isKeyword(KEYWORD.import)) {
+        const location = this.location();
+        this.next();
+        if (this.current.kind !== 'string') this.fail(TEXT.string);
+        imports.push({ path: this.stringText(this.next()), location });
+        this.expect(PUNCTUATOR.semicolon);
+      } else {
+        declarations.push(this.declaration());
+      }
+    }
+    return { declarations, imports };
   }
 
   private declaration(): Declaration {
@@ -306,7 +319,7 @@ class Parser {
     }
     if (token.kind === 'string') {
       this.next();
-      return { kind: 'string', parts: token.parts.map(templatePart), location };
+      return { kind: 'string', parts: token.parts.map((part) => templatePart(part, this.file)), location };
     }
     if (this.accept(KEYWORD.true)) return { kind: 'boolean', value: true, location };
     if (this.accept(KEYWORD.false)) return { kind: 'boolean', value: false, location };
@@ -332,12 +345,19 @@ class Parser {
   }
 }
 
-function templatePart(part: StringPart): TemplatePart {
+function templatePart(part: StringPart, file: string | undefined): TemplatePart {
   if (part.kind === 'text') return part;
-  const parser = new Parser(tokenize(part.source, part.line));
+  const parser = new Parser(tokenize(part.source, part.line), file);
   const expression = parser.expression();
   if (!parser.atEnd()) throw new SourceError(part.line, TEXT.expected(TEXT.quoted(PUNCTUATOR.closeBrace), TEXT.expression));
   return { kind: 'expression', expression };
 }
 
-export const parseSource = (source: string): SourceFile => new Parser(tokenize(source)).sourceFile();
+export function parseSource(source: string, file?: string): SourceFile {
+  try {
+    return new Parser(tokenize(source), file).sourceFile();
+  } catch (error) {
+    if (error instanceof SourceError && error.file === undefined) error.file = file;
+    throw error;
+  }
+}

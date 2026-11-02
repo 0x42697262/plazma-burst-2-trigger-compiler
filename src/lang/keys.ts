@@ -1,11 +1,11 @@
 export const KEYWORDS: ReadonlySet<string> = new Set([
   'var', 'const', 'let', 'extern', 'function', 'export', 'on', 'every', 'if', 'else', 'while', 'for', 'player',
-  'break', 'continue', 'return', 'true', 'false', 'wait',
+  'break', 'continue', 'return', 'true', 'false', 'wait', 'import',
 ]);
 export const KEYWORD = Object.freeze({
   var: 'var', const: 'const', let: 'let', extern: 'extern', function: 'function', export: 'export', on: 'on', every: 'every',
   if: 'if', else: 'else', while: 'while', for: 'for', player: 'player', break: 'break', continue: 'continue', return: 'return',
-  true: 'true', false: 'false', wait: 'wait',
+  true: 'true', false: 'false', wait: 'wait', import: 'import',
 } as const);
 export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat' } as const);
 export const PUNCTUATORS: readonly string[] = Object.freeze([

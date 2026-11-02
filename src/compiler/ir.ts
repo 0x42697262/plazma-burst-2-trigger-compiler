@@ -4,7 +4,7 @@ export type Operand = { kind: 'text'; text: string } | { kind: 'label'; label: s
 
 export type Condition = 'eq' | 'ne' | 'lt' | 'le' | 'gt' | 'ge';
 
-export type SourceLocation = { line: number };
+export type SourceLocation = { line: number; file?: string };
 
 export type Instruction =
   | { kind: 'label'; label: string; entry: boolean }

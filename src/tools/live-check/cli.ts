@@ -35,7 +35,7 @@ function loadCases(): Case[] {
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(file);
-    const result = frontEnd.compile(source, prefix, {});
+    const result = frontEnd.compile(source, prefix, {}, file);
     const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS });
     simulation.tick(SIMULATED_FRAMES);
     return { name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), simulated: encodeVariables(simulation.variables), errors: simulation.errors };
