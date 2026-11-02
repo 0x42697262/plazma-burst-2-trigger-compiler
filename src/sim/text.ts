@@ -5,6 +5,8 @@ export const TEXT = Object.freeze({
   noVarSync: 'Sync action without the Var Sync engine mark in the map.',
   syncNameTooLong: 'Sync action: the variable name is longer than 2048 characters.',
   syncValueTooLong: 'Sync action: the value is longer than 2048 characters.',
+  notText: (value: string): string => `${value} is a number here; the game calls toLowerCase() on it and fails.`,
+  noRegion: (uid: string): string => `No region ${uid} in the simulation options.`,
   noCharacter: (slot: string): string => `No character in slot ${slot}.`,
   stepLimit: (steps: number): string => `Stopped after ${steps} actions: endless loop?`,
   notAllowed: (opcode: number): string => `action ${opcode} acts on the game`,

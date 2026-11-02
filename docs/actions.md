@@ -60,7 +60,7 @@ needs the Var Sync engine mark (F30).
 
 | # | Text name | A | B | Description | Notes |
 |---|---|---|---|---|---|
-| 174 | `op174` | string | nochange | Set global AI difficulty (easy = 1, normal = 2, hard = 3) |  |
+| 174 | `op174` | string | nochange | Set global AI difficulty (easy = 1, normal = 2, hard = 3) | sim |
 
 ## Array (7)
 
@@ -471,9 +471,9 @@ needs the Var Sync engine mark (F30).
 
 | # | Text name | A | B | Description | Notes |
 |---|---|---|---|---|---|
-| 161 | `op161` | nochange | nochange | Clear all session variables |  |
-| 162 | `op162` | string | string | Save value of regular variable 'B' to session variable 'A' |  |
-| 163 | `op163` | string | string | Load value for regular variable 'B' from session variable 'A' |  |
+| 161 | `op161` | nochange | nochange | Clear all session variables | sim |
+| 162 | `op162` | string | string | Save value of regular variable 'B' to session variable 'A' | sim |
+| 163 | `op163` | string | string | Load value for regular variable 'B' from session variable 'A' | sim |
 
 ## Sound (3)
 
@@ -526,7 +526,7 @@ needs the Var Sync engine mark (F30).
 | 95 | `op95` | region | region | Continue execution of this trigger only if tracing from center of Region 'A' to center of Region 'B' is possible |  |
 | 96 | `op96` | region | region | Continue execution of this trigger only if tracing from center of Region 'A' to center of Region 'B' is impossible |  |
 | 99 | `ExecTrigger` | trigger | nochange | Execute trigger 'A' | sim |
-| 230 | `op230` | string | string | Continue trigger actions execution only if value of session variable 'A' was set by map with ID 'B' (list of map IDs can be used, separated with commas without spaces) |  |
+| 230 | `op230` | string | string | Continue trigger actions execution only if value of session variable 'A' was set by map with ID 'B' (list of map IDs can be used, separated with commas without spaces) | sim |
 | 275 | `op275` | nochange | nochange | Continue trigger actions execution only if loading of custom images has been finished |  |
 | 276 | `op276` | nochange | nochange | Continue trigger actions execution only if all custom images have been successfully loaded (any error will prevent execution until map is restarted) |  |
 | 362 | `op362` | string | nochange | Switch execution to trigger ID in variable 'A' | sim, avoid |
@@ -557,18 +557,18 @@ needs the Var Sync engine mark (F30).
 | 108 | `VarRound` | string | nochange | Round value of variable 'A' | sim |
 | 109 | `VarFloor` | string | nochange | Floor value of variable 'A' | sim |
 | 110 | `continue if VarA > VarB ` | string | string | Continue trigger actions execution only if variable 'A' is greater than variable 'B' | sim |
-| 111 | `continue if VarA < VarB ` | string | string | Continue trigger actions execution only if variable 'A' is less than variable 'B' |  |
-| 112 | `continue if VarA == VarB ` | string | string | Continue trigger actions execution only if variable 'A' equals variable 'B' |  |
-| 113 | `continue if VarA != VarB ` | string | string | Continue trigger actions execution only if variable 'A' does not equals to variable 'B' |  |
-| 114 | `continue if VarA > ValueB ` | string | string | Continue trigger actions execution only if variable 'A' has greater value than value 'B' |  |
+| 111 | `continue if VarA < VarB ` | string | string | Continue trigger actions execution only if variable 'A' is less than variable 'B' | sim |
+| 112 | `continue if VarA == VarB ` | string | string | Continue trigger actions execution only if variable 'A' equals variable 'B' | sim |
+| 113 | `continue if VarA != VarB ` | string | string | Continue trigger actions execution only if variable 'A' does not equals to variable 'B' | sim |
+| 114 | `continue if VarA > ValueB ` | string | string | Continue trigger actions execution only if variable 'A' has greater value than value 'B' | sim |
 | 115 | `continue if VarA < ValueB ` | string | string | Continue trigger actions execution only if value of variable 'A' is less than value 'B' | sim |
-| 116 | `continue if VarA == ValueB ` | string | string | Continue trigger actions execution only if value of variable 'A' equals value 'B' |  |
-| 117 | `continue if VarA != ValueB ` | string | string | Continue trigger actions execution only if value of variable 'A' does not equals to value 'B' |  |
-| 118 | `VarSetRegionX` | string | region | Set value of variable 'A' to value of region 'B' X position of left-top corner point |  |
-| 119 | `VarSetRegionY` | string | region | Set value of variable 'A' to value of region 'B' Y position of left-top corner point |  |
-| 120 | `RegionXSetVar` | region | string | Set X position of 'A' region left-top corner point to value of variable 'B' |  |
-| 121 | `RegionYSetVar` | region | string | Set Y position of 'A' region left-top corner point to value of variable 'B' |  |
-| 122 | `VarSetCharHP` | string | character | Set value of variable 'A' to hitpoints value of player 'B' |  |
+| 116 | `continue if VarA == ValueB ` | string | string | Continue trigger actions execution only if value of variable 'A' equals value 'B' | sim |
+| 117 | `continue if VarA != ValueB ` | string | string | Continue trigger actions execution only if value of variable 'A' does not equals to value 'B' | sim |
+| 118 | `VarSetRegionX` | string | region | Set value of variable 'A' to value of region 'B' X position of left-top corner point | sim |
+| 119 | `VarSetRegionY` | string | region | Set value of variable 'A' to value of region 'B' Y position of left-top corner point | sim |
+| 120 | `RegionXSetVar` | region | string | Set X position of 'A' region left-top corner point to value of variable 'B' | sim |
+| 121 | `RegionYSetVar` | region | string | Set Y position of 'A' region left-top corner point to value of variable 'B' | sim |
+| 122 | `VarSetCharHP` | string | character | Set value of variable 'A' to hitpoints value of player 'B' | sim |
 | 123 | `next if VarA == ValueB` | string | string | Skip next trigger action if value of variable 'A' does not equals value 'B' | sim, skips |
 | 124 | `VarSetModuloDivValue` | string | string | Set variable 'A' value to remainder after division by value 'B' (only positive numbers) | sim |
 | 125 | `VarSetVar` | string | string | Set variable 'A' value to value of variable 'B' | sim |
@@ -581,23 +581,23 @@ needs the Var Sync engine mark (F30).
 | 132 | `VarDivVar` | string | string | Divide variable 'A' by value of variable 'B' | sim |
 | 133 | `VarPowVar` | string | string | Set value of variable 'A' to result of power function with value of variable 'A' and power of value of variable 'B' | sim |
 | 134 | `VarPowValue` | string | string | Set value of variable 'A' to result of power function with value of variable 'A' and power of value 'B' | sim |
-| 135 | `VarSinVar` | string | string | Set value of variable 'A' to result of sin function with value of variable 'B' (in radians) as parameter |  |
-| 136 | `VarCosVar` | string | string | Set value of variable 'A' to result of cos function with value of variable 'B' (in radians) as parameter |  |
+| 135 | `VarSinVar` | string | string | Set value of variable 'A' to result of sin function with value of variable 'B' (in radians) as parameter | sim |
+| 136 | `VarCosVar` | string | string | Set value of variable 'A' to result of cos function with value of variable 'B' (in radians) as parameter | sim |
 | 137 | `SetACurrentPlayerSlot` | string | string | Set value of variable 'A' to slot of current player | sim |
-| 138 | `SetIsMP` | string | string | Set value of variable 'A' to 1 if game is in multiplyer mode and to 0 in else case |  |
-| 139 | `SetIsSpectator` | string | string | Set value of variable 'A' to 1 if my player is spectating this match as spectator and to 0 in else case |  |
-| 140 | `SetIsLowPhys` | string | string | Set value of variable 'A' to 1 if LOW PHYSICS setting is enabled and to 0 in else case |  |
-| 145 | `SetCountAliveInRegion` | string | region | Set value of variable 'A' to number of alive players in region 'B' |  |
+| 138 | `SetIsMP` | string | string | Set value of variable 'A' to 1 if game is in multiplyer mode and to 0 in else case | sim |
+| 139 | `SetIsSpectator` | string | string | Set value of variable 'A' to 1 if my player is spectating this match as spectator and to 0 in else case | sim |
+| 140 | `SetIsLowPhys` | string | string | Set value of variable 'A' to 1 if LOW PHYSICS setting is enabled and to 0 in else case | sim |
+| 145 | `SetCountAliveInRegion` | string | region | Set value of variable 'A' to number of alive players in region 'B' | sim |
 | 146 | `SetLoginOfInitiator` | string | nochange | Set string-value of variable 'A' to login name of player-initiator | sim |
-| 147 | `SetNicknameOfInitiator` | string | nochange | Set string-value of variable 'A' to displayed name of player-initiator |  |
-| 148 | `SetMPMode` | string | nochange | Set string-value of variable 'A' to multiplayer match name |  |
+| 147 | `SetNicknameOfInitiator` | string | nochange | Set string-value of variable 'A' to displayed name of player-initiator | sim |
+| 148 | `SetMPMode` | string | nochange | Set string-value of variable 'A' to multiplayer match name | sim |
 | 149 | `SetIsAContainsValueB` | string | string | Set value of variable 'A' to 1 if string-value of variable 'A' contains string-value 'B' and to 0 in else case | sim |
 | 150 | `SetIsAContainsVarB` | string | string | Set value of variable 'A' to 1 if string-value of variable 'A' contains string-value of variable 'B' and to 0 in else case | sim |
 | 151 | `CountLength` | string | string | Set value of variable 'A' to length of string-value of variable 'B' | sim |
 | 152 | `AddString` | string | string | Add string-value of variable 'B' at the end of string-value of variable 'A' | sim |
-| 153 | `OneMinusA` | string | nochange | Set value of variable 'A' to 1-A |  |
+| 153 | `OneMinusA` | string | nochange | Set value of variable 'A' to 1-A | sim |
 | 154 | `MinusA` | string | nochange | Set value of variable 'A' to -A | sim |
-| 155 | `GetGSPEED` | string | nochange | Set value of variable 'A' to current frame time |  |
+| 155 | `GetGSPEED` | string | nochange | Set value of variable 'A' to current frame time | sim |
 | 157 | `GetTalkerLogin` | string | nochange | Set string-value of variable 'A' to login name of player who says text | sim |
 | 158 | `GetTalkerNickname` | string | nochange | Set string-value of variable 'A' to displayed name of player who says text | sim |
 | 159 | `GetTalkerID` | string | nochange | Set value of variable 'A' to slot index of player who says text | sim |
@@ -605,22 +605,22 @@ needs the Var Sync engine mark (F30).
 | 171 | `op171` | gun | string | Change Gun 'A' speed multiplier to value of variable 'B' |  |
 | 173 | `op173` | gun | string | Change Gun 'A' recoil multiplier to value of variable 'B' |  |
 | 176 | `op176` | gun | string | Change Gun 'A' projectile model to model with index-value of variable 'B' |  |
-| 177 | `op177` | string | nochange | Set value of variable 'A' to id of type of current multiplayer mode (0 = singleplayer, 1 = DM, 2 = COOP, 3 = TDM) |  |
+| 177 | `op177` | string | nochange | Set value of variable 'A' to id of type of current multiplayer mode (0 = singleplayer, 1 = DM, 2 = COOP, 3 = TDM) | sim |
 | 178 | `op178` | string | character | Save inventory info of Character 'B' to variable 'A' |  |
 | 179 | `op179` | string | character | Spawn all weapons stored in variable 'A' at position of Character 'B' |  |
 | 180 | `op180` | string | nochange | Set value of variable 'A' to player-initiator slot | sim |
-| 181 | `op181` | string | nochange | Set value of variable 'A' to player-killer slot |  |
-| 182 | `op182` | string | nochange | Set value of variable 'A' to login name of player-killer |  |
-| 183 | `op183` | string | nochange | Set value of variable 'A' to displayed name of player-killer |  |
+| 181 | `op181` | string | nochange | Set value of variable 'A' to player-killer slot | sim |
+| 182 | `op182` | string | nochange | Set value of variable 'A' to login name of player-killer | sim |
+| 183 | `op183` | string | nochange | Set value of variable 'A' to displayed name of player-killer | sim |
 | 184 | `op184` | string | string | Set value of variable 'A' to login name of player with slot 'B' | sim |
 | 185 | `op185` | string | string | Set value of variable 'A' to displayed name of player with slot 'B' | sim |
 | 186 | `op186` | string | string | Set value of variable 'A' to team ID of player with slot 'B' | sim |
 | 187 | `op187` | string | string | Set value of variable 'A' to login name of player with slot-value of variable 'B' | sim |
 | 188 | `op188` | string | string | Set value of variable 'A' to displayed name of player with slot-value of variable 'B' | sim |
 | 189 | `op189` | string | string | Set value of variable 'A' to team ID of player with slot-value of variable 'B' | sim |
-| 204 | `op204` | string | string | Set value of variable 'A' to result of asin function with value of variable 'B' as parameter |  |
-| 205 | `op205` | string | string | Set value of variable 'A' to result of acos function with value of variable 'B' as parameter |  |
-| 206 | `op206` | string | string | Set value of variable 'A' to result of atan2 function with values of variables 'A' and 'B' as parameters |  |
+| 204 | `op204` | string | string | Set value of variable 'A' to result of asin function with value of variable 'B' as parameter | sim |
+| 205 | `op205` | string | string | Set value of variable 'A' to result of acos function with value of variable 'B' as parameter | sim |
+| 206 | `op206` | string | string | Set value of variable 'A' to result of atan2 function with values of variables 'A' and 'B' as parameters | sim |
 | 223 | `op223` | string | nochange | Synchronize value of variable 'A' through overriding value for all connected players (requires Var Sync engine mark) | sim, needs var_sync |
 | 224 | `op224` | string | nochange | Synchronize value of variable 'A' through keeping defined value (requires Var Sync engine mark) | sim, needs var_sync |
 | 225 | `op225` | string | nochange | Synchronize value of variable 'A' through keeping maximum value (requires Var Sync engine mark) | sim, needs var_sync |
@@ -638,7 +638,7 @@ needs the Var Sync engine mark (F30).
 | 263 | `op263` | string | nochange | Save energy value to variable 'A' (gameplay) |  |
 | 264 | `op264` | string | nochange | Load energy value from variable 'A' (gameplay) |  |
 | 265 | `op265` | string | nochange | Set max energy value to value of variable 'A' (gameplay) |  |
-| 266 | `op266` | string | nochange | Save current AI difficulty to variable 'A' (easy = 1, normal = 2, hard = 3) |  |
+| 266 | `op266` | string | nochange | Save current AI difficulty to variable 'A' (easy = 1, normal = 2, hard = 3) | sim |
 | 277 | `op277` | string | nochange | Save current number of loaded custom images to variable 'A' |  |
 | 278 | `op278` | string | nochange | Save number of expected custom images on current level to variable 'A' |  |
 | 280 | `op280` | string | nochange | Set variable 'A' to 1 if compromised song should play (if non-dying enemy is hunting player or player is hunting non-dying enemy). Sets to value 0.5 in case if song should be played more quietly (if there are non-dying enemies within radius of 400px). In else case sets to 0 |  |
@@ -648,15 +648,15 @@ needs the Var Sync engine mark (F30).
 | 296 | `op296` | gun | string | Override existing Gun 'A' with a new gun with model by string-value of variable 'B' |  |
 | 299 | `op299` | decor | string | Set decoration 'A' visibility multiplier to value of variable 'B' (0...1) |  |
 | 302 | `op302` | gun | string | Set Gun 'A' projectile scale to value of variable 'B' |  |
-| 314 | `op314` | string | character | Set variable 'A' to 1 if Character 'B' is dying (variable 'A' becomes 0 in else case) |  |
-| 315 | `op315` | string | nochange | Set variable 'A' to 1 if Character-initiator is dying (variable 'A' becomes 0 in else case) |  |
-| 316 | `op316` | string | nochange | Set variable 'A' to 1 if Character-killer is dying (variable 'A' becomes 0 in else case) |  |
+| 314 | `op314` | string | character | Set variable 'A' to 1 if Character 'B' is dying (variable 'A' becomes 0 in else case) | sim |
+| 315 | `op315` | string | nochange | Set variable 'A' to 1 if Character-initiator is dying (variable 'A' becomes 0 in else case) | sim |
+| 316 | `op316` | string | nochange | Set variable 'A' to 1 if Character-killer is dying (variable 'A' becomes 0 in else case) | sim |
 | 325 | `op325` | string | string | Replace variables with their values in string-value of variable 'B' and save result to variable 'A' | sim, replaces B |
 | 326 | `op326` | string | string | Replace variables with their values in string-value 'B' and save result to variable 'A' | sim, replaces B |
 | 327 | `op327` | string | string | Set variable 'A' value to random number with floating point in range 0..X, where X is value of variable 'B' | sim |
-| 328 | `op328` | string | string | Set variable 'A' value to random integer number in range 0..X-1, where X is value of variable 'B' |  |
+| 328 | `op328` | string | string | Set variable 'A' value to random integer number in range 0..X-1, where X is value of variable 'B' | sim |
 | 329 | `op329` | string | string | Set interface visibility multiplier to value of variable 'A' and cursor visibility multiplier to value of variable 'B' |  |
-| 331 | `op331` | string | nochange | Set variable 'A' string-value to string-value of ''Gameplay modifications'' field from match starting screen |  |
+| 331 | `op331` | string | nochange | Set variable 'A' string-value to string-value of ''Gameplay modifications'' field from match starting screen | sim |
 | 332 | `op332` | string | gun | Set variable 'A' to value 1 if Gun 'B' is not in owner's active slot, set to value 0 in else case |  |
 | 333 | `op333` | string | gun | Set variable 'A' to value 1 if Gun 'B' has owner, set to value 0 in else case |  |
 | 334 | `op334` | string | gun | Set variable 'A' to number of frames passed since last attack of Gun 'B' |  |
@@ -684,8 +684,8 @@ needs the Var Sync engine mark (F30).
 | 372 | `op372` | string | string | Remove beginning 'A' characters from variable 'B' (-/+) | sim |
 | 373 | `op373` | string | string | Set variable 'A' to degrees between regions in 'B' (seperated by commas) |  |
 | 376 | `op376` | string | character | Set variable 'A' to stability of Character 'B' |  |
-| 393 | `op393` | string | nochange | Set variable 'A' to value of time in miliseconds (since January 1 1970) |  |
-| 394 | `op394` | string | string | Set variable 'A' to value of time between January 1 1970 and variable 'B' (year, month, day) in miliseconds |  |
+| 393 | `op393` | string | nochange | Set variable 'A' to value of time in miliseconds (since January 1 1970) | sim |
+| 394 | `op394` | string | string | Set variable 'A' to value of time between January 1 1970 and variable 'B' (year, month, day) in miliseconds | sim |
 | 397 | `op397` | string | nochange | Set variable 'A' to value of 1 if mouse is held down and to 0 if else case |  |
 | 398 | `op398` | string | string | Set variable 'A' to distance between 2 regions in 'B' (separated by commas) |  |
 | 400 | `op400` | string | nochange | Add ghost effect to Character slot-value variable 'A' |  |
@@ -700,20 +700,20 @@ needs the Var Sync engine mark (F30).
 | 432 | `op432` | string | string | Set Y speed of Character slot-value variable 'A' to value of variable 'B' |  |
 | 434 | `op434` | string | character | Set variable 'A' value to speed of Character 'B' |  |
 | 435 | `op435` | string | string | Set variable 'A' value to speed of Character slot-value variable 'B' |  |
-| 436 | `op436` | string | nochange | Set variable 'A' to map ID of current game |  |
+| 436 | `op436` | string | nochange | Set variable 'A' to map ID of current game | sim |
 | 448 | `op448` | string | value | Set Character slot-value variable 'A' Health bar GUI opacity to value 'B' |  |
 | 449 | `op449` | string | string | Set Character slot-value variable 'A' Health bar GUI opacity to variable 'B' |  |
 | 452 | `op452` | string | string | Change Character slot-value variable 'A' sword life to variable 'B' |  |
-| 463 | `op463` | string | nochange | Set variable 'A' to value of chatting status (0 = off, 1 = chat, 2 = team chat) |  |
+| 463 | `op463` | string | nochange | Set variable 'A' to value of chatting status (0 = off, 1 = chat, 2 = team chat) | sim |
 | 465 | `op465` | string | string | Set Character slot-value variable 'A' current and max hit points to variable 'B' |  |
 | 471 | `op471` | string | gun | Set variable 'A' to rotation of Gun 'B' |  |
 | 472 | `op472` | string | gun | Set variable 'A' to X scale of Gun 'B' |  |
 | 474 | `op474` | string | gun | Set variable 'A' to Y scale of Gun 'B' |  |
 | 509 | `op509` | string | gun | Set variable 'A' to length of Gun 'B' |  |
-| 510 | `op510` | string | nochange | Set variable 'A' to value of current framerate |  |
+| 510 | `op510` | string | nochange | Set variable 'A' to value of current framerate | sim |
 | 531 | `op531` | string | string | Save inventory info of Character slot-value variable 'B' to variable 'A' |  |
 | 532 | `op532` | string | string | Spawn all weapons stored in variable 'A' at position of Character slot-value variable 'B' |  |
-| 544 | `op544` | string | string | Set variable 'A' to 1 if Character slot-value variable 'B' is dying |  |
+| 544 | `op544` | string | string | Set variable 'A' to 1 if Character slot-value variable 'B' is dying | sim |
 
 ## Vehicle (4)
 

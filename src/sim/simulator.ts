@@ -1,15 +1,21 @@
 import type { Program } from '../program/types.ts';
 import { OPCODE, SYNC_TEXT_LIMIT } from '../opcodes/constants.ts';
 import {
-  CLOCK_START, DECIMAL, DEFAULT_MAX_STEPS, FALSE_FLAG, MILLISECONDS_PER_FRAME, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
+  AI_DIFFICULTY, CLOCK_START, DATE_PARTS, DEFAULT_HITPOINTS, FRAMES_PER_SECOND, NO_PLAYER, DECIMAL, DEFAULT_MAX_STEPS, FALSE_FLAG, MILLISECONDS_PER_FRAME, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
 } from './constants.ts';
-import { EMPTY_LOGIN, EMPTY_SLOT_NAME, SHOWN_TEXT_ENTITIES, UID_MARK } from './keys.ts';
+import { DATE_SEPARATOR, DATE_SPACE, EMPTY, EMPTY_LOGIN, EMPTY_SLOT_NAME, SESSION_SEPARATOR, SHOWN_TEXT_ENTITIES, UID_MARK } from './keys.ts';
 import { escapeXml } from '../emit/xml-emitter.ts';
 import { TEXT } from './text.ts';
 import { add, loadValue, replaceVariables, stringOf, toFloat, toIndex, toNumber } from './values.ts';
 import type { Registry } from './values.ts';
 
-export type Player = { slot: number; name: string; active: boolean; team?: number; login?: string };
+export type Player = { slot: number; name: string; active: boolean; team?: number; login?: string; hitpoints?: number; dying?: boolean; x?: number; y?: number };
+
+export type Region = { x: number; y: number; w: number; h: number };
+
+export type Session = { values: Record<string, unknown>; maps: Record<string, string> };
+
+export const newSession = (): Session => ({ values: {}, maps: {} });
 
 export type SimulationOptions = {
   maxSteps: number;
@@ -18,10 +24,26 @@ export type SimulationOptions = {
   initiatorSlot: number;
   frameSpeed: number;
   allowedActions: ReadonlySet<number> | null;
+  killerSlot: number;
+  multiplayer: boolean;
+  spectator: boolean;
+  lowPhysics: boolean;
+  matchName: string;
+  matchMode: number;
+  mapId: string;
+  gameplayModifications: string;
+  frameTime: number;
+  frameRate: number;
+  chatStatus: number;
+  aiDifficulty: number;
+  regions: Readonly<Record<string, Region>>;
+  session: Session | null;
 };
 
 export const DEFAULT_SIMULATION: SimulationOptions = Object.freeze({
-  maxSteps: DEFAULT_MAX_STEPS, players: [], currentSlot: 0, initiatorSlot: 0, frameSpeed: 1, allowedActions: null,
+  maxSteps: DEFAULT_MAX_STEPS, players: [], currentSlot: 0, initiatorSlot: NO_PLAYER, frameSpeed: 1, allowedActions: null,
+  killerSlot: NO_PLAYER, multiplayer: false, spectator: false, lowPhysics: false, matchName: EMPTY, matchMode: 0, mapId: EMPTY,
+  gameplayModifications: EMPTY, frameTime: 1, frameRate: FRAMES_PER_SECOND, chatStatus: 0, aiDifficulty: AI_DIFFICULTY.normal, regions: {}, session: null,
 });
 
 type LoadedAction = { opcode: number; targetA: unknown; targetB: unknown };
@@ -51,10 +73,16 @@ export class Simulation {
   private steps = 0;
   private frames = 0;
   private seed = RANDOM_SEED;
+  private aiDifficulty: number;
+  private readonly regions: Record<string, Region>;
+  readonly session: Session;
 
   constructor(program: Program, options: Partial<SimulationOptions> = {}) {
     this.options = { ...DEFAULT_SIMULATION, ...options };
     this.varSync = program.varSyncMark === true;
+    this.aiDifficulty = this.options.aiDifficulty;
+    this.regions = Object.fromEntries(Object.entries(this.options.regions).map(([uid, region]) => [uid, { ...region }]));
+    this.session = this.options.session ?? newSession();
     program.triggers.forEach((trigger, index) => this.register(trigger.uid, index));
     program.timers.forEach((timer, index) => this.register(timer.uid, index));
     this.triggers = program.triggers.map((trigger) => ({
@@ -188,6 +216,38 @@ export class Simulation {
   private playerName(slot: number): string {
     const player = this.options.players.find((entry) => entry.slot === slot);
     return player?.active ? player.name : EMPTY_SLOT_NAME;
+  }
+
+  private player(slot: unknown): Player {
+    const player = this.options.players.find((entry) => String(entry.slot) === String(slot) && entry.active);
+    if (!player) throw new Error(TEXT.noCharacter(String(slot)));
+    return player;
+  }
+
+  private region(value: unknown): Region {
+    const region = this.regions[String(value)];
+    if (!region) throw new Error(TEXT.noRegion(String(value)));
+    return region;
+  }
+
+  private killer(): Player | null {
+    return this.options.killerSlot === NO_PLAYER ? null : this.player(this.options.killerSlot);
+  }
+
+  private aliveIn(region: Region): number {
+    return this.options.players.filter((player) => player.active && (player.hitpoints ?? DEFAULT_HITPOINTS) > 0
+      && (player.x ?? 0) > region.x && (player.x ?? 0) < region.x + region.w && (player.y ?? 0) > region.y && (player.y ?? 0) < region.y + region.h).length;
+  }
+
+  private setAiDifficulty(level: number): void {
+    if (level <= AI_DIFFICULTY.easy) this.aiDifficulty = AI_DIFFICULTY.easy;
+    else if (level <= AI_DIFFICULTY.normal) this.aiDifficulty = AI_DIFFICULTY.normal;
+    else this.aiDifficulty = AI_DIFFICULTY.hard;
+  }
+
+  private date(text: string): number {
+    const parts = text.split(DATE_SPACE).join(EMPTY).split(DATE_SEPARATOR).map(Number);
+    return new Date(parts[DATE_PARTS.year] ?? 0, parts[DATE_PARTS.month] ?? 0, parts[DATE_PARTS.day] ?? 0).getTime();
   }
 
   private playerLogin(slot: unknown, emptyWhenMissing: boolean): string {
@@ -449,6 +509,146 @@ export class Simulation {
         vars[nameB] = count > 0 ? text.slice(count) : text.slice(0, text.length - (-count));
         break;
       }
+      case OPCODE.continueIfLess:
+        if (!(toFloat(vars[nameA]) < toFloat(vars[nameB]))) stop();
+        break;
+      case OPCODE.continueIfEqual:
+        if (vars[nameA] !== vars[nameB]) stop();
+        break;
+      case OPCODE.continueIfNotEqual:
+        if (vars[nameA] === vars[nameB]) stop();
+        break;
+      case OPCODE.continueIfGreaterValue:
+        if (!(toFloat(vars[nameA]) > toFloat(valueB))) stop();
+        break;
+      case OPCODE.continueIfEqualValue:
+        if (vars[nameA] !== valueB) stop();
+        break;
+      case OPCODE.continueIfNotEqualValue:
+        if (vars[nameA] === valueB) stop();
+        break;
+      case OPCODE.regionX:
+        vars[nameA] = this.region(valueB).x;
+        break;
+      case OPCODE.regionY:
+        vars[nameA] = this.region(valueB).y;
+        break;
+      case OPCODE.setRegionX:
+        this.region(action.targetA).x = toFloat(vars[nameB]);
+        break;
+      case OPCODE.setRegionY:
+        this.region(action.targetA).y = toFloat(vars[nameB]);
+        break;
+      case OPCODE.hitpoints:
+        vars[nameA] = this.player(toIndex(valueB)).hitpoints ?? DEFAULT_HITPOINTS;
+        break;
+      case OPCODE.sine:
+        vars[nameA] = Math.sin(toFloat(vars[nameB]));
+        break;
+      case OPCODE.cosine:
+        vars[nameA] = Math.cos(toFloat(vars[nameB]));
+        break;
+      case OPCODE.arcSine:
+        vars[nameA] = Math.asin(toFloat(vars[nameB]));
+        break;
+      case OPCODE.arcCosine:
+        vars[nameA] = Math.acos(toFloat(vars[nameB]));
+        break;
+      case OPCODE.arcTangent2:
+        vars[nameA] = Math.atan2(toFloat(vars[nameA]), toFloat(vars[nameB]));
+        break;
+      case OPCODE.isMultiplayer:
+        vars[nameA] = this.options.multiplayer ? TRUE_FLAG : FALSE_FLAG;
+        break;
+      case OPCODE.isSpectator:
+        vars[nameA] = this.options.spectator ? TRUE_FLAG : FALSE_FLAG;
+        break;
+      case OPCODE.isLowPhysics:
+        vars[nameA] = this.options.lowPhysics ? TRUE_FLAG : FALSE_FLAG;
+        break;
+      case OPCODE.aliveInRegion:
+        vars[nameA] = this.aliveIn(this.region(valueB));
+        break;
+      case OPCODE.initiatorName:
+        vars[nameA] = this.player(this.options.initiatorSlot).name;
+        break;
+      case OPCODE.matchName:
+        vars[nameA] = this.options.matchName;
+        break;
+      case OPCODE.oneMinus:
+        vars[nameA] = 1 - (vars[nameA] as number);
+        break;
+      case OPCODE.frameTime:
+        vars[nameA] = this.options.frameTime;
+        break;
+      case OPCODE.clearSession:
+        this.session.values = {};
+        this.session.maps = {};
+        break;
+      case OPCODE.saveSession:
+        this.session.maps[nameA] = this.options.mapId;
+        this.session.values[nameA] = vars[nameB];
+        break;
+      case OPCODE.loadSession:
+        vars[nameB] = this.session.values[nameA];
+        break;
+      case OPCODE.continueIfSessionFrom:
+        if (typeof valueB !== 'string') throw new Error(TEXT.notText(stringOf(valueB)));
+        if ((SESSION_SEPARATOR + stringOf(valueB).toLowerCase() + SESSION_SEPARATOR).indexOf(SESSION_SEPARATOR + stringOf(this.session.maps[nameA]) + SESSION_SEPARATOR) === NOT_FOUND) stop();
+        break;
+      case OPCODE.setAiDifficulty:
+        this.setAiDifficulty(toIndex(action.targetA));
+        break;
+      case OPCODE.aiDifficulty:
+        vars[nameA] = this.aiDifficulty;
+        break;
+      case OPCODE.matchMode:
+        vars[nameA] = this.options.multiplayer ? this.options.matchMode : 0;
+        break;
+      case OPCODE.killerSlot:
+        vars[nameA] = this.options.killerSlot;
+        break;
+      case OPCODE.killerLogin: {
+        const killer = this.killer();
+        vars[nameA] = killer ? killer.login ?? killer.name : EMPTY_LOGIN;
+        break;
+      }
+      case OPCODE.killerName:
+        vars[nameA] = this.killer()?.name ?? EMPTY_SLOT_NAME;
+        break;
+      case OPCODE.isDying:
+        vars[nameA] = this.player(toIndex(valueB)).dying ? TRUE_FLAG : FALSE_FLAG;
+        break;
+      case OPCODE.initiatorDying:
+        vars[nameA] = this.options.initiatorSlot === NO_PLAYER ? FALSE_FLAG : this.player(this.options.initiatorSlot).dying ? TRUE_FLAG : FALSE_FLAG;
+        break;
+      case OPCODE.killerDying:
+        vars[nameA] = this.killer()?.dying ? TRUE_FLAG : FALSE_FLAG;
+        break;
+      case OPCODE.isDyingBySlotVariable:
+        vars[nameA] = this.player(Math.floor(toNumber(vars[nameB]))).dying ? TRUE_FLAG : FALSE_FLAG;
+        break;
+      case OPCODE.randomIntegerVariable:
+        vars[nameA] = Math.floor(this.random() * (toFloat(vars[nameB]) - 1));
+        break;
+      case OPCODE.gameplayModifications:
+        vars[nameA] = this.options.gameplayModifications;
+        break;
+      case OPCODE.wallClock:
+        vars[nameA] = Math.round(CLOCK_START + this.frames * MILLISECONDS_PER_FRAME);
+        break;
+      case OPCODE.dateTime:
+        vars[nameA] = this.date(stringOf(vars[nameB]));
+        break;
+      case OPCODE.mapId:
+        vars[nameA] = this.options.mapId;
+        break;
+      case OPCODE.chatStatus:
+        vars[nameA] = this.options.chatStatus;
+        break;
+      case OPCODE.frameRate:
+        vars[nameA] = this.options.frameRate;
+        break;
       case OPCODE.activeSlots:
         vars[nameA] = this.activeSlots();
         break;
