@@ -6,7 +6,8 @@ import { VARIABLE_MARK, INTERNAL_MARK, USER_SEPARATOR } from '../compiler/keys.t
 export type SymbolEntry =
   | { kind: 'variable'; name: string; constant: false }
   | { kind: 'constant'; text: string }
-  | { kind: 'array'; base: string; length: string };
+  | { kind: 'array'; base: string; length: string }
+  | { kind: 'object'; keyword: string; uid: string };
 
 export type FunctionInfo = { name: string; params: string[]; paramVariables: string[]; returnVariable: string; exported: boolean };
 

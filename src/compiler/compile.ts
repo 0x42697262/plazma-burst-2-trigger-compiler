@@ -1,7 +1,7 @@
 import type { Program, Timer } from '../program/types.ts';
 import { START_TIMER } from '../program/constants.ts';
 import { checkProgram } from '../emit/check.ts';
-import type { Module } from './ir.ts';
+import type { Module, ObjectDeclaration } from './ir.ts';
 import type { Names } from './names.ts';
 import { CompileError } from './names.ts';
 import { addLoopGuard } from './guard.ts';
@@ -20,7 +20,13 @@ export type CompileOptions = { loopGuard: number | null; startTimer: boolean; ex
 
 export const DEFAULT_OPTIONS: CompileOptions = Object.freeze({ loopGuard: DEFAULT_LOOP_GUARD, startTimer: true, externalUids: [], varSync: 'add' });
 
-export type CompileResult = { program: Program; warnings: string[]; sourceMap: SourceMapEntry[]; entries: Map<string, string> };
+export type CompileResult = {
+  program: Program;
+  warnings: string[];
+  sourceMap: SourceMapEntry[];
+  entries: Map<string, string>;
+  objects: readonly ObjectDeclaration[];
+};
 
 export function compileModule(module: Module, names: Names, options: CompileOptions = DEFAULT_OPTIONS): CompileResult {
   const guarded = options.loopGuard === null ? [...module.instructions] : addLoopGuard(module.instructions, names, options.loopGuard);
@@ -42,12 +48,14 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
   checkProgram(program);
   const entries = new Map(module.instructions.flatMap((instruction) =>
     (instruction.kind === 'label' && instruction.entry ? [[instruction.label, uidOf(instruction.label)] as const] : [])));
+  const objects = module.objects ?? [];
   const startWarning = !options.startTimer && module.start !== null ? [TEXT.noStart(uidOf(module.start))] : [];
   if (usesSync && options.varSync === 'off') startWarning.push(TEXT.noVarSync);
   return {
     program,
-    warnings: [...(module.warnings ?? []), ...startWarning, ...laid.warnings, ...checkTriggers(program, options.externalUids)],
+    warnings: [...(module.warnings ?? []), ...startWarning, ...laid.warnings, ...checkTriggers(program, [...options.externalUids, ...objects.map((object) => object.uid)])],
     sourceMap: laid.sourceMap,
     entries,
+    objects,
   };
 }

@@ -1,7 +1,8 @@
 import type { Declaration, Expression, Location, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
 import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
-import { COMPOUND_ASSIGNMENTS, EVENT, KEYWORD, PRECEDENCE, PUNCTUATOR } from './keys.ts';
+import { COMPOUND_ASSIGNMENTS, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
+import { isObjectKeyword } from '../objects/objects.ts';
 import { TEXT } from './text.ts';
 
 class Parser {
@@ -10,6 +11,10 @@ class Parser {
 
   constructor(tokens: Token[]) {
     this.tokens = tokens;
+  }
+
+  private peek(offset: number): Token {
+    return this.tokens[this.position + offset] ?? this.tokens[this.tokens.length - 1] as Token;
   }
 
   private get current(): Token {
@@ -94,6 +99,9 @@ class Parser {
       this.expect(PUNCTUATOR.semicolon);
       return { kind: 'extern', name, hostName, location };
     }
+    if (this.current.kind === 'identifier' && isObjectKeyword(this.current.text) && this.peek(1).kind === 'identifier') {
+      return this.objectDeclaration(location);
+    }
     const exported = this.accept(KEYWORD.export);
     if (this.accept(KEYWORD.function)) {
       const name = this.identifier();
@@ -119,6 +127,36 @@ class Parser {
       return { kind: 'every', frames, body: this.block(), location };
     }
     return this.fail(TEXT.topLevel);
+  }
+
+  private objectDeclaration(location: Location): Declaration {
+    const keyword = this.next().text;
+    const name = this.identifier();
+    this.expect(PUNCTUATOR.assign);
+    if (this.current.kind !== 'string') this.fail(TEXT.string);
+    const uid = this.stringText(this.next());
+    if (!uid.startsWith(UID_MARK)) throw new SourceError(location.line, TEXT.objectUid(name));
+    let positionX: number | null = null;
+    let positionY: number | null = null;
+    if (this.isWord(OBJECT_AT)) {
+      this.next();
+      positionX = this.signedNumber();
+      this.expect(PUNCTUATOR.comma);
+      positionY = this.signedNumber();
+    }
+    this.expect(PUNCTUATOR.semicolon);
+    return { kind: 'object', keyword, name, uid, x: positionX, y: positionY, location };
+  }
+
+  private isWord(word: string): boolean {
+    return this.current.kind === 'identifier' && this.current.text === word;
+  }
+
+  private signedNumber(): number {
+    const negative = this.accept(PUNCTUATOR.minus);
+    if (this.current.kind !== 'number') return this.fail(TEXT.number);
+    const value = Number(this.next().text);
+    return negative ? -value : value;
   }
 
   private stringText(token: Token): string {

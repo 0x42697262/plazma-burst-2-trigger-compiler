@@ -16,7 +16,15 @@ export type Instruction =
 
 export type TimerSpec = { label: string; target: string; enabled: boolean; maxCalls: number; delay: number };
 
-export type Module = { instructions: readonly Instruction[]; start: string | null; timers: readonly TimerSpec[]; warnings?: readonly string[] };
+export type ObjectDeclaration = { keyword: string; name: string; uid: string; x: number | null; y: number | null };
+
+export type Module = {
+  instructions: readonly Instruction[];
+  start: string | null;
+  timers: readonly TimerSpec[];
+  warnings?: readonly string[];
+  objects?: readonly ObjectDeclaration[];
+};
 
 export const variable = (name: string): Value => ({ kind: 'variable', name });
 export const literal = (text: string): Value => ({ kind: 'literal', text });

@@ -1,14 +1,17 @@
 import { OPCODE } from '../opcodes/constants.ts';
 import { opcodeByName, opcodeByNumber } from '../opcodes/table.ts';
 import { labelOperand, literal, textOperand, variable } from '../compiler/ir.ts';
-import type { Condition, Instruction, Module, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
+import type { Condition, Instruction, Module, ObjectDeclaration, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
+import type { Opcode } from '../opcodes/table.ts';
+import { objectKind } from '../objects/objects.ts';
+import { OBJECT_PARAM_KINDS } from '../objects/keys.ts';
 import type { Names } from '../compiler/names.ts';
 import { CompileError } from '../compiler/names.ts';
 import type { Declaration, Expression, Location, SourceFile, Statement, TemplatePart } from './ast.ts';
 import { SourceError } from './lexer.ts';
 import {
   ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
-  WHOLE_NUMBER, DEFAULT_SYNC_MODE,
+  WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
 import { ACTION_ARGUMENTS, DEFAULT_SAY_COLOR, SAY_ARGUMENTS, SYNC_ARGUMENTS, UNLIMITED_TIMER_CALLS } from './constants.ts';
@@ -144,6 +147,7 @@ export class Generator {
   private readonly globals = new Map<string, SymbolEntry>();
   private readonly functions = new Map<string, FunctionInfo>();
   private readonly timers: TimerSpec[] = [];
+  private readonly objects: ObjectDeclaration[] = [];
   private readonly reach: Map<string, Set<string>>;
   private readonly used: Set<string>;
   private readonly warnings: string[] = [];
@@ -231,7 +235,7 @@ export class Generator {
       if (this.used.has(declaration.name)) sections.push(section);
       else this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
-    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings };
+    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects };
   }
 
   private collect(file: SourceFile): void {
@@ -251,6 +255,11 @@ export class Generator {
           define(declaration.name, declaration.location);
           if (!isLiteralExpression(declaration.value)) fail(declaration.location, TEXT.constantNeedsLiteral(declaration.name));
           this.globals.set(declaration.name, { kind: 'constant', text: literalText(declaration.value) });
+          break;
+        case 'object':
+          define(declaration.name, declaration.location);
+          this.globals.set(declaration.name, { kind: 'object', keyword: declaration.keyword, uid: declaration.uid });
+          this.objects.push({ keyword: declaration.keyword, name: declaration.name, uid: declaration.uid, x: declaration.x, y: declaration.y });
           break;
         case 'extern':
           define(declaration.name, declaration.location);
@@ -326,6 +335,7 @@ export class Generator {
     const entry = this.lookup(name, location);
     if (entry.kind === 'constant') return fail(location, TEXT.constantAssignment(name));
     if (entry.kind === 'array') return fail(location, TEXT.arrayAsValue(name));
+    if (entry.kind === 'object') return fail(location, TEXT.objectAsValue(name));
     return entry.name;
   }
 
@@ -611,6 +621,7 @@ export class Generator {
         const entry = this.lookup(expression.name, expression.location);
         if (entry.kind === 'constant') return literal(entry.text);
         if (entry.kind === 'array') return fail(expression.location, TEXT.arrayAsValue(expression.name));
+        if (entry.kind === 'object') return fail(expression.location, TEXT.objectAsValue(expression.name));
         return variable(entry.name);
       }
       case 'index': {
@@ -1202,25 +1213,35 @@ export class Generator {
       const inner = part.expression;
       if (inner.kind !== 'name') return null;
       const entry = this.lookup(inner.name, inner.location);
-      if (entry.kind === 'array') return null;
+      if (entry.kind === 'array' || entry.kind === 'object') return null;
       text += entry.kind === 'constant' ? entry.text : entry.name;
     }
     return text;
   }
 
-  private rawOperand(expression: Expression | undefined): Operand {
+  private rawOperand(expression: Expression | undefined, opcode: Opcode, side: string): Operand {
     if (!expression) return textOperand(FALSE_TEXT);
+    const kind = side === SIDE.a ? opcode.paramA : opcode.paramB;
+    const expectsObject = OBJECT_PARAM_KINDS.has(kind);
     if (expression.kind === 'reference') {
       if (!this.functions.has(expression.name)) fail(expression.location, TEXT.unknownFunction(expression.name));
+      if (kind !== TRIGGER_KIND) fail(expression.location, TEXT.referenceNotTrigger(opcode.number, side, kind));
       return labelOperand(expression.name);
     }
     if (isLiteralExpression(expression)) return textOperand(literalText(expression));
     if (expression.kind === 'name') {
       const entry = this.lookup(expression.name, expression.location);
+      if (entry.kind === 'object') {
+        const declared = objectKind(entry.keyword)?.paramKind;
+        if (declared !== kind) fail(expression.location, TEXT.wrongObject(opcode.number, side, kind, expression.name, entry.keyword));
+        return textOperand(entry.uid);
+      }
       if (entry.kind === 'constant') return textOperand(entry.text);
+      if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));
       if (entry.kind === 'array') return textOperand(entry.length);
       return textOperand(entry.name);
     }
+    if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));
     const inline = this.inlineTemplate(expression);
     return inline === null ? fail(expression.location, TEXT.literalOnly(BUILTIN.action)) : textOperand(inline);
   }
@@ -1235,7 +1256,7 @@ export class Generator {
       ? opcodeByNumber(Number(which.text))
       : which.kind === 'name' ? opcodeByName(which.name) : isLiteralExpression(which) ? opcodeByName(literalText(which)) : null;
     if (!opcode) return fail(which.location, TEXT.unknownAction(which.kind === 'name' ? which.name : literalText(which)));
-    this.act(opcode.number, this.rawOperand(expression.args[1]), this.rawOperand(expression.args[2]));
+    this.act(opcode.number, this.rawOperand(expression.args[1], opcode, SIDE.a), this.rawOperand(expression.args[2], opcode, SIDE.b));
   }
 }
 

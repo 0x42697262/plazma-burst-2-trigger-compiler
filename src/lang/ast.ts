@@ -35,6 +35,7 @@ export type Declaration =
   | { kind: 'var'; name: string; array: boolean; value: Expression | null; location: Location }
   | { kind: 'const'; name: string; value: Expression; location: Location }
   | { kind: 'extern'; name: string; hostName: string; location: Location }
+  | { kind: 'object'; keyword: string; name: string; uid: string; x: number | null; y: number | null; location: Location }
   | { kind: 'function'; name: string; params: string[]; body: Statement[]; exported: boolean; location: Location }
   | { kind: 'on'; event: 'start' | 'join' | 'chat'; body: Statement[]; location: Location }
   | { kind: 'every'; frames: number; body: Statement[]; location: Location };

@@ -39,5 +39,12 @@ export const TEXT = Object.freeze({
   unusedFunction: (name: string): string => `the function "${name}" is never called; it was left out`,
   syncTarget: 'sync(...) needs a variable or an array element with a fixed index',
   syncMode: (modes: readonly string[]): string => `the sync mode must be one of ${modes.join(', ')}`,
+  objectUid: (name: string): string => `the uid of "${name}" must start with #, like "#water*1"`,
+  objectAsValue: (name: string): string => `"${name}" is a map object; use it as an argument of action(...)`,
+  wrongObject: (action: number, side: string, expected: string, name: string, keyword: string): string =>
+    `action ${action} takes ${expected} as ${side}, but "${name}" is a ${keyword}`,
+  needsObject: (action: number, side: string, expected: string): string =>
+    `action ${action} takes ${expected} as ${side}: give a declared object, its uid text, or @function for a trigger`,
+  referenceNotTrigger: (action: number, side: string, expected: string): string => `action ${action} takes ${expected} as ${side}, not a function's trigger`,
   sayColor: 'the color of say(...) must be a number or a string',
 });
