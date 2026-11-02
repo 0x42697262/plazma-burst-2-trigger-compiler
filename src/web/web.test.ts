@@ -4,6 +4,7 @@ import { Workspace } from './workspace.ts';
 import { build, prefixFor, simulate } from './pipeline.ts';
 import { collectExamples } from '../tools/build-web/build.ts';
 import path from 'node:path';
+import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
 const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const };
@@ -39,6 +40,14 @@ describe('web page logic', () => {
     assert.match(raw.xml, /"007"/);
     assert.doesNotMatch(raw.xml, /_007/);
     assert.ok(raw.result?.warnings.some((warning) => warning.includes('website editor')));
+  });
+
+  it('reads the standard library from the bundle', () => {
+    const workspace = new Workspace(null, { 'std:hash.ptc': fs.readFileSync(path.resolve(import.meta.dirname, '..', '..', 'std', 'hash.ptc'), 'utf8') });
+    workspace.set('/work/main.ptc', 'import "std/hash.ptc";\nconst H = hash("abcd");\non start { say(H); }\n');
+    const result = build(workspace, '/work/main.ptc', OPTIONS, null);
+    assert.deepEqual(result.problems.filter((problem) => problem.severity === 'error'), []);
+    assert.match(simulate(result.result!, 1)[0] ?? '', /^chat: \d+-\d+-\d+$/);
   });
 
   it('reports problems instead of output', () => {

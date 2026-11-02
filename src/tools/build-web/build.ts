@@ -2,12 +2,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { build } from 'esbuild';
 import type { Plugin } from 'esbuild';
-import { BUNDLE, ENTRY, EXAMPLES, NO_JEKYLL, SITE, STATIC_FILES, WEB_SOURCE } from './paths.ts';
+import { BUNDLE, ENTRY, EXAMPLES, NO_JEKYLL, SITE, STATIC_FILES, STD, WEB_SOURCE } from './paths.ts';
+import { STD_SCHEME } from '../../lang/keys.ts';
 import {
   BROWSER, EXAMPLE_FILE, EXAMPLES_PREFIX, FILE_ENCODING, JSON_LOADER, MODULE_FORMAT, SEPARATOR, SLASH, TARGET, VIRTUAL_FILTER, VIRTUAL_NAMESPACE,
 } from './keys.ts';
 import { TEXT } from './text.ts';
 import { KILOBYTE } from './constants.ts';
+
+export function collectLibrary(folder: string): Record<string, string> {
+  return Object.fromEntries(fs.readdirSync(folder).filter((name) => EXAMPLE_FILE.test(name)).map((name) => [STD_SCHEME + name, fs.readFileSync(path.join(folder, name), FILE_ENCODING)]));
+}
 
 export function collectExamples(folder: string): Record<string, string> {
   const files: Record<string, string> = {};
@@ -31,7 +36,7 @@ const examplesPlugin = (files: Record<string, string>): Plugin => ({
 });
 
 export async function buildSite(): Promise<string> {
-  const examples = collectExamples(EXAMPLES);
+  const examples = { ...collectExamples(EXAMPLES), ...collectLibrary(STD) };
   fs.rmSync(SITE, { recursive: true, force: true });
   fs.mkdirSync(SITE, { recursive: true });
   await build({

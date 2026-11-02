@@ -5,9 +5,11 @@ export class Workspace {
   private readonly files = new Map<string, string>();
   private current = DEFAULT_FILE;
   private readonly storage: Storage | null;
+  private readonly library: Readonly<Record<string, string>>;
 
-  constructor(storage: Storage | null) {
+  constructor(storage: Storage | null, library: Readonly<Record<string, string>> = {}) {
     this.storage = storage;
+    this.library = library;
     const saved = storage?.getItem(STORAGE.files);
     if (saved) {
       for (const [file, text] of Object.entries(JSON.parse(saved) as Record<string, string>)) this.files.set(file, text);
@@ -29,7 +31,7 @@ export class Workspace {
   }
 
   get(file: string): string | null {
-    return this.files.get(file) ?? null;
+    return this.files.get(file) ?? this.library[file] ?? null;
   }
 
   set(file: string, text: string): void {

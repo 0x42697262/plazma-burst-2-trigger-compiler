@@ -8,6 +8,7 @@ import { DEFAULT_FRAMES, DEFAULT_GUARD, STATUS_TIME } from './constants.ts';
 import { TEXT } from './text.ts';
 import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { DEFAULT_TARGET, isTarget } from '../pcode/keys.ts';
+import { isStandardLibrary } from '../lang/file-paths.ts';
 
 type OutputName = (typeof OUTPUT)[keyof typeof OUTPUT];
 
@@ -20,7 +21,7 @@ const storage = ((): Storage | null => {
   }
 })();
 
-const workspace = new Workspace(storage);
+const workspace = new Workspace(storage, Object.fromEntries(Object.entries(examples).filter(([file]) => isStandardLibrary(file))));
 if (workspace.isEmpty) {
   workspace.loadExample(examples, STARTER_EXAMPLE);
   storage?.setItem(STORAGE.example, STARTER_EXAMPLE);
@@ -189,7 +190,7 @@ placeholder.textContent = TEXT.examplesPlaceholder;
 placeholder.value = '';
 examplesSelect.append(placeholder);
 const groups = new Map<string, HTMLOptGroupElement>();
-for (const file of Object.keys(examples).sort()) {
+for (const file of Object.keys(examples).filter((name) => !isStandardLibrary(name)).sort()) {
   const parts = file.split(PATH_SEPARATOR);
   if (parts.includes(LIBRARY_FOLDER)) continue;
   const folder = parts.at(FOLDER_POSITION) ?? '';
