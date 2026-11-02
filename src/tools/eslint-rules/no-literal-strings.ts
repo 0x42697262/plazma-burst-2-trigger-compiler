@@ -57,6 +57,12 @@ const isCheckedByCompiler = (node: ParentedNode, parent: ParentedNode | undefine
   const checker = services.program.getTypeChecker();
   const tsNode = services.esTreeNodeToTSNodeMap.get(node);
   if (ts.isExpression(tsNode) && isStringLiteralUnion(checker.getContextualType(tsNode))) return true;
+  if (parent?.type === 'SwitchCase' && parent.test === node) {
+    const statement = (parent as ParentedNode).parent;
+    if (statement?.type === 'SwitchStatement') {
+      return isStringLiteralUnion(checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(statement.discriminant)));
+    }
+  }
   if (parent?.type !== 'BinaryExpression') return false;
   const other = parent.left === node ? parent.right : parent.left;
   return isStringLiteralUnion(checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(other)));
