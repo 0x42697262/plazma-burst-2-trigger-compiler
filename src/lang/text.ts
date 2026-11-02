@@ -18,7 +18,7 @@ export const TEXT = Object.freeze({
   unknownVariable: (name: string): string => `unknown variable "${name}"`,
   compileTimeNoValue: (name: string): string => `${name} has no number or text value after running it while compiling`,
   compileTimeFailed: (name: string, problem: string): string => `cannot compute ${name} while compiling: ${problem}`,
-  envArgument: 'env() takes one name in quotes, like env("MAP_PASSWORD")',
+  envArgument: 'env() takes a name in quotes and maybe a fallback, like env("MAP_PASSWORD") or env("LOGIN", "ann")',
   envMissing: (name: string): string => `the environment variable ${name} is not set`,
   envOutsideConstant: 'env() works only in a const, while compiling',
   secretTooShort: (name: string, minimum: number): string => `the secret ${name} needs at least ${minimum} characters`,

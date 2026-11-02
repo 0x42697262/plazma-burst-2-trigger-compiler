@@ -7,3 +7,4 @@ export const ESCAPE_LENGTH = 2;
 export const SYNC_ARGUMENTS = Object.freeze({ min: 1, max: 2 });
 export const COMPILE_TIME_MAX_STEPS = 10_000_000;
 export const SECRET_MIN_LENGTH = 4;
+export const ENV_ARGUMENTS = 2;

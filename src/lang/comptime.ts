@@ -6,7 +6,7 @@ import { createNames, CompileError } from '../compiler/names.ts';
 import { Simulation } from '../sim/simulator.ts';
 import { COMPILE_TIME_ACTIONS } from '../opcodes/constants.ts';
 import { BUILTIN, COMPILE_TIME_BUILTIN, COMPILE_TIME_PREFIX, COMPILE_TIME_RESULT, EMPTY_TEXT, EVENT } from './keys.ts';
-import { COMPILE_TIME_MAX_STEPS, SECRET_MIN_LENGTH } from './constants.ts';
+import { COMPILE_TIME_MAX_STEPS, ENV_ARGUMENTS, SECRET_MIN_LENGTH } from './constants.ts';
 import { TEXT } from './text.ts';
 import { callGraph, reachable } from './calls.ts';
 
@@ -160,21 +160,36 @@ export function foldConstants(file: SourceFile, environment: Environment): Folde
 
   const withEnvironment = (expression: Expression): Expression => {
     if (expression.kind === 'call' && expression.callee === COMPILE_TIME_BUILTIN.env) {
-      const [argument] = expression.args;
-      if (expression.args.length !== 1 || argument === undefined || argument.kind !== 'string' || !isLiteral(argument)) return fail(expression.location, TEXT.envArgument);
+      const [argument, fallback] = expression.args;
+      const isText = (part: Expression | undefined): part is Expression => part !== undefined && part.kind === 'string' && isLiteral(part);
+      if (expression.args.length > ENV_ARGUMENTS || !isText(argument) || (fallback !== undefined && !isText(fallback))) return fail(expression.location, TEXT.envArgument);
       const name = textOf(argument);
-      const value = environment[name];
+      const value = environment[name] ?? (fallback === undefined ? undefined : textOf(fallback));
       if (value === undefined) return fail(expression.location, TEXT.envMissing(name));
       return { kind: 'string', parts: [{ kind: 'text', text: value }], location: expression.location };
     }
     return mapChildren(expression, withEnvironment);
   };
 
+  const graph = callGraph(file);
+  const reach = reachable(graph);
+  const calledBy = (expression: Expression, found = new Set<string>()): Set<string> => {
+    if (expression.kind === 'call' && functions.has(expression.callee)) {
+      found.add(expression.callee);
+      for (const callee of reach.get(expression.callee) ?? []) found.add(callee);
+    }
+    for (const child of childrenOf(expression)) calledBy(child, found);
+    return found;
+  };
+
   const evaluate = (expression: Expression, name: string): Expression => {
     const location = expression.location;
     noteCalls(expression);
+    const starting = file.declarations.flatMap((declaration) => (declaration.kind === 'var' && declaration.value !== null && !mentionsPending(declaration.value) ? [declaration.value] : []));
+    const needed = new Set([expression, ...starting].flatMap((part) => [...calledBy(part)]));
     const kept = file.declarations.flatMap((declaration): Declaration[] => {
       if (declaration.kind === 'on' || declaration.kind === 'every') return [];
+      if (declaration.kind === 'function' && !needed.has(declaration.name)) return [];
       if (declaration.kind === 'var' && declaration.value !== null && mentionsPending(declaration.value)) return [{ ...declaration, value: null }];
       if (declaration.kind !== 'const') return [declaration];
       const known = constants.get(declaration.name);
@@ -242,7 +257,6 @@ export function foldConstants(file: SourceFile, environment: Environment): Folde
         return declaration;
     }
   });
-  const reach = reachable(callGraph(file));
   for (const name of [...compileTimeFunctions]) for (const callee of reach.get(name) ?? []) compileTimeFunctions.add(callee);
   return { file: { ...file, declarations }, secrets, compileTimeFunctions };
 }

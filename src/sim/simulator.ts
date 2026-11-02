@@ -190,6 +190,13 @@ export class Simulation {
     return player?.active ? player.name : EMPTY_SLOT_NAME;
   }
 
+  private playerLogin(slot: unknown, emptyWhenMissing: boolean): string {
+    const player = this.options.players.find((entry) => String(entry.slot) === String(slot) && entry.active);
+    if (player) return player.login ?? player.name;
+    if (emptyWhenMissing) return EMPTY_SLOT_NAME;
+    throw new Error(TEXT.noCharacter(String(slot)));
+  }
+
   private character(slot: unknown): Player {
     const key = String(slot);
     const player = this.options.players.find((entry) => String(entry.slot) === key);
@@ -329,6 +336,15 @@ export class Simulation {
         break;
       case OPCODE.initiatorSlot:
         vars[nameA] = this.options.initiatorSlot;
+        break;
+      case OPCODE.initiatorLogin:
+        vars[nameA] = this.playerLogin(this.options.initiatorSlot, false);
+        break;
+      case OPCODE.playerLoginBySlot:
+        vars[nameA] = this.playerLogin(toIndex(valueB), true);
+        break;
+      case OPCODE.playerLoginBySlotVariable:
+        vars[nameA] = this.playerLogin(vars[nameB], false);
         break;
       case OPCODE.playerNameBySlot:
         vars[nameA] = this.playerName(toIndex(valueB));

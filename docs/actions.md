@@ -588,7 +588,7 @@ needs the Var Sync engine mark (F30).
 | 139 | `SetIsSpectator` | string | string | Set value of variable 'A' to 1 if my player is spectating this match as spectator and to 0 in else case |  |
 | 140 | `SetIsLowPhys` | string | string | Set value of variable 'A' to 1 if LOW PHYSICS setting is enabled and to 0 in else case |  |
 | 145 | `SetCountAliveInRegion` | string | region | Set value of variable 'A' to number of alive players in region 'B' |  |
-| 146 | `SetLoginOfInitiator` | string | nochange | Set string-value of variable 'A' to login name of player-initiator |  |
+| 146 | `SetLoginOfInitiator` | string | nochange | Set string-value of variable 'A' to login name of player-initiator | sim |
 | 147 | `SetNicknameOfInitiator` | string | nochange | Set string-value of variable 'A' to displayed name of player-initiator |  |
 | 148 | `SetMPMode` | string | nochange | Set string-value of variable 'A' to multiplayer match name |  |
 | 149 | `SetIsAContainsValueB` | string | string | Set value of variable 'A' to 1 if string-value of variable 'A' contains string-value 'B' and to 0 in else case | sim |
@@ -612,10 +612,10 @@ needs the Var Sync engine mark (F30).
 | 181 | `op181` | string | nochange | Set value of variable 'A' to player-killer slot |  |
 | 182 | `op182` | string | nochange | Set value of variable 'A' to login name of player-killer |  |
 | 183 | `op183` | string | nochange | Set value of variable 'A' to displayed name of player-killer |  |
-| 184 | `op184` | string | string | Set value of variable 'A' to login name of player with slot 'B' |  |
+| 184 | `op184` | string | string | Set value of variable 'A' to login name of player with slot 'B' | sim |
 | 185 | `op185` | string | string | Set value of variable 'A' to displayed name of player with slot 'B' | sim |
 | 186 | `op186` | string | string | Set value of variable 'A' to team ID of player with slot 'B' | sim |
-| 187 | `op187` | string | string | Set value of variable 'A' to login name of player with slot-value of variable 'B' |  |
+| 187 | `op187` | string | string | Set value of variable 'A' to login name of player with slot-value of variable 'B' | sim |
 | 188 | `op188` | string | string | Set value of variable 'A' to displayed name of player with slot-value of variable 'B' | sim |
 | 189 | `op189` | string | string | Set value of variable 'A' to team ID of player with slot-value of variable 'B' | sim |
 | 204 | `op204` | string | string | Set value of variable 'A' to result of asin function with value of variable 'B' as parameter |  |

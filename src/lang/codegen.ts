@@ -35,14 +35,14 @@ const NEGATED: Readonly<Record<string, Condition>> = { '==': 'ne', '!=': 'eq', '
 const DIRECT: Readonly<Record<string, Condition>> = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
 const VALUE_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.name, BUILTIN.time,
-  BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop, BUILTIN.chatText, BUILTIN.talker, BUILTIN.talkerName, BUILTIN.team, BUILTIN.pop,
+  BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop, BUILTIN.chatText, BUILTIN.talker, BUILTIN.talkerName, BUILTIN.talkerLogin, BUILTIN.login, BUILTIN.team, BUILTIN.pop,
 ]);
 const SYNC_MODES: Readonly<Record<string, number>> = {
   replace: OPCODE.syncReplace, default: OPCODE.syncDefault, max: OPCODE.syncMax, min: OPCODE.syncMin, longest: OPCODE.syncLongest,
 };
 const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action, BUILTIN.sync, BUILTIN.clear]);
 const BUILTIN_ARITY: Readonly<Record<string, number>> = {
-  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2, chatText: 0, talker: 0, talkerName: 0, team: 1, clear: 1, pop: 1,
+  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2, chatText: 0, talker: 0, talkerName: 0, talkerLogin: 0, login: 1, team: 1, clear: 1, pop: 1,
 };
 
 const fail = (location: Location, message: string): never => {
@@ -1220,6 +1220,15 @@ export class Generator {
       case BUILTIN.talkerName:
         this.act(OPCODE.talkerName, destination);
         return;
+      case BUILTIN.talkerLogin:
+        this.act(OPCODE.talkerLogin, destination);
+        return;
+      case BUILTIN.login: {
+        const slot = this.value(first());
+        if (slot.kind === 'literal') this.act(OPCODE.playerLoginBySlot, destination, slot.text);
+        else this.act(OPCODE.playerLoginBySlotVariable, destination, slot.name);
+        return;
+      }
       case BUILTIN.team: {
         const slot = this.value(first());
         if (slot.kind === 'literal') this.act(OPCODE.teamBySlot, destination, slot.text);

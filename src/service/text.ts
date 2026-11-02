@@ -21,9 +21,11 @@ export const TEXT = Object.freeze({
     chatText: ['chatText()', 'In on chat: the text that was written.'],
     talker: ['talker()', 'In on chat: the slot of the player who wrote.'],
     talkerName: ['talkerName()', 'In on chat: the name of the player who wrote.'],
+    talkerLogin: ['talkerLogin()', 'In on chat: the account login of the player who wrote.'],
+    login: ['login(slot)', 'Account login of the player in a slot (Empty when nobody is there).'],
     sync: ['sync(x, mode?)', 'Sends x to every player in multiplayer. Modes: replace, default, max, min, longest.'],
     action: ['action(op, a, b)', 'Runs any game action, by alias or number. See docs/actions.md.'],
-    env: ['env("NAME")', 'In a const, while compiling: the value of an environment variable. Never written into the map by itself.'],
+    env: ['env("NAME") / env("NAME", "fallback")', 'In a const, while compiling: the value of an environment variable, or the fallback when it is not set.'],
   } as Record<string, readonly [string, string]>),
   keywords: Object.freeze({
     var: 'Global variable: var name = value; or an array: var list[];',

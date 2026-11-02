@@ -66,7 +66,7 @@ export const LABEL = Object.freeze({
 export const BUILTIN = Object.freeze({
   say: 'say', push: 'push', action: 'action', len: 'len', contains: 'contains', random: 'random', floor: 'floor', round: 'round',
   slot: 'slot', initiator: 'initiator', name: 'name', time: 'time', number: 'number', text: 'text', charAt: 'charAt', drop: 'drop', sync: 'sync',
-  chatText: 'chatText', talker: 'talker', talkerName: 'talkerName', team: 'team', clear: 'clear', pop: 'pop',
+  chatText: 'chatText', talker: 'talker', talkerName: 'talkerName', talkerLogin: 'talkerLogin', login: 'login', team: 'team', clear: 'clear', pop: 'pop',
 } as const);
 export const SPLIT_EVERY_CHARACTER = '';
 export const NUMBER_TEXT_MARK = '_';
