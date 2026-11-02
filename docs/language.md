@@ -50,6 +50,18 @@ Declare each map object the program uses with its kind and uid:
   instead of adding.
 - The kind words are not reserved: `var water = 1;` still works.
 
+## Named values
+
+The editor's value lists are named values, written `Group.Name`: `Color.NoirLime` is `2`,
+`Team.RedTeam` is `12`, `Behavior.FollowThePlayer` is `1`, `GunModel.AssaultRifleC01r` is
+`gun_rifle`. Groups: `Color`, `Team`, `Behavior`, `Bool`, `Toggle`, `Calls`, `PusherDamage`,
+`GunModel`, `Sound`, `Sky`, `Voice`, `CharacterModel`, `DecorModel`, `Song`; all names and values
+are in [actions.md](actions.md#named-values).
+
+- A named value is a fixed value: it works in `say`, `match` patterns, comparisons and any action.
+- Like object kinds, it is checked: a `Team` value where an action takes a color is a compile error.
+- The raw value (`2`, `12`) still works.
+
 ## Fixed values
 
 Some places need a value the game reads from the action itself, not from a variable: the color
@@ -294,6 +306,7 @@ primary        = number
                | "(" expression ")"
                | identifier "(" [ expression { "," expression } ] ")"
                | identifier "[" expression "]"
+               | identifier "." identifier
                | identifier ;
 
 identifier     = letter { letter | digit } ;

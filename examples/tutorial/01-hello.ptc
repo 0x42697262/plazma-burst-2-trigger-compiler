@@ -6,5 +6,5 @@ on start {
     count += 1;
     say("count is {count}");
   }
-  say("done!", 2);
+  say("done!", Color.NoirLime);
 }

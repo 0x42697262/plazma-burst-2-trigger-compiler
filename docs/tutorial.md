@@ -54,7 +54,7 @@ on start {
     count += 1;
     say("count is {count}");
   }
-  say("done!", 2);
+  say("done!", Color.NoirLime);
 }
 ```
 
@@ -69,8 +69,9 @@ done!
 
 - `var` declares a global variable. Its value is set when the map starts.
 - `on start { ... }` runs once, when the map starts.
-- `say(text)` shows text in the chat; `say(text, color)` picks a color (2 here). Inside text,
-  `{expression}` inserts a value.
+- `say(text)` shows text in the chat; `say(text, color)` picks a color. `Color.NoirLime` is a
+  named value from the editor's color list (it is `2`); every list is in [actions.md](actions.md).
+  Inside text, `{expression}` inserts a value.
 - `while`, `if`, `for` work as in C or JavaScript. Statements end with `;`.
 
 ## 3. Talking to the map: buttons, regions, doors
@@ -152,7 +153,7 @@ export function becomeGod() {
   }
   godSlot = initiator();
   action(498, godSlot, 450);
-  say("{name(godSlot)} has 450 lifepoints", 4);
+  say("{name(godSlot)} has 450 lifepoints", Color.CivilSecurity);
 }
 ```
 
@@ -320,9 +321,9 @@ function splitTeams() {
   for (let i = 0; i < len(players); i += 1) {
     let who = players[i];
     if (i % 2 == 0) {
-      action(507, who, 12);
+      action(507, who, Team.RedTeam);
     } else {
-      action(507, who, 13);
+      action(507, who, Team.BlueTeam);
     }
     order ..= name(who) .. ";";
   }
@@ -343,8 +344,8 @@ With the four players `ann`, `bob`, `cy` and `dee` in slots 0 to 3, one run says
 - `randomPlayer` picks one element at random: the simplest "random player".
 - `shufflePlayers` is the Fisher–Yates shuffle: walk from the end, swap each element with a random
   one at or before it. Every order is equally likely.
-- `splitTeams` shuffles, then puts every other player in team 12 (red) or 13 (blue) with action
-  507, the "slot-value variable" form of "change team".
+- `splitTeams` shuffles, then puts every other player in `Team.RedTeam` (12) or `Team.BlueTeam` (13)
+  with action 507, the "slot-value variable" form of "change team".
 - `findPlayer("bob")` selects a player by name. Slots from `for player` are text (`"1"`), which
   every action that takes a slot accepts.
 - `team(slot)` gives a player's team number.

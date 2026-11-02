@@ -8,5 +8,5 @@ export function becomeGod() {
   }
   godSlot = initiator();
   action(498, godSlot, 450);
-  say("{name(godSlot)} has 450 lifepoints", 4);
+  say("{name(godSlot)} has 450 lifepoints", Color.CivilSecurity);
 }

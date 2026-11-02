@@ -37,9 +37,9 @@ function splitTeams() {
   for (let i = 0; i < len(players); i += 1) {
     let who = players[i];
     if (i % 2 == 0) {
-      action(507, who, 12);
+      action(507, who, Team.RedTeam);
     } else {
-      action(507, who, 13);
+      action(507, who, Team.BlueTeam);
     }
     order ..= name(who) .. ";";
   }
