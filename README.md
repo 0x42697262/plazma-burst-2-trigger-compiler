@@ -79,6 +79,7 @@ simulator runs.
 | `--run`, `--frames <n>` | simulate the program for n frames and print variables, chat and errors |
 | `--no-sync-mark` | do not add the Var Sync engine mark that a program with sync actions needs (with `--into`, a map that has one keeps it and gets no second one) |
 | `--no-create` | with `--into`: do not add declared map objects the map lacks; warn instead |
+| `--no-number-text` | write number-like text such as `"007"` as it is, for map editors other than the website one; by default it is kept safe from the website editor, which turns it into a number (F36) |
 | `--help` | all options |
 
 ## Development
