@@ -1,7 +1,7 @@
 import type { Program, Timer } from '../program/types.ts';
 import { START_TIMER } from '../program/constants.ts';
 import { checkProgram } from '../emit/check.ts';
-import type { Module, ObjectDeclaration } from './ir.ts';
+import type { ExportedVariable, Module, ObjectDeclaration } from './ir.ts';
 import type { Names } from './names.ts';
 import { CompileError } from './names.ts';
 import { addLoopGuard } from './guard.ts';
@@ -26,6 +26,7 @@ export type CompileResult = {
   sourceMap: SourceMapEntry[];
   entries: Map<string, string>;
   objects: readonly ObjectDeclaration[];
+  exports: readonly ExportedVariable[];
 };
 
 export function compileModule(module: Module, names: Names, options: CompileOptions = DEFAULT_OPTIONS): CompileResult {
@@ -57,5 +58,6 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
     sourceMap: laid.sourceMap,
     entries,
     objects,
+    exports: module.exports ?? [],
   };
 }

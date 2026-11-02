@@ -87,14 +87,7 @@ class Parser {
 
   private declaration(): Declaration {
     const location = this.location();
-    if (this.accept(KEYWORD.var)) {
-      const name = this.identifier();
-      const array = this.accept(PUNCTUATOR.openBracket);
-      if (array) this.expect(PUNCTUATOR.closeBracket);
-      const value = !array && this.accept(PUNCTUATOR.assign) ? this.expression() : null;
-      this.expect(PUNCTUATOR.semicolon);
-      return { kind: 'var', name, array, value, location };
-    }
+    if (this.accept(KEYWORD.var)) return this.variableDeclaration(location, false);
     if (this.accept(KEYWORD.const)) {
       const name = this.identifier();
       this.expect(PUNCTUATOR.assign);
@@ -116,6 +109,7 @@ class Parser {
       return this.objectDeclaration(location);
     }
     const exported = this.accept(KEYWORD.export);
+    if (exported && this.accept(KEYWORD.var)) return this.variableDeclaration(location, true);
     if (this.accept(KEYWORD.function)) {
       const name = this.identifier();
       this.expect(PUNCTUATOR.openParen);
@@ -127,7 +121,7 @@ class Parser {
       this.expect(PUNCTUATOR.closeParen);
       return { kind: 'function', name, params, body: this.block(), exported, location };
     }
-    if (exported) this.fail(TEXT.quoted(KEYWORD.function));
+    if (exported) this.fail(TEXT.exportable);
     if (this.accept(KEYWORD.on)) {
       const eventLine = this.current.line;
       const event = this.identifier();
@@ -140,6 +134,15 @@ class Parser {
       return { kind: 'every', frames, body: this.block(), location };
     }
     return this.fail(TEXT.topLevel);
+  }
+
+  private variableDeclaration(location: Location, exported: boolean): Declaration {
+    const name = this.identifier();
+    const array = this.accept(PUNCTUATOR.openBracket);
+    if (array) this.expect(PUNCTUATOR.closeBracket);
+    const value = !array && this.accept(PUNCTUATOR.assign) ? this.expression() : null;
+    this.expect(PUNCTUATOR.semicolon);
+    return { kind: 'var', name, array, value, exported, location };
   }
 
   private objectDeclaration(location: Location): Declaration {

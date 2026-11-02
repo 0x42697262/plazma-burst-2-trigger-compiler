@@ -1,5 +1,6 @@
 export const TEXT = Object.freeze({
   where: (line: number, message: string, file?: string): string => (file === undefined ? `line ${line}: ${message}` : `${file} line ${line}: ${message}`),
+  exportable: '"function" or "var"',
   importNeedsFile: 'import works only when compiling a file',
   cannotImport: (file: string): string => `cannot read the imported file ${file}`,
   unexpectedCharacter: (character: string): string => `unexpected character "${character}"`,

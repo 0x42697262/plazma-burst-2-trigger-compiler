@@ -16,6 +16,8 @@ export type Instruction =
 
 export type TimerSpec = { label: string; target: string; enabled: boolean; maxCalls: number; delay: number };
 
+export type ExportedVariable = { name: string; gameName: string; lengthName: string | null };
+
 export type ObjectDeclaration = { keyword: string; name: string; uid: string; x: number | null; y: number | null };
 
 export type Module = {
@@ -24,6 +26,7 @@ export type Module = {
   timers: readonly TimerSpec[];
   warnings?: readonly string[];
   objects?: readonly ObjectDeclaration[];
+  exports?: readonly ExportedVariable[];
 };
 
 export const variable = (name: string): Value => ({ kind: 'variable', name });

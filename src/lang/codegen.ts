@@ -1,7 +1,7 @@
 import { OPCODE } from '../opcodes/constants.ts';
 import { opcodeByName, opcodeByNumber } from '../opcodes/table.ts';
 import { labelOperand, literal, textOperand, variable } from '../compiler/ir.ts';
-import type { Condition, Instruction, Module, ObjectDeclaration, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
+import type { Condition, ExportedVariable, Instruction, Module, ObjectDeclaration, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
 import type { Opcode } from '../opcodes/table.ts';
 import { objectKind } from '../objects/objects.ts';
 import { OBJECT_PARAM_KINDS } from '../objects/keys.ts';
@@ -11,7 +11,7 @@ import type { Declaration, Expression, Location, SourceFile, Statement, Template
 import { SourceError } from './lexer.ts';
 import {
   ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
-  WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND,
+  WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND, ARRAY_INDEX_PLACEHOLDER,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
 import { ACTION_ARGUMENTS, DEFAULT_SAY_COLOR, SAY_ARGUMENTS, SYNC_ARGUMENTS, UNLIMITED_TIMER_CALLS } from './constants.ts';
@@ -148,6 +148,7 @@ export class Generator {
   private readonly functions = new Map<string, FunctionInfo>();
   private readonly timers: TimerSpec[] = [];
   private readonly objects: ObjectDeclaration[] = [];
+  private readonly exports: ExportedVariable[] = [];
   private readonly reach: Map<string, Set<string>>;
   private readonly used: Set<string>;
   private readonly warnings: string[] = [];
@@ -235,7 +236,7 @@ export class Generator {
       if (this.used.has(declaration.name)) sections.push(section);
       else if (declaration.location.file === undefined) this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
-    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects };
+    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects, exports: this.exports };
   }
 
   private collect(file: SourceFile): void {
@@ -250,6 +251,10 @@ export class Generator {
           this.globals.set(declaration.name, declaration.array
             ? { kind: 'array', base: declaration.name, length: arrayLengthName(this.names, declaration.name) }
             : { kind: 'variable', name: this.names.variable(declaration.name), constant: false });
+          if (declaration.exported) {
+            const gameName = declaration.array ? elementName(this.names, declaration.name, ARRAY_INDEX_PLACEHOLDER) : this.names.variable(declaration.name);
+            this.exports.push({ name: declaration.name, gameName, lengthName: declaration.array ? arrayLengthName(this.names, declaration.name) : null });
+          }
           break;
         case 'const':
           define(declaration.name, declaration.location);

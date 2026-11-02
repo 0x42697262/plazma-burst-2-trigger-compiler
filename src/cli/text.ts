@@ -31,6 +31,8 @@ export const TEXT = Object.freeze({
     `Added ${keyword} ${uid} at ${positionX}, ${positionY}: move it into place in the editor`,
   objectMissing: (name: string, uid: string): string => `the map has no ${uid} for "${name}" (--no-create)`,
   objectProblems: (problems: readonly string[]): string => problems.join('\n'),
+  exported: (list: readonly string[]): string => `Exported variables: ${list.join(', ')}`,
+  exportedEntry: (name: string, gameName: string): string => `${name} = ${gameName}`,
   timerTarget: (uid: string, target: string): string => `${uid} -> ${target}`,
   summary: (triggers: number, actions: number, timers: number): string => `${triggers} triggers, ${actions} actions, ${timers} timers`,
   variable: (name: string, value: string): string => `  ${name} = ${value}`,

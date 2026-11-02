@@ -13,6 +13,7 @@ export const TEXT = Object.freeze({
   switchByIndex: (uid: string): string => `Trigger ${uid} uses action 362 (switch by trigger index); indexes depend on the host map.`,
   notText: (uid: string): string => `Trigger ${uid} has a value that cannot be written as trigger text; use the XML output.`,
   entityValue: (uid: string, value: string): string => `Trigger ${uid}: the game reads ${JSON.stringify(value)} with & < > " and line breaks as XML entities (&amp; &lt; &gt; &quot; &#10;).`,
+  hostUsesUnexported: (name: string): string => `The host map uses ${name}, which the program does not export: it may change or disappear when the program changes.`,
   hostNameInText: (uid: string, name: string, value: string): string =>
     `Trigger ${uid}: the host map's variable "${name}" appears inside ${JSON.stringify(value)}; the game will replace it with its value (F9).`,
   hashValue: (uid: string, value: string): string => `Trigger ${uid}: the value "${value}" starts with "#"; the game replaces it with an object index if a uid matches.`,

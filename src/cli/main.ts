@@ -8,7 +8,8 @@ import { DEFAULT_LAYOUT } from '../emit/constants.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap } from '../emit/merge.ts';
-import { checkHostNames } from '../compiler/host.ts';
+import { checkHostNames, checkHostUses } from '../compiler/host.ts';
+import { createNames } from '../compiler/names.ts';
 import { DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
@@ -90,6 +91,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     for (const warning of result.warnings) output.err(TEXT.warning(warning));
     const actions = result.program.triggers.reduce((total, trigger) => total + trigger.actions.length, 0);
     output.out(TEXT.summary(result.program.triggers.length, actions, result.program.timers.length));
+    if (result.exports.length > 0) output.out(TEXT.exported(result.exports.map((entry) => TEXT.exportedEntry(entry.name, entry.gameName))));
     const base = path.join(lastValue(parsed, FLAG.out) ?? DEFAULT_OUT, path.basename(file, path.extname(file)));
     const check = hostMap === null ? null : checkObjects(result.objects, hostMap);
     if (check && check.problems.length > 0) throw new UsageError(TEXT.objectProblems(check.problems));
@@ -115,6 +117,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     writeFile(base + OUTPUT.sourceMap, JSON.stringify(result.sourceMap, null, JSON_INDENT), output);
     if (hostMap !== null) {
       for (const warning of checkHostNames(result.program, hostMap)) output.err(TEXT.warning(warning));
+      for (const warning of checkHostUses(hostMap, createNames(prefix).ownsVariable, result.exports)) output.err(TEXT.warning(warning));
       writeFile(base + OUTPUT.map, appendToMap(hostMap, xml), output);
     }
     if (parsed.flags.has(FLAG.run)) simulate(result, frames, output);

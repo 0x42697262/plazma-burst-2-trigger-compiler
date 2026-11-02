@@ -120,6 +120,18 @@ describe('compile CLI', () => {
     assert.ok(lines.err.some((line) => line.includes('the map has no #door*2 for "gate"')));
   });
 
+  it('prints the exported variables and warns about unexported ones the host map uses', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'e.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(source, 'export var score = 0;\nvar hidden = 0;\non start { score = 1; hidden = 2; }\n');
+    fs.writeFileSync(host, '<trigger uid="#h" x="0" y="0" enabled="true" maxcalls="-1" actions_1_type="125" actions_1_targetA="~e_hidden~" actions_1_targetB="0" />\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--into', host], output), 0);
+    assert.ok(lines.out.includes('Exported variables: score = ~e_score~'));
+    assert.ok(lines.err.some((line) => line.includes('The host map uses ~e_hidden~, which the program does not export')));
+  });
+
   it('removes an old text file when the new program cannot be written as text', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'c.pasm');

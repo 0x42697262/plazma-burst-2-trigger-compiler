@@ -66,6 +66,7 @@ export const HIDDEN = Object.freeze({ players: 'players', count: 'count', index:
 export const WHOLE_NUMBER = /^-?[0-9]+$/;
 export const DEFAULT_SYNC_MODE = 'replace';
 export const OBJECT_AT = 'at';
+export const ARRAY_INDEX_PLACEHOLDER = 'i';
 export const SIDE = Object.freeze({ a: 'A', b: 'B' });
 export const TRIGGER_KIND = 'trigger';
 export const UID_MARK = '#';

@@ -4,6 +4,8 @@ import { opcodeByNumber } from '../opcodes/table.ts';
 import { OPCODE, TEMPLATE_REPLACED_A, TEMPLATE_REPLACED_B } from '../opcodes/constants.ts';
 import { HOST_ACTION_ATTRIBUTE, HOST_TRIGGER_ELEMENT, STRING_PARAM_KIND } from './keys.ts';
 import { TEXT } from './text.ts';
+import type { ExportedVariable } from './ir.ts';
+import { ELEMENT_START } from './keys.ts';
 
 const NOT_VARIABLE_NAMES: ReadonlySet<number> = new Set([OPCODE.showText]);
 
@@ -36,4 +38,15 @@ export function checkHostNames(program: Program, mapXml: string): string[] {
     }
   }
   return [...warnings];
+}
+
+const isExported = (name: string, exports: readonly ExportedVariable[]): boolean => exports.some((entry) => {
+  if (entry.lengthName === null) return entry.gameName === name;
+  return name === entry.lengthName || name.startsWith(entry.gameName.slice(0, entry.gameName.indexOf(ELEMENT_START) + ELEMENT_START.length));
+});
+
+export function checkHostUses(mapXml: string, owns: (name: string) => boolean, exports: readonly ExportedVariable[]): string[] {
+  return [...hostVariableNames(mapXml)]
+    .filter((name) => owns(name) && !isExported(name, exports))
+    .map((name) => TEXT.hostUsesUnexported(name));
 }

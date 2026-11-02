@@ -22,3 +22,4 @@ export const COLOR_PARAM_KIND = 'textmsg';
 export const HOST_TRIGGER_ELEMENT = /<trigger\b[^>]*>/g;
 export const HOST_ACTION_ATTRIBUTE = /actions_(\d+)_type="(-?\d+)" actions_\1_targetA="([^"]*)"/g;
 export const STRING_PARAM_KIND = 'string';
+export const ELEMENT_START = '[';

@@ -32,7 +32,7 @@ export type Statement =
   | { kind: 'block'; body: Statement[]; location: Location };
 
 export type Declaration =
-  | { kind: 'var'; name: string; array: boolean; value: Expression | null; location: Location }
+  | { kind: 'var'; name: string; array: boolean; value: Expression | null; exported: boolean; location: Location }
   | { kind: 'const'; name: string; value: Expression; location: Location }
   | { kind: 'extern'; name: string; hostName: string; location: Location }
   | { kind: 'object'; keyword: string; name: string; uid: string; x: number | null; y: number | null; location: Location }
