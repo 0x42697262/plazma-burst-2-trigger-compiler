@@ -94,3 +94,7 @@ simulator runs.
 
 More: [docs/game-facts.md](docs/game-facts.md) (every game fact this relies on, with its source,
 and the checks that still need a player) and [docs/architecture.md](docs/architecture.md).
+
+## License
+
+[GNU General Public License v3.0](LICENSE.md).
