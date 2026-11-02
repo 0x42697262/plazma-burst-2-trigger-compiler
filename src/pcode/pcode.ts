@@ -25,11 +25,13 @@ type Handler =
   | { kind: 'return' }
   | { kind: 'branch'; condition: Condition; left: Kind; right: Kind };
 
-export type PcodeResult = { triggers: Trigger[]; uidOf: (label: string) => string; vmUids: ReadonlySet<string>; baseUid: string };
+export type PcodeResult = { triggers: Trigger[]; uidOf: (label: string) => string; vmUids: ReadonlySet<string>; baseUid: string; handlerUids: readonly string[] };
+
+export type PcodeObfuscation = { initUid: string; check: string; base: string; size: string; failed: string; expected: number; shuffle: <Item>(items: readonly Item[]) => Item[] };
 
 const isWholeNumber = (text: string): boolean => String(parseInt(text, RADIX)) === text;
 
-export function buildPcode(instructions: readonly Instruction[], names: Names, extraEntries: readonly string[]): PcodeResult {
+export function buildPcode(instructions: readonly Instruction[], names: Names, extraEntries: readonly string[], obfuscation: PcodeObfuscation | null = null): PcodeResult {
   const internal = (name: string): string => names.internalVariable(name);
   const opening = (stem: string): string => internal(stem).slice(0, -VARIABLE_MARK.length);
   const pc = internal(VM_VARIABLE.pc);
@@ -46,7 +48,6 @@ export function buildPcode(instructions: readonly Instruction[], names: Names, e
   const loadUid = names.triggerUid(VM_LABEL.load);
   const unpackUid = names.triggerUid(VM_LABEL.unpack);
   const readyUid = names.triggerUid(VM_LABEL.ready);
-  const baseUid = names.triggerUid(VM_LABEL.handler(0));
 
   const labelPc = new Map<string, number>();
   const body: Exclude<Instruction, { kind: 'label' }>[] = [];
@@ -137,12 +138,21 @@ export function buildPcode(instructions: readonly Instruction[], names: Names, e
     }
   };
 
-  const code = body.map((instruction) => {
+  const encodedBody = body.map((instruction) => {
     const encoded = encode(instruction);
     while (encoded.length < OPERAND_FIELDS + FIRST_OPERAND) encoded.push(EMPTY);
     if (encoded.some((field) => field.includes(SEPARATOR))) throw new CompileError(TEXT.separatorInText(instruction.location?.line ?? 0));
-    return encoded.join(SEPARATOR);
-  }).join(SEPARATOR);
+    return encoded;
+  });
+  const handlerOrder = [...handlers.values()].map((entry) => entry.index);
+  const order = obfuscation === null ? handlerOrder : obfuscation.shuffle(handlerOrder);
+  const positionOf = new Map(order.map((index, position) => [index, position]));
+  const opText = (field: string): string => {
+    const position = positionOf.get(Number(field)) ?? 0;
+    return String(obfuscation === null ? position : ((position - obfuscation.expected) % order.length + order.length) % order.length);
+  };
+  const code = encodedBody.map(([op, ...rest]) => [opText(op ?? EMPTY), ...rest].join(SEPARATOR)).join(SEPARATOR);
+  const baseUid = names.triggerUid(VM_LABEL.handler(order[0] ?? 0));
 
   const act = (opcode: number, targetA: string, targetB: string = ZERO): Action => ({ opcode, targetA, targetB });
   const trigger = (uid: string, actions: Action[]): Trigger => ({ uid, enabled: true, maxCalls: UNLIMITED_CALLS, actions });
@@ -236,12 +246,18 @@ export function buildPcode(instructions: readonly Instruction[], names: Names, e
     }
   };
 
+  const op = internal(VM_VARIABLE.op);
+  const dispatch = obfuscation === null
+    ? [act(OPCODE.copyVariable, work, internal(VM_VARIABLE.base)), act(OPCODE.addVariable, work, op)]
+    : [
+      act(OPCODE.copyVariable, work, obfuscation.check), act(OPCODE.addVariable, work, op), act(OPCODE.moduloVariable, work, obfuscation.size),
+      act(OPCODE.addVariable, work, obfuscation.base),
+    ];
   const loop = trigger(loopUid, [
-    act(OPCODE.setVariable, key, opening(FIELD_STEM)), act(OPCODE.appendString, key, pc), ...fetch(FIELD.op, internal(VM_VARIABLE.op)),
-    act(OPCODE.copyVariable, work, internal(VM_VARIABLE.base)), act(OPCODE.addVariable, work, internal(VM_VARIABLE.op)),
-    act(OPCODE.switchToTriggerIndex, work),
+    act(OPCODE.setVariable, key, opening(FIELD_STEM)), act(OPCODE.appendString, key, pc), ...fetch(FIELD.op, op), ...dispatch, act(OPCODE.switchToTriggerIndex, work),
   ]);
-  const handlerTriggers = [...handlers.values()].map(({ index, handler }) => trigger(names.triggerUid(VM_LABEL.handler(index)), handlerActions(handler, index)));
+  const handlerByIndex = new Map([...handlers.values()].map((entry) => [entry.index, entry.handler]));
+  const handlerTriggers = order.map((index) => trigger(names.triggerUid(VM_LABEL.handler(index)), handlerActions(handlerByIndex.get(index) as Handler, index)));
   const codeVariable = internal(VM_VARIABLE.code);
   const index = internal(VM_VARIABLE.index);
   const count = internal(VM_VARIABLE.count);
@@ -249,9 +265,10 @@ export function buildPcode(instructions: readonly Instruction[], names: Names, e
   const item = internal(VM_VARIABLE.item);
   const ready = internal(VM_VARIABLE.ready);
   const load = trigger(loadUid, [
+    ...(obfuscation === null ? [] : [act(OPCODE.executeTrigger, obfuscation.initUid)]),
     act(OPCODE.skipIfNotEqualValue, ready, READY_MARK), act(OPCODE.switchToTrigger, readyUid),
     ...suffixes.map((suffix, position) => act(OPCODE.setVariable, suffix, FIELD_SUFFIXES[position] ?? EMPTY)),
-    act(OPCODE.setVariable, stackEnd, STACK_END), act(OPCODE.setVariable, internal(VM_VARIABLE.base), baseUid), act(OPCODE.setIfUndefined, sp, ZERO),
+    act(OPCODE.setVariable, stackEnd, STACK_END), ...(obfuscation === null ? [act(OPCODE.setVariable, internal(VM_VARIABLE.base), baseUid)] : []), act(OPCODE.setIfUndefined, sp, ZERO),
     ...[...pool].map(([text, name]) => act(OPCODE.setVariable, name, text)),
     act(OPCODE.setVariable, codeVariable, code), act(OPCODE.splitByValue, codeVariable, SEPARATOR), act(OPCODE.length, count, codeVariable),
     act(OPCODE.setVariable, index, ZERO), act(OPCODE.setVariable, number, ZERO), act(OPCODE.switchToTrigger, unpackUid),
@@ -267,7 +284,7 @@ export function buildPcode(instructions: readonly Instruction[], names: Names, e
   ]);
   const readyTrigger = trigger(readyUid, [act(OPCODE.setVariable, ready, READY_MARK)]);
   const stubTriggers = [...stubs].map((label) => trigger(names.triggerUid(label), [
-    act(OPCODE.executeTrigger, loadUid), ...push(pc), act(OPCODE.setVariable, value, EXIT_MARK), ...push(value),
+    act(OPCODE.executeTrigger, loadUid), ...(obfuscation === null ? [] : [act(OPCODE.continueIfLessValue, obfuscation.failed, ONE)]), ...push(pc), act(OPCODE.setVariable, value, EXIT_MARK), ...push(value),
     act(OPCODE.setVariable, pc, pcOf(label)), act(OPCODE.executeTrigger, loopUid), ...pop(pc),
   ]));
   const vmTriggers = [loop, ...handlerTriggers, ...stopHelpers, load, unpack, readyTrigger];
@@ -279,5 +296,6 @@ export function buildPcode(instructions: readonly Instruction[], names: Names, e
     },
     vmUids: new Set(vmTriggers.map((entry) => entry.uid)),
     baseUid,
+    handlerUids: handlerTriggers.map((entry) => entry.uid),
   };
 }
