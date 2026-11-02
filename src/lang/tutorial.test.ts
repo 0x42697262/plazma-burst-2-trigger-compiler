@@ -52,6 +52,13 @@ const SCENARIOS: Record<string, Scenario> = {
   '18-dsa-maze.ptc': { expect: ['shortest path: 9 steps'] },
   '19-dsa-heap.ptc': { expect: ['heap sort: 2 4 5 6 9 15 31 53 '] },
   '20-dsa-union-find.ptc': { expect: ['4 groups; 0 and 2 together: 1; 4 and 5 together: 0'] },
+  '21-dsa-linked-list.ptc': { expect: ['list: a → b → c → d → e → end, middle c', 'without a and c: b → d → e → end', 'reversed: e → d → b → end'] },
+  '22-dsa-binary-tree.ptc': {
+    expect: ['in order: 20 30 35 40 50 60 70 80 ', 'pre order: 50 30 20 40 35 70 60 80 ', 'height 4, has 35: 1, has 36: 0', 'mirrored, in order: 80 70 60 50 40 35 30 20 '],
+  },
+  '23-dsa-more-sorting.ptc': {
+    expect: ['input:     529156380742', 'selection: 012234556789', 'merge:     012234556789', 'counting:  012234556789', 'shell:     012234556789'],
+  },
 };
 
 const DOC = path.resolve(import.meta.dirname, '..', '..', 'docs', 'tutorial.md');

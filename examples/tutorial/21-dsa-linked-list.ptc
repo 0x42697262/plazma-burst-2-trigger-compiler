@@ -1,0 +1,82 @@
+// Level 3: a singly linked list. Each node is an index into two arrays:
+// value[node] holds the data, next[node] the following node (-1 ends the list).
+var value[];
+var next[];
+var head = -1;
+
+function newNode(data) {
+  push(value, data);
+  push(next, -1);
+  return len(value) - 1;
+}
+
+function addFront(data) {
+  let node = newNode(data);
+  next[node] = head;
+  head = node;
+}
+
+function addBack(data) {
+  let node = newNode(data);
+  if (head == -1) { head = node; return; }
+  let last = head;
+  while (next[last] != -1) { last = next[last]; }
+  next[last] = node;
+}
+
+function remove(data) {
+  if (head == -1) { return 0; }
+  if (value[head] == data) { head = next[head]; return 1; }
+  let previous = head;
+  while (next[previous] != -1) {
+    let node = next[previous];
+    if (value[node] == data) {
+      next[previous] = next[node];
+      return 1;
+    }
+    previous = node;
+  }
+  return 0;
+}
+
+function reverse() {
+  let previous = -1;
+  let node = head;
+  while (node != -1) {
+    let following = next[node];
+    next[node] = previous;
+    previous = node;
+    node = following;
+  }
+  head = previous;
+}
+
+function middle() {
+  let slow = head;
+  let fast = head;
+  while (fast != -1 && next[fast] != -1) {
+    slow = next[slow];
+    fast = next[next[fast]];
+  }
+  return value[slow];
+}
+
+function listText() {
+  let text = "";
+  let node = head;
+  while (node != -1) {
+    text ..= value[node] .. " → ";
+    node = next[node];
+  }
+  return text .. "end";
+}
+
+on start {
+  addBack("b"); addBack("c"); addFront("a"); addBack("d"); addBack("e");
+  say("list: {listText()}, middle {middle()}");
+  remove("c");
+  remove("a");
+  say("without a and c: {listText()}");
+  reverse();
+  say("reversed: {listText()}");
+}

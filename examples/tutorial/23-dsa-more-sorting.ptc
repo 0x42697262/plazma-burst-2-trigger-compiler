@@ -1,0 +1,98 @@
+// Level 3: four more sorts on the same data, each from a fresh copy.
+// selection sort, merge sort (recursive), counting sort (small whole numbers), shell sort.
+var numbers[];
+var merged[];
+var counts[];
+
+function fill() {
+  clear(numbers);
+  let input = "5 2 9 1 5 6 3 8 0 7 4 2";
+  for (let i = 0; i < len(input); i += 2) { push(numbers, number(charAt(input, i))); }
+}
+
+function listText() {
+  let text = "";
+  for (let i = 0; i < len(numbers); i += 1) { text ..= numbers[i]; }
+  return text;
+}
+
+function swap(i, j) {
+  let keep = numbers[i];
+  numbers[i] = numbers[j];
+  numbers[j] = keep;
+}
+
+function selectionSort() {
+  for (let i = 0; i < len(numbers) - 1; i += 1) {
+    let smallest = i;
+    for (let j = i + 1; j < len(numbers); j += 1) {
+      if (numbers[j] < numbers[smallest]) { smallest = j; }
+    }
+    swap(i, smallest);
+  }
+}
+
+function mergeSort(low, high) {
+  if (high - low < 1) { return; }
+  let middle = floor((low + high) / 2);
+  mergeSort(low, middle);
+  mergeSort(middle + 1, high);
+  let a = low;
+  let b = middle + 1;
+  clear(merged);
+  while (a <= middle || b <= high) {
+    if (b > high || (a <= middle && numbers[a] <= numbers[b])) {
+      push(merged, numbers[a]);
+      a += 1;
+    } else {
+      push(merged, numbers[b]);
+      b += 1;
+    }
+  }
+  for (let i = 0; i < len(merged); i += 1) { numbers[low + i] = merged[i]; }
+}
+
+function countingSort(largest) {
+  clear(counts);
+  for (let v = 0; v <= largest; v += 1) { push(counts, 0); }
+  for (let i = 0; i < len(numbers); i += 1) { counts[numbers[i]] += 1; }
+  let at = 0;
+  for (let v = 0; v <= largest; v += 1) {
+    for (let k = 0; k < counts[v]; k += 1) {
+      numbers[at] = v;
+      at += 1;
+    }
+  }
+}
+
+function shellSort() {
+  let gap = floor(len(numbers) / 2);
+  while (gap > 0) {
+    for (let i = gap; i < len(numbers); i += 1) {
+      let current = numbers[i];
+      let j = i;
+      while (j >= gap && numbers[j - gap] > current) {
+        numbers[j] = numbers[j - gap];
+        j -= gap;
+      }
+      numbers[j] = current;
+    }
+    gap = floor(gap / 2);
+  }
+}
+
+on start {
+  fill();
+  say("input:     {listText()}");
+  selectionSort();
+  say("selection: {listText()}");
+  fill();
+  mergeSort(0, len(numbers) - 1);
+  say("merge:     {listText()}");
+  fill();
+  countingSort(9);
+  say("counting:  {listText()}");
+  fill();
+  shellSort();
+  say("shell:     {listText()}");
+}

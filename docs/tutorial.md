@@ -1,6 +1,6 @@
 # Tutorial
 
-This tutorial builds 20 small programs in the `.ptc` language, from a first loop to parsers and
+This tutorial builds 23 small programs in the `.ptc` language, from a first loop to parsers and
 classic algorithms. Every program is in [`examples/tutorial/`](../examples/tutorial/), and a test
 runs each one and checks the chat output shown here, so what you read is what the game does.
 
@@ -1374,6 +1374,341 @@ on start {
 
 Each element points to a parent; a group's leader points to itself. `join` links two leaders.
 `find` also makes every element on its way point to its grandparent, so later searches are short.
+
+### Level 3: a linked list
+
+Nodes are indexes. Parallel arrays hold each node's fields: `value[node]` and `next[node]`. This
+is how any record ("struct") is built in the language: one array per field, one index per record.
+
+<!-- file: 21-dsa-linked-list.ptc -->
+```ptc
+// Level 3: a singly linked list. Each node is an index into two arrays:
+// value[node] holds the data, next[node] the following node (-1 ends the list).
+var value[];
+var next[];
+var head = -1;
+
+function newNode(data) {
+  push(value, data);
+  push(next, -1);
+  return len(value) - 1;
+}
+
+function addFront(data) {
+  let node = newNode(data);
+  next[node] = head;
+  head = node;
+}
+
+function addBack(data) {
+  let node = newNode(data);
+  if (head == -1) { head = node; return; }
+  let last = head;
+  while (next[last] != -1) { last = next[last]; }
+  next[last] = node;
+}
+
+function remove(data) {
+  if (head == -1) { return 0; }
+  if (value[head] == data) { head = next[head]; return 1; }
+  let previous = head;
+  while (next[previous] != -1) {
+    let node = next[previous];
+    if (value[node] == data) {
+      next[previous] = next[node];
+      return 1;
+    }
+    previous = node;
+  }
+  return 0;
+}
+
+function reverse() {
+  let previous = -1;
+  let node = head;
+  while (node != -1) {
+    let following = next[node];
+    next[node] = previous;
+    previous = node;
+    node = following;
+  }
+  head = previous;
+}
+
+function middle() {
+  let slow = head;
+  let fast = head;
+  while (fast != -1 && next[fast] != -1) {
+    slow = next[slow];
+    fast = next[next[fast]];
+  }
+  return value[slow];
+}
+
+function listText() {
+  let text = "";
+  let node = head;
+  while (node != -1) {
+    text ..= value[node] .. " → ";
+    node = next[node];
+  }
+  return text .. "end";
+}
+
+on start {
+  addBack("b"); addBack("c"); addFront("a"); addBack("d"); addBack("e");
+  say("list: {listText()}, middle {middle()}");
+  remove("c");
+  remove("a");
+  say("without a and c: {listText()}");
+  reverse();
+  say("reversed: {listText()}");
+}
+```
+```
+list: a → b → c → d → e → end, middle c
+without a and c: b → d → e → end
+reversed: e → d → b → end
+```
+
+- `remove` relinks the node before around the removed one; the removed node stays in the arrays,
+  unused.
+- `reverse` walks once and turns every `next` around, keeping three nodes in hand: previous,
+  current, following.
+- `middle` moves `slow` one step and `fast` two: when `fast` reaches the end, `slow` is halfway.
+- The arrow is `→`: a `>` stored in a variable reaches the game as `&gt;` (F26).
+
+### Level 3: a binary search tree, and mirroring it
+
+<!-- file: 22-dsa-binary-tree.ptc -->
+```ptc
+// Level 3: a binary search tree. Nodes are indexes into key[], left[] and right[]
+// (-1 means no child). Smaller keys go left, bigger keys right.
+var key[];
+var left[];
+var right[];
+var root = -1;
+var visited = "";
+
+function insert(newKey) {
+  push(key, newKey);
+  push(left, -1);
+  push(right, -1);
+  let node = len(key) - 1;
+  if (root == -1) { root = node; return; }
+  let at = root;
+  while (1) {
+    if (newKey < key[at]) {
+      if (left[at] == -1) { left[at] = node; return; }
+      at = left[at];
+    } else {
+      if (right[at] == -1) { right[at] = node; return; }
+      at = right[at];
+    }
+  }
+}
+
+function has(wanted) {
+  let at = root;
+  while (at != -1) {
+    if (key[at] == wanted) { return 1; }
+    if (wanted < key[at]) { at = left[at]; } else { at = right[at]; }
+  }
+  return 0;
+}
+
+function inOrder(node) {
+  if (node == -1) { return; }
+  inOrder(left[node]);
+  visited ..= key[node] .. " ";
+  inOrder(right[node]);
+}
+
+function preOrder(node) {
+  if (node == -1) { return; }
+  visited ..= key[node] .. " ";
+  preOrder(left[node]);
+  preOrder(right[node]);
+}
+
+function height(node) {
+  if (node == -1) { return 0; }
+  let leftHeight = height(left[node]);
+  let rightHeight = height(right[node]);
+  if (leftHeight > rightHeight) { return leftHeight + 1; }
+  return rightHeight + 1;
+}
+
+function mirror(node) {
+  if (node == -1) { return; }
+  let keep = left[node];
+  left[node] = right[node];
+  right[node] = keep;
+  mirror(left[node]);
+  mirror(right[node]);
+}
+
+function walk(order) {
+  visited = "";
+  if (order == "in") { inOrder(root); } else { preOrder(root); }
+  return visited;
+}
+
+on start {
+  let input = "50 30 70 20 40 60 80 35";
+  let digits = "";
+  for (let i = 0; i <= len(input); i += 1) {
+    if (i == len(input) || charAt(input, i) == " ") {
+      insert(number(digits));
+      digits = "";
+    } else {
+      digits ..= charAt(input, i);
+    }
+  }
+  say("in order: {walk("in")}");
+  say("pre order: {walk("pre")}");
+  say("height {height(root)}, has 35: {has(35)}, has 36: {has(36)}");
+  mirror(root);
+  say("mirrored, in order: {walk("in")}");
+}
+```
+```
+in order: 20 30 35 40 50 60 70 80 
+pre order: 50 30 20 40 35 70 60 80 
+height 4, has 35: 1, has 36: 0
+mirrored, in order: 80 70 60 50 40 35 30 20 
+```
+
+- Every key in a node's left subtree is smaller, every key in its right subtree bigger, so
+  `has` follows one path down, and an in-order walk (left, node, right) gives sorted keys.
+- `inOrder`, `preOrder`, `height` and `mirror` are recursive; each call keeps its own `node`.
+- `mirror` swaps the children of every node: the tree is reversed, and the in-order walk now gives
+  the keys from biggest to smallest.
+- `-1` stands for "no child", like `null` in other languages.
+
+### Level 3: more sorting algorithms
+
+<!-- file: 23-dsa-more-sorting.ptc -->
+```ptc
+// Level 3: four more sorts on the same data, each from a fresh copy.
+// selection sort, merge sort (recursive), counting sort (small whole numbers), shell sort.
+var numbers[];
+var merged[];
+var counts[];
+
+function fill() {
+  clear(numbers);
+  let input = "5 2 9 1 5 6 3 8 0 7 4 2";
+  for (let i = 0; i < len(input); i += 2) { push(numbers, number(charAt(input, i))); }
+}
+
+function listText() {
+  let text = "";
+  for (let i = 0; i < len(numbers); i += 1) { text ..= numbers[i]; }
+  return text;
+}
+
+function swap(i, j) {
+  let keep = numbers[i];
+  numbers[i] = numbers[j];
+  numbers[j] = keep;
+}
+
+function selectionSort() {
+  for (let i = 0; i < len(numbers) - 1; i += 1) {
+    let smallest = i;
+    for (let j = i + 1; j < len(numbers); j += 1) {
+      if (numbers[j] < numbers[smallest]) { smallest = j; }
+    }
+    swap(i, smallest);
+  }
+}
+
+function mergeSort(low, high) {
+  if (high - low < 1) { return; }
+  let middle = floor((low + high) / 2);
+  mergeSort(low, middle);
+  mergeSort(middle + 1, high);
+  let a = low;
+  let b = middle + 1;
+  clear(merged);
+  while (a <= middle || b <= high) {
+    if (b > high || (a <= middle && numbers[a] <= numbers[b])) {
+      push(merged, numbers[a]);
+      a += 1;
+    } else {
+      push(merged, numbers[b]);
+      b += 1;
+    }
+  }
+  for (let i = 0; i < len(merged); i += 1) { numbers[low + i] = merged[i]; }
+}
+
+function countingSort(largest) {
+  clear(counts);
+  for (let v = 0; v <= largest; v += 1) { push(counts, 0); }
+  for (let i = 0; i < len(numbers); i += 1) { counts[numbers[i]] += 1; }
+  let at = 0;
+  for (let v = 0; v <= largest; v += 1) {
+    for (let k = 0; k < counts[v]; k += 1) {
+      numbers[at] = v;
+      at += 1;
+    }
+  }
+}
+
+function shellSort() {
+  let gap = floor(len(numbers) / 2);
+  while (gap > 0) {
+    for (let i = gap; i < len(numbers); i += 1) {
+      let current = numbers[i];
+      let j = i;
+      while (j >= gap && numbers[j - gap] > current) {
+        numbers[j] = numbers[j - gap];
+        j -= gap;
+      }
+      numbers[j] = current;
+    }
+    gap = floor(gap / 2);
+  }
+}
+
+on start {
+  fill();
+  say("input:     {listText()}");
+  selectionSort();
+  say("selection: {listText()}");
+  fill();
+  mergeSort(0, len(numbers) - 1);
+  say("merge:     {listText()}");
+  fill();
+  countingSort(9);
+  say("counting:  {listText()}");
+  fill();
+  shellSort();
+  say("shell:     {listText()}");
+}
+```
+```
+input:     529156380742
+selection: 012234556789
+merge:     012234556789
+counting:  012234556789
+shell:     012234556789
+```
+
+| Sort | Idea | Work for n values |
+|---|---|---|
+| selection | find the smallest of the rest, put it next | about n² compares |
+| merge | sort both halves, then merge them through `merged` | about n·log n |
+| counting | count each value, write the values back in order; whole numbers in a small range only | about n + range |
+| shell | insertion sort over elements `gap` apart, then smaller gaps | between the two |
+| bubble, insertion (level 2) | swap neighbors / shift into place | about n² |
+| quicksort (level 3) | partition around a pivot, sort both sides | about n·log n on average |
+| heap sort (level 3) | take the smallest from a heap until empty | about n·log n |
+
+In this game every array access costs a scan of all variables (section 10), so fewer accesses
+matter more than in other languages: for a few dozen values, any of these is fine.
 
 ## 10. Cost, limits and pitfalls
 
