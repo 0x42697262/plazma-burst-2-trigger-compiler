@@ -23,7 +23,10 @@ sent anywhere. Files are kept in the browser's local storage.
 - "map XML": choose a map downloaded from the editor; the Map tab shows it with the program appended
   (and declared objects the map lacks added). Download saves the shown output.
 - "replace" (off by default): same as `--replace`; when the chosen map already holds an older build
-  of the program, remove its triggers and timers before adding the new ones (update in place).
+  of the program, remove its triggers and timers before adding the new ones (update in place). The
+  page remembers the uids of the last map build (per file) so this works even across renamed builds.
+- "name seed": same as `--name-seed`; derive the name prefix from a seed for reproducible,
+  source-independent names. Leave empty for names based on the file name.
 
 Build it locally with `npm run web` (writes `site/`; serve that folder with any static server). On
 GitHub, `.github/workflows/pages.yml` builds and deploys it on every push to `master`; turn it on

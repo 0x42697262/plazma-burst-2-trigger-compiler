@@ -53,6 +53,11 @@ Declare each map object the program uses with its kind and uid:
 - `--replace` (with `--into`) removes the program's own triggers and timers from the map before
   adding the new ones, so a map that already holds an older build is updated in place. Declared
   objects and everything else in the map stay. Without it, a uid already in the map is an error.
+  Each `--into` build writes a `.build.json` next to the output listing the uids it added; `--replace`
+  reads the previous one, so the update is exact even when the names changed between builds.
+- `--name-seed <s>` derives the name prefix from a seed instead of the file name, so the triggers
+  and variables get reproducible, source-independent names (`#z…`); the same seed always gives the
+  same names, a different seed different ones. It cannot be combined with `--prefix`.
 - The kind words are not reserved: `var water = 1;` still works.
 
 ### Object arrays

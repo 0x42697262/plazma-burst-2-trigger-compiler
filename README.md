@@ -22,6 +22,7 @@ That writes, in `out/`:
 | `hello.txt` | the same triggers in the editor's "Edit as text" format, one block per trigger |
 | `hello.map.json` | source lines of every action, per trigger uid |
 | `hello-map.xml` | with `--into <map.xml>`: the map with the elements appended |
+| `hello.build.json` | with `--into`: the uids this build added, read back by `--replace` |
 
 `--run` also runs the program in the simulator and prints its variables and chat.
 
@@ -36,8 +37,10 @@ The website editor cannot import XML into an open map; it can only replace the w
 The compiler refuses uids that the map already uses, adds declared map objects the map lacks,
 and warns when the map uses one of the program's variables that is not `export var`. To update a
 map that already holds an older build of the program, add `--replace`: it removes the program's
-own triggers and timers (found by the prefix) before adding the new ones, and leaves everything
-else (your objects and other triggers) in place. The map's own timers come first in the file,
+own triggers and timers before adding the new ones, and leaves everything else (your objects and
+other triggers) in place. Each `--into` build also writes a `.build.json` next to the output that
+records the uids it added; `--replace` reads the previous one, so the update is exact even when
+the names changed between builds (for example with a different `--name-seed`). The map's own timers come first in the file,
 so a host timer with delay 0 runs before the program's start code in the first frame.
 
 The `.txt` output (for "Edit trigger as text") holds triggers only, not timers: add the listed
@@ -87,6 +90,7 @@ simulator runs.
 | `--no-sync-mark` | do not add the Var Sync engine mark that a program with sync actions needs (with `--into`, a map that has one keeps it and gets no second one) |
 | `--no-create` | with `--into`: do not add declared map objects the map lacks; warn instead |
 | `--replace` | with `--into`: remove this program's old triggers and timers from the map first, to update it in place |
+| `--name-seed <s>` | derive the name prefix from a seed: reproducible, source-independent names. Pair with `--replace` to update a map across renamed builds (a `.build.json` next to the output records the uids) |
 | `--target <name>` | `triggers` (default) compiles to triggers; `pcode` compiles to p-code run by a fixed set of triggers: about 20× slower, experimental ([docs/pcode.md](docs/pcode.md)) |
 | `--direct-index` | build array element names from pieces instead of scanning every variable: 2 more actions per array access, faster in maps with many variables (F37) |
 | `--no-number-text` | write number-like text such as `"007"` as it is, for map editors other than the website one; by default it is kept safe from the website editor, which turns it into a number (F36) |
