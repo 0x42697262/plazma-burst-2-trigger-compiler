@@ -50,6 +50,20 @@ Declare each map object the program uses with its kind and uid:
   instead of adding.
 - The kind words are not reserved: `var water = 1;` still works.
 
+## Files and visibility
+
+- `import "file.ptc";` pulls in another file's declarations, as if they were written in this one.
+  Everything shares one prefix and one namespace, so two files cannot declare the same name.
+  Errors name the file: `lib/tools.ptc line 4: ...`. Unused functions of imported files are left
+  out silently.
+- Every variable and trigger is visible to the whole map: the game has one variable table. The
+  prefix keeps programs apart; `export` marks what is meant to be shared:
+  - `export function f()` gets the fixed trigger uid `#<prefix>_f`.
+  - `export var score;` is listed after compiling (`score = ~<prefix>_score~`). With `--into`, the
+    compiler warns when the host map uses one of the program's variables that is not exported:
+    those names can change when the program changes.
+- There is no private/public/protected: the game could not enforce them.
+
 ## Values and types
 
 The language has no type declarations, and a variable needs none. Every value is a game variable,
@@ -88,6 +102,8 @@ Collections:
 | `const NAME = 5;` | constant: a number, text, `true` or `false`; written into the actions |
 | `extern score;` / `extern s = "host name";` | a variable of the host map, used by its own name |
 | `water pool = "#water*1";` / `door gate = "#door*3" at 400, -120;` | a map object (see below) |
+| `export var score = 0;` / `export var list[];` | a variable meant for the host map or other programs: listed after compiling; with `--into`, using a non-exported one from the host map is warned about |
+| `import "lib/tools.ptc";` | adds every declaration of that file (path relative to this file; each file once) |
 | `function f(a, b) { ... }` | function; builtin names cannot be used |
 | `export function f() { ... }` | function with a stable uid `#<prefix>_f`, for the map's own triggers and regions |
 | `on start { ... }` | runs at map start (a start timer, before every other timer); several blocks run one after the other, each with its own scope (`return` ends only its block) |
@@ -190,9 +206,11 @@ text, `;` ends a rule. Spaces, line breaks, `// line` and `/* block */` comments
 any two tokens. Words in the keyword list are not identifiers.
 
 ```ebnf
-program        = { declaration } ;
+program        = { import | declaration } ;
 
-declaration    = "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
+import         = "import" string ";" ;
+
+declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
                | "const" identifier "=" expression ";"
                | "extern" identifier [ "=" string ] ";"
                | object-kind identifier "=" string [ "at" signed "," signed ] ";"
@@ -250,7 +268,7 @@ character      = ? any character except '"', "\", "{", "}" and a line break ? ;
 
 keyword        = "var" | "const" | "let" | "extern" | "function" | "export" | "on" | "every"
                | "if" | "else" | "while" | "for" | "player" | "break" | "continue" | "return"
-               | "true" | "false" | "wait" ;
+               | "true" | "false" | "wait" | "import" ;
 ```
 
 Rules the grammar does not show:

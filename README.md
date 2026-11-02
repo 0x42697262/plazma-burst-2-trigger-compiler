@@ -26,7 +26,8 @@ The website editor cannot import XML into an open map; it can only replace the w
 2. `npm run compile -- game.ptc --into downloaded-map.xml`
 3. Replace the map with `out/game-map.xml`.
 
-The compiler refuses uids that the map already uses. The map's own timers come first in the file,
+The compiler refuses uids that the map already uses, adds declared map objects the map lacks,
+and warns when the map uses one of the program's variables that is not `export var`. The map's own timers come first in the file,
 so a host timer with delay 0 runs before the program's start code in the first frame.
 
 The `.txt` output (for "Edit trigger as text") holds triggers only, not timers: add the listed
