@@ -25,6 +25,7 @@ export const TEXT = Object.freeze({
   secretLeak: (name: string, where: string): string => `the secret ${name} would be written into the map (${where}); use it only inside a const, like const HASH = hash(${name});`,
   leakPlace: (uid: string, position: number, line: number | null): string => `trigger ${uid}, action ${position}${line === null ? '' : `, from line ${line}`}`,
   leakTimer: (uid: string): string => `timer ${uid}`,
+  leakEncoded: (variable: string): string => `the encoded text of ${variable} (it is decoded at map start)`,
   unknownFunction: (name: string): string => `unknown function "${name}"`,
   duplicate: (name: string): string => `"${name}" is already defined`,
   constantAssignment: (name: string): string => `"${name}" is a constant`,

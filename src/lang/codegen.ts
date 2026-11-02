@@ -287,7 +287,8 @@ export class Generator {
       else if (declaration.location.file === undefined && !this.compileTimeFunctions.has(declaration.name)) this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
     this.setTextConstants(sections);
-    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects, exports: this.exports };
+    const hostNames = file.declarations.flatMap((declaration) => (declaration.kind === 'extern' ? [declaration.hostName] : []));
+    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects, exports: this.exports, hostNames };
   }
 
   private collect(file: SourceFile): void {

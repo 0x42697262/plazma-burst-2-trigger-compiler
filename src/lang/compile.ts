@@ -4,6 +4,7 @@ import { createNames, CompileError } from '../compiler/names.ts';
 import type { Declaration, SourceFile } from './ast.ts';
 import { parseSource } from './parser.ts';
 import { generate } from './codegen.ts';
+import { keepExported } from './symbols.ts';
 import { checkSecrets, foldConstants } from './comptime.ts';
 import type { Folded } from './comptime.ts';
 import { SourceError } from './lexer.ts';
@@ -39,7 +40,8 @@ function loadFiles(source: string, origin: SourceOrigin | null): SourceFile {
 }
 
 export function compileSource(source: string, prefix: string, options: Partial<CompileOptions> = {}, origin: SourceOrigin | null = null): CompileResult {
-  const names = createNames(prefix);
+  const merged: CompileOptions = { ...DEFAULT_OPTIONS, ...options };
+  const names = createNames(prefix, merged.obfuscate);
   let file;
   try {
     file = loadFiles(source, origin);
@@ -47,7 +49,7 @@ export function compileSource(source: string, prefix: string, options: Partial<C
     if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
     throw error;
   }
-  const merged: CompileOptions = { ...DEFAULT_OPTIONS, ...options };
+  keepExported(names, file.declarations);
   let folded: Folded;
   try {
     folded = foldConstants(file, merged.environment);
@@ -60,11 +62,13 @@ export function compileSource(source: string, prefix: string, options: Partial<C
   };
   const result = compileModule(generate(folded.file, names, generateOptions), names, merged);
   const lineOf = (uid: string, position: number): number | null => result.sourceMap.find((entry) => entry.uid === uid)?.lines[position] ?? null;
+  const machineUids = result.obfuscation?.machineUids ?? new Set<string>();
   checkSecrets(folded.secrets, [
-    ...result.program.triggers.flatMap((trigger) => trigger.actions.flatMap((action, position) => [action.targetA, action.targetB].map((text) => ({
+    ...result.program.triggers.filter((trigger) => !machineUids.has(trigger.uid)).flatMap((trigger) => trigger.actions.flatMap((action, position) => [action.targetA, action.targetB].map((text) => ({
       text, where: TEXT.leakPlace(trigger.uid, position + 1, lineOf(trigger.uid, position)),
     })))),
     ...result.program.timers.map((timer) => ({ text: timer.uid, where: TEXT.leakTimer(timer.uid) })),
+    ...(result.obfuscation?.texts ?? []).map((entry) => ({ text: entry.value, where: TEXT.leakEncoded(entry.variable) })),
   ]);
   return result;
 }

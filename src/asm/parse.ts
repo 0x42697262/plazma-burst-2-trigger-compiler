@@ -23,7 +23,7 @@ type Token =
   | { kind: 'string'; text: string }
   | { kind: 'bare'; text: string };
 
-export type Assembly = { module: Module; externals: string[] };
+export type Assembly = { module: Module; externals: string[]; exportedLabels: string[] };
 
 class LineError extends Error {}
 
@@ -144,7 +144,7 @@ const expectCount = (name: string, tokens: readonly Token[], count: number): voi
   if (tokens.length !== count) fail(TEXT.operandCount(name, TEXT.exactly(count), tokens.length));
 };
 
-type State = { instructions: Instruction[]; entries: Set<string>; start: string | null; externals: string[]; timers: TimerSpec[]; firstLabel: string | null };
+type State = { instructions: Instruction[]; entries: Set<string>; start: string | null; externals: string[]; timers: TimerSpec[]; firstLabel: string | null; hostNames: Set<string> };
 
 const action = (opcode: number, targetA: Operand, targetB: Operand, location: SourceLocation): Instruction => ({ kind: 'action', opcode, targetA, targetB, location });
 
@@ -264,6 +264,7 @@ function parseLine(rawLine: string, lineNumber: number, state: State, names: Nam
   const space = line.search(WHITESPACE);
   const mnemonic = space < 0 ? line : line.slice(0, space);
   const tokens = splitOperands(space < 0 ? '' : line.slice(space)).map((raw) => readToken(raw, names));
+  for (const token of tokens) if (token.kind === 'host') state.hostNames.add(token.name);
   const produced = instructionsOf(mnemonic, tokens, names, location);
   const previous = state.instructions.at(-1);
   if (previous?.kind === 'action' && SKIPS_NEXT.has(previous.opcode) && produced.length > 1) fail(TEXT.skipBeforeMultiple(mnemonic));
@@ -271,7 +272,7 @@ function parseLine(rawLine: string, lineNumber: number, state: State, names: Nam
 }
 
 export function parseAssembly(source: string, names: Names): Assembly {
-  const state: State = { instructions: [], entries: new Set(), start: null, externals: [], timers: [], firstLabel: null };
+  const state: State = { instructions: [], entries: new Set(), start: null, externals: [], timers: [], firstLabel: null, hostNames: new Set() };
   source.split(LINE_SPLIT).forEach((rawLine, index) => {
     const lineNumber = index + 1;
     try {
@@ -288,9 +289,10 @@ export function parseAssembly(source: string, names: Names): Assembly {
     if (!labels.has(label)) throw new CompileError(TEXT.undefinedLabel(label));
   }
   for (const timer of state.timers) if (labels.has(timer.label)) throw new CompileError(TEXT.timerNameClash(timer.label));
+  const exportedLabels = [...state.entries];
   state.entries.add(start);
   for (const timer of state.timers) state.entries.add(timer.target);
   const instructions = state.instructions.map((instruction) =>
     (instruction.kind === 'label' && state.entries.has(instruction.label) ? { ...instruction, entry: true } : instruction));
-  return { module: { instructions, start, timers: state.timers }, externals: state.externals };
+  return { module: { instructions, start, timers: state.timers, hostNames: [...state.hostNames] }, externals: state.externals, exportedLabels };
 }
