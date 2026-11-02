@@ -12,6 +12,7 @@ export const TEXT = Object.freeze({
     '  --frames <n>      frames to simulate with --run (default 1)',
     '  --at <x>,<y>      where the first trigger goes in the map (default 0,0)',
     '  --no-sync-mark    do not add the Var Sync engine mark when the program syncs variables',
+    '  --no-create       with --into, do not add declared objects the map lacks; warn instead',
   ].join('\n'),
   wrote: (file: string): string => `Wrote ${file}`,
   warning: (message: string): string => `warning: ${message}`,
@@ -26,6 +27,10 @@ export const TEXT = Object.freeze({
   badPosition: (value: string): string => `--at needs two whole numbers like 1000,-500, got "${value}".`,
   textHasNoTimers: (timers: readonly string[]): string => `the trigger text has no timers; in the editor, add timers for: ${timers.join(', ')}`,
   textNeedsVarSync: 'the program syncs variables: in the editor, add a Var Sync engine mark to the map, or every sync stops its trigger',
+  objectCreated: (keyword: string, uid: string, positionX: number, positionY: number): string =>
+    `Added ${keyword} ${uid} at ${positionX}, ${positionY}: move it into place in the editor`,
+  objectMissing: (name: string, uid: string): string => `the map has no ${uid} for "${name}" (--no-create)`,
+  objectProblems: (problems: readonly string[]): string => problems.join('\n'),
   timerTarget: (uid: string, target: string): string => `${uid} -> ${target}`,
   summary: (triggers: number, actions: number, timers: number): string => `${triggers} triggers, ${actions} actions, ${timers} timers`,
   variable: (name: string, value: string): string => `  ${name} = ${value}`,

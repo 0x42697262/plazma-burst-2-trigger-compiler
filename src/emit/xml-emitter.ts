@@ -6,7 +6,7 @@ import { TEXT } from './text.ts';
 import { checkProgram } from './check.ts';
 
 export type Layout = { originX: number; originY: number; spacing: number; columns: number };
-type Position = { x: number; y: number };
+export type Position = { x: number; y: number };
 
 export const escapeXml = (value: string): string => XML_ESCAPES.reduce((text, [raw, escaped]) => text.split(raw).join(escaped), value);
 
@@ -51,6 +51,14 @@ const varSyncElement = (position: Position): string => TEXT.xmlEngineMark([
   attribute(ENGINE_MARK.markAttribute, ENGINE_MARK.varSync),
   attribute(ENGINE_MARK.teamAttribute, ENGINE_MARK.anyTeam),
 ].join(ATTRIBUTE_SEPARATOR));
+
+export const stagingPosition = (index: number, program: Program, layout: Layout = DEFAULT_LAYOUT): Position => {
+  const elements = program.triggers.length + program.timers.length + (program.varSyncMark ? 1 : 0);
+  return {
+    x: layout.originX + index * layout.spacing,
+    y: layout.originY + (Math.ceil(elements / layout.columns) + 1) * layout.spacing,
+  };
+};
 
 export function emitXml(program: Program, layout: Layout = DEFAULT_LAYOUT): string {
   checkProgram(program);

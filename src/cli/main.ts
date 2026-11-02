@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { emitXml } from '../emit/xml-emitter.ts';
+import { emitXml, escapeXml, stagingPosition } from '../emit/xml-emitter.ts';
+import { XML_LINE_END } from '../emit/keys.ts';
+import { checkObjects, objectElement } from '../objects/objects.ts';
 import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
@@ -89,7 +91,18 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const actions = result.program.triggers.reduce((total, trigger) => total + trigger.actions.length, 0);
     output.out(TEXT.summary(result.program.triggers.length, actions, result.program.timers.length));
     const base = path.join(lastValue(parsed, FLAG.out) ?? DEFAULT_OUT, path.basename(file, path.extname(file)));
-    const xml = emitXml(result.program, layout);
+    const check = hostMap === null ? null : checkObjects(result.objects, hostMap);
+    if (check && check.problems.length > 0) throw new UsageError(TEXT.objectProblems(check.problems));
+    const creating = check !== null && !parsed.flags.has(FLAG.noCreate) ? check.missing : [];
+    if (check !== null && parsed.flags.has(FLAG.noCreate)) {
+      for (const object of check.missing) output.err(TEXT.warning(TEXT.objectMissing(object.name, object.uid)));
+    }
+    const objectXml = creating.map((object, index) => {
+      const staging = stagingPosition(index, result.program, layout);
+      output.out(TEXT.objectCreated(object.keyword, object.uid, object.x ?? staging.x, object.y ?? staging.y));
+      return objectElement(object, staging, escapeXml) + XML_LINE_END;
+    }).join('');
+    const xml = emitXml(result.program, layout) + objectXml;
     writeFile(base + OUTPUT.xml, xml, output);
     try {
       writeFile(base + OUTPUT.text, joinTextBlocks(emitText(result.program)), output);

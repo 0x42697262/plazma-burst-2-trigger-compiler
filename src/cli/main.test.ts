@@ -85,6 +85,41 @@ describe('compile CLI', () => {
     assert.ok(lines.err.some((line) => line.includes('no Var Sync engine mark is added')));
   });
 
+  it('adds declared objects the host map lacks, and only those', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'o.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(source, [
+      'water pool = "#water*1";', 'region spawn = "#SPAWN1";', 'door gate = "#door*7" at 50, -60;', 'gun rifle = "#gun*9";',
+      'on start { action(MovableTo, gate, spawn); action(395, pool, 5); action(SetGunPower, rifle, 2); }', '',
+    ].join('\n'));
+    fs.writeFileSync(host, '<player x="0" y="0" />\n<water uid="#water*1" x="0" y="0" w="10" h="10" damage="0" friction="true" />\n<region uid="#SPAWN1" x="0" y="0" w="10" h="10" use_target="-1" use_on="0" attach="-1" />\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--into', host], output), 0, lines.err.join('\n'));
+    const merged = fs.readFileSync(path.join(folder, 'o-map.xml'), 'utf8');
+    assert.match(merged, /<door uid="#door\*7" x="50" y="-60" w="10" h="10" moving="false" tarx="0" tary="0" maxspeed="10" vis="true" attach="-1" \/>/);
+    assert.match(merged, /<gun uid="#gun\*9" x="\d+" y="\d+" model="gun_rifle" command="-1" upg="0" \/>/);
+    assert.equal(merged.match(/uid="#water\*1"/g)?.length, 1);
+    assert.equal(merged.match(/uid="#SPAWN1"/g)?.length, 1);
+    assert.ok(lines.out.some((line) => line.startsWith('Added door #door*7 at 50, -60')));
+    assert.deepEqual(lines.err, ['warning: the trigger text has no timers; in the editor, add timers for: #o:start-timer -> #o:start']);
+  });
+
+  it('refuses an object whose uid is another kind in the map, and can skip creating', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'k.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(source, 'water pool = "#water*1";\ndoor gate = "#door*2";\non start { action(395, pool, 5); action(MovableTo, gate, "#r"); }\n');
+    fs.writeFileSync(host, '<door uid="#water*1" x="0" y="0" />\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--into', host], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /"pool" is declared as water, but #water\*1 in the map is a <door>/);
+    fs.writeFileSync(host, '<player x="0" y="0" />\n');
+    assert.equal(main([source, '--out', folder, '--into', host, '--no-create'], output), 0);
+    assert.doesNotMatch(fs.readFileSync(path.join(folder, 'k-map.xml'), 'utf8'), /<water|<door/);
+    assert.ok(lines.err.some((line) => line.includes('the map has no #door*2 for "gate"')));
+  });
+
   it('removes an old text file when the new program cannot be written as text', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'c.pasm');
