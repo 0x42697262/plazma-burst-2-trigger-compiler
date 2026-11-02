@@ -7,7 +7,7 @@ export const KEYWORD = Object.freeze({
   if: 'if', else: 'else', while: 'while', for: 'for', player: 'player', break: 'break', continue: 'continue', return: 'return',
   true: 'true', false: 'false', wait: 'wait',
 } as const);
-export const EVENT = Object.freeze({ start: 'start', join: 'join' } as const);
+export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat' } as const);
 export const PUNCTUATORS: readonly string[] = Object.freeze([
   '..=', '+=', '-=', '*=', '/=', '%=', '==', '!=', '<=', '>=', '&&', '||', '..',
   '(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '+', '-', '*', '/', '%', '!', '@',
@@ -53,12 +53,13 @@ export const ELEMENT_OPEN = '[';
 export const ELEMENT_CLOSE = ']';
 export const ADDRESS_NAME = 'address';
 export const LABEL = Object.freeze({
-  start: ':start', join: ':join', every: 'every', wait: 'wait', timer: 'timer', else: 'else', end: 'end', head: 'loop',
+  start: ':start', join: ':join', chat: ':chat', every: 'every', wait: 'wait', timer: 'timer', else: 'else', end: 'end', head: 'loop',
   next: 'next', skip: 'skip',
 });
 export const BUILTIN = Object.freeze({
   say: 'say', push: 'push', action: 'action', len: 'len', contains: 'contains', random: 'random', floor: 'floor', round: 'round',
   slot: 'slot', initiator: 'initiator', name: 'name', time: 'time', number: 'number', text: 'text', charAt: 'charAt', drop: 'drop', sync: 'sync',
+  chatText: 'chatText', talker: 'talker', talkerName: 'talkerName', team: 'team', clear: 'clear', pop: 'pop',
 } as const);
 export const SPLIT_EVERY_CHARACTER = '';
 export const HIDDEN = Object.freeze({ players: 'players', count: 'count', index: 'index' });

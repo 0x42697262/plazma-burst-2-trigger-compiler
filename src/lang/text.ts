@@ -35,7 +35,7 @@ export const TEXT = Object.freeze({
   returnValueInBlock: 'only functions return a value',
   reservedName: (name: string): string => `"${name}" is a builtin; pick another function name`,
   assignTarget: 'only a variable or an array element can be assigned',
-  unknownEvent: (name: string): string => `unknown event "${name}"; use start or join`,
+  unknownEvent: (name: string): string => `unknown event "${name}"; use start, join or chat`,
   unusedFunction: (name: string): string => `the function "${name}" is never called; it was left out`,
   syncTarget: 'sync(...) needs a variable or an array element with a fixed index',
   syncMode: (modes: readonly string[]): string => `the sync mode must be one of ${modes.join(', ')}`,

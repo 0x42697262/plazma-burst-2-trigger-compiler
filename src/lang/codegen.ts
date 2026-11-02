@@ -23,14 +23,14 @@ const NEGATED: Readonly<Record<string, Condition>> = { '==': 'ne', '!=': 'eq', '
 const DIRECT: Readonly<Record<string, Condition>> = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
 const VALUE_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.name, BUILTIN.time,
-  BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop,
+  BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop, BUILTIN.chatText, BUILTIN.talker, BUILTIN.talkerName, BUILTIN.team, BUILTIN.pop,
 ]);
 const SYNC_MODES: Readonly<Record<string, number>> = {
   replace: OPCODE.syncReplace, default: OPCODE.syncDefault, max: OPCODE.syncMax, min: OPCODE.syncMin, longest: OPCODE.syncLongest,
 };
-const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action, BUILTIN.sync]);
+const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action, BUILTIN.sync, BUILTIN.clear]);
 const BUILTIN_ARITY: Readonly<Record<string, number>> = {
-  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2,
+  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2, chatText: 0, talker: 0, talkerName: 0, team: 1, clear: 1, pop: 1,
 };
 
 const fail = (location: Location, message: string): never => {
@@ -58,7 +58,7 @@ const negateLiteral = (text: string): string => String(-parseFloat(text));
 function hasCall(expression: Expression): boolean {
   switch (expression.kind) {
     case 'call':
-      return !VALUE_BUILTINS.has(expression.callee) || expression.args.some(hasCall);
+      return !VALUE_BUILTINS.has(expression.callee) || expression.callee === BUILTIN.pop || expression.args.some(hasCall);
     case 'index':
       return hasCall(expression.index);
     case 'unary':
@@ -74,6 +74,7 @@ function hasCall(expression: Expression): boolean {
 
 const NUMERIC_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.time, BUILTIN.number,
+  BUILTIN.talker, BUILTIN.team,
 ]);
 
 function isNumeric(expression: Expression): boolean {
@@ -101,10 +102,30 @@ function flattenConcat(expression: Expression): Expression[] {
   return [expression];
 }
 
+function hasBreak(statements: readonly Statement[]): boolean {
+  return statements.some((statement) => {
+    switch (statement.kind) {
+      case 'break':
+        return true;
+      case 'if':
+        return hasBreak(statement.then) || hasBreak(statement.otherwise ?? []);
+      case 'block':
+        return hasBreak(statement.body);
+      default:
+        return false;
+    }
+  });
+}
+
+const isAlwaysTrue = (expression: Expression): boolean =>
+  (expression.kind === 'boolean' && expression.value) || (expression.kind === 'number' && expression.text !== FALSE_TEXT);
+
 function terminates(statements: readonly Statement[]): boolean {
   const last = statements[statements.length - 1];
   if (!last) return false;
   switch (last.kind) {
+    case 'while':
+      return isAlwaysTrue(last.condition) && !hasBreak(last.body);
     case 'return':
     case 'break':
     case 'continue':
@@ -174,13 +195,16 @@ export class Generator {
     const startBlocks: Statement[][] = [];
     const sections: Instruction[][] = [];
     let hasJoin = false;
+    let hasChat = false;
     for (const declaration of file.declarations) {
       if (declaration.kind === 'on' && declaration.event === EVENT.start) startBlocks.push(declaration.body);
       if (declaration.kind === 'on' && declaration.event === EVENT.join) hasJoin = true;
+      if (declaration.kind === 'on' && declaration.event === EVENT.chat) hasChat = true;
     }
     sections.push(this.section(LABEL.start, EVENT.start, false, () => {
       for (const declaration of file.declarations) this.initializeGlobal(declaration);
       if (hasJoin) this.act(OPCODE.onPlayerJoin, labelOperand(LABEL.join));
+      if (hasChat) this.act(OPCODE.setChatReceiver, labelOperand(LABEL.chat));
       for (const body of startBlocks) {
         const end = this.fresh(LABEL.end);
         this.frame.returnLabel = end;
@@ -192,6 +216,8 @@ export class Generator {
     for (const declaration of file.declarations) {
       if (declaration.kind === 'on' && declaration.event === EVENT.join) {
         sections.push(this.section(LABEL.join, EVENT.join, false, () => this.statements(declaration.body)));
+      } else if (declaration.kind === 'on' && declaration.event === EVENT.chat) {
+        sections.push(this.section(LABEL.chat, EVENT.chat, false, () => this.statements(declaration.body)));
       } else if (declaration.kind === 'every') {
         const handler = this.fresh(LABEL.every);
         const timer = this.fresh(LABEL.timer);
@@ -991,6 +1017,31 @@ export class Generator {
       case BUILTIN.slot:
         this.act(OPCODE.currentPlayerSlot, destination);
         return;
+      case BUILTIN.pop: {
+        const target = first();
+        if (target.kind !== 'name') return fail(expression.location, TEXT.notArray(EMPTY_TEXT));
+        const array = this.arrayOf(target.name, target.location);
+        const address = this.frame.temp();
+        this.act(OPCODE.addValue, array.length, negateLiteral(TRUE_TEXT));
+        this.act(OPCODE.replaceInValue, address, elementName(this.names, array.base, array.length));
+        this.act(OPCODE.loadIndirect, destination, address);
+        return;
+      }
+      case BUILTIN.chatText:
+        this.act(OPCODE.chatInput, destination);
+        return;
+      case BUILTIN.talker:
+        this.act(OPCODE.talkerSlot, destination);
+        return;
+      case BUILTIN.talkerName:
+        this.act(OPCODE.talkerName, destination);
+        return;
+      case BUILTIN.team: {
+        const slot = this.value(first());
+        if (slot.kind === 'literal') this.act(OPCODE.teamBySlot, destination, slot.text);
+        else this.act(OPCODE.teamBySlotVariable, destination, slot.name);
+        return;
+      }
       case BUILTIN.initiator:
         this.act(OPCODE.initiatorSlot, destination);
         return;
@@ -1087,6 +1138,13 @@ export class Generator {
       case BUILTIN.sync:
         this.sync(expression);
         return;
+      case BUILTIN.clear: {
+        this.checkArity(expression, BUILTIN_ARITY.clear ?? 0);
+        const target = this.argument(expression, 0);
+        if (target.kind !== 'name') return fail(expression.location, TEXT.notArray(EMPTY_TEXT));
+        this.act(OPCODE.setVariable, this.arrayOf(target.name, target.location).length, FALSE_TEXT);
+        return;
+      }
       default:
         return;
     }

@@ -110,7 +110,7 @@ class Parser {
     if (this.accept(KEYWORD.on)) {
       const eventLine = this.current.line;
       const event = this.identifier();
-      if (event !== EVENT.start && event !== EVENT.join) throw new SourceError(eventLine, TEXT.unknownEvent(event));
+      if (event !== EVENT.start && event !== EVENT.join && event !== EVENT.chat) throw new SourceError(eventLine, TEXT.unknownEvent(event));
       return { kind: 'on', event, body: this.block(), location };
     }
     if (this.accept(KEYWORD.every)) {

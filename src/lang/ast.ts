@@ -36,7 +36,7 @@ export type Declaration =
   | { kind: 'const'; name: string; value: Expression; location: Location }
   | { kind: 'extern'; name: string; hostName: string; location: Location }
   | { kind: 'function'; name: string; params: string[]; body: Statement[]; exported: boolean; location: Location }
-  | { kind: 'on'; event: 'start' | 'join'; body: Statement[]; location: Location }
+  | { kind: 'on'; event: 'start' | 'join' | 'chat'; body: Statement[]; location: Location }
   | { kind: 'every'; frames: number; body: Statement[]; location: Location };
 
 export type SourceFile = { declarations: Declaration[] };

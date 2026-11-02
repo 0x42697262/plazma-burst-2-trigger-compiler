@@ -422,6 +422,26 @@ describe('language: review round 3', () => {
   });
 });
 
+describe('language: chat, teams and stacks', () => {
+  it('answers chat lines and reads teams', () => {
+    const result = compileSource('var log = "";\non chat { log ..= talkerName() .. ":" .. chatText() .. "@" .. team(talker()) .. ";"; }', 't');
+    const sim = new Simulation(result.program, { players: [{ slot: 2, name: 'cy', active: true, team: 13 }] });
+    sim.tick();
+    sim.playerSays(2, 'hi');
+    assert.equal(sim.variables['~t_log~'], 'cy:hi@13;');
+  });
+
+  it('pops, clears and treats while (true) without break as an end', () => {
+    const { get, warnings } = run(`
+var list[]; var out = "";
+function spin() { while (true) { return 1; } }
+on start { push(list, 1); push(list, 2); out = pop(list) .. pop(list) .. len(list); push(list, 3); clear(list); out ..= len(list) .. spin(); }
+`);
+    assert.equal(get('out'), '21001');
+    assert.deepEqual(warnings, []);
+  });
+});
+
 describe('language: errors', () => {
   const error = (source: string, pattern: RegExp) => assert.throws(() => compileSource(source, 't'), pattern);
 
