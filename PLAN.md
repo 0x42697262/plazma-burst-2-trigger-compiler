@@ -6,9 +6,9 @@ Output, the end goal, both from the same compile:
 1. **XML**: `<trigger …/>` elements a player appends to a downloaded map XML, then loads with the editor's "replace map with XML" (F13).
 2. **Trigger text**: one block per trigger, in the map editor's "Edit trigger as text" format, to copy and paste.
 
-Status: M0 done. M1 code done and the sample runs in the game (live check 2026-11-02); waiting on the editor checks in §4 M1.
+Status: M0–M5 done in code (2026-11-02). `npm run live-check`: 15 of 15 test programs give the same variables in the game and in the simulator. Left: the website-editor checks of M1 (§4), which need the user.
 
-**New session? Read this file, then `AGENTS.md`, then start at §4 M0.** Everything learned so far is in here; nothing else carries over.
+**New session? Read this file, then `AGENTS.md`, `README.md` and `docs/`, then continue from Status.** Everything learned so far is in here; nothing else carries over.
 
 ---
 
@@ -35,6 +35,14 @@ Each was checked in the game client (`plazma-burst-2/game/scripts/actions.js`, `
 | F15 | 42 ShowText replaces variable names inside A (F9 function) before showing it | `frame2.js:43718` (show-text function calls the F9 function on A) | `ShowText( "count = ~x~" )` prints the value |
 | F16 | `<timer uid x y enabled maxcalls target delay />`; `target` starting with `#` is a uid, else an index | `frame2.js` timer loader (`charAt(0)` check), saved maps | A start timer (delay 0, 1 call) runs the entry trigger at map start |
 | F17 | Live check: 99 returns to the caller; actions after a 363 never run | live run of `ptc-hello`, 2026-11-02 | Confirms F2 and F4 |
+| F18 | At load, every action's A and B go through one function: text starting with `#` becomes the index of the first object with that uid (one registry for all kinds; unknown uids stay text); text equal to `String(parseInt(text))` becomes a number (`"5"` → 5, `"-3"` → -3, `"1.5"`, `"007"` and `""` stay text) | `frame2.js` loader loop over triggers (`$cIсA1`) | Literal text that looks like a whole number is a number in the game; `===` actions (112, 113, 116, 117) are avoided |
+| F19 | `actions.js` shadows `Number` with `parseFloat`; 364/365 compare two **variables** as floats; 110/111/114/115 also use `parseFloat`; 361 uses `String(a) == String(b)` | top of `actions.js`, cases | Comparisons: `<` `>` numeric, `==` `!=` text |
+| F20 | 110 with A = B always stops the trigger (`x > x` is false, also for NaN); a stop still counts as a finished call | case 110, runner | Used as the "stop" action |
+| F21 | 104 (`vars[A] += parseFloat(vars[B])`) and 152 use `+=`: text in A concatenates (`"5.5"` + 5 = `"5.55"`); 102 uses `parseFloat` on both | cases; live `arith.pasm` | The compiler emits 102 A 0 before 104 |
+| F22 | 99, 19, 20, 22 read A with `parseInt` (NaN → 0): an unknown uid there means trigger index 0. 363 uses `Math.floor` (NaN → error, frame dropped) | cases 99/19/20/22/363 | The checker warns about unknown targets |
+| F23 | A frame starts only if its trigger is enabled and has calls left (-1 = unlimited); calls drop by 1 when a frame ends normally, not when 363 replaces it | runner in `actions.js` | `maxcalls -1` on every compiled trigger |
+| F24 | Timers: each frame, in element order, an enabled timer with calls left adds the game speed to its counter; at counter ≥ delay it resets to 0, drops a call (disabled at 0) and runs its target. 44 resets the counter | `frame2.js` timer loop, case 44 | `wait(n)`: 44 + 25 on a disabled timer, the continuation runs 26 first |
+| F25 | 508 lists no slot in single player, also 60 frames after start; it checks a per-character field against two values | live `lang-players.ptc`; case 508 | `for player` works in multiplayer only |
 
 Action numbers: always the client's. The gitbook manual is off by one around 348–365.
 
@@ -65,11 +73,8 @@ Language for the tool: TypeScript on Node (≥ 22.18, runs `.ts` directly), `nod
 
 1. **Unit + golden files**: parser, lowering, layout, both emitters.
 2. **Simulator**: small interpreter of the trigger runner for the actions we emit (frames, 99 push, 363 replace, skip, template replace). Fast tests without the game.
-3. **Live check** through `plazma-burst-2` (read-only use of its tools):
-   - write the XML into a local map at `plazma-burst-2/data/maps/<name>.xml`
-   - load `local-<name>`, run, read results with the dev console (`vars`, `triggers`)
-   - single trigger: `triggers exec <pasted text>` runs it directly
-4. The simulator must agree with the live check on every test program.
+3. **Live check**: `npm run live-check` compiles every program in `examples/live/`, appends all of them to one map, runs it in the game, reads the map variables object (`PB2_NAMES.mapVars` from `plazma-burst-2/data/names.js`) through CDP, and compares every variable of every program with the simulator (type and value). `--simulate-only` skips the game.
+4. The simulator must agree with the live check on every test program. Last run: 15 of 15 (2026-11-02).
 
 ---
 
@@ -77,14 +82,16 @@ Language for the tool: TypeScript on Node (≥ 22.18, runs `.ts` directly), `nod
 
 | # | Milestone | Done when | Time |
 |---|---|---|---|
-| M0 | Repo setup, opcode snapshot | `npm test` runs; table has all 531 actions | 1–2 h |
-| M1 | Emitters from hand-built IR | A hand-built 3-trigger program imports as XML **and** pastes as text in the real editor, and runs | ½ day |
-| M2 | Assembler | Labels, jumps, calls, 100-action chaining, name mangling; test programs pass in the simulator | 2–3 days |
-| M3 | Simulator + live harness | Same results in simulator and game for every test program | 1–2 days |
-| M4 | High-level language | `if/else`, `while`, `for each player`, functions, arrays, string ops | 1–2 weeks |
-| M5 | Extras | Loop yield via timers (F5), standard library (contains-in-list, substring), source line comments in output | ongoing |
+| M0 ✅ | Repo setup, opcode snapshot | `npm test` runs; table has all 531 actions | 1–2 h |
+| M1 ⏳ | Emitters from hand-built IR | A hand-built 3-trigger program imports as XML **and** pastes as text in the real editor, and runs | ½ day |
+| M2 ✅ | Assembler | Labels, jumps, calls, 100-action chaining, name mangling; test programs pass in the simulator | 2–3 days |
+| M3 ✅ | Simulator + live harness | Same results in simulator and game for every test program | 1–2 days |
+| M4 ✅ | High-level language | `if/else`, `while`, `for each player`, functions, arrays, string ops | 1–2 weeks |
+| M5 ✅ | Extras | Loop yield via timers (F5), standard library (contains-in-list, substring), source line comments in output | ongoing |
 
 M1 comes first on purpose: it proves the end goal (import / paste) before any compiler work.
+
+What M4/M5 became: the `.ptc` language in `docs/language.md` (functions with recursion, arrays, `for player`, `wait`, `every`, `on join`, builtins `len contains charAt drop text number floor round random slot initiator name time push say action`), and the assembler in `docs/assembly.md`. Loop yield = `wait(frames)`; source lines = `out/<name>.map.json`.
 
 M1 state: `npm run emit-sample` writes `out/ptc-hello.xml` (elements), `out/ptc-hello.txt` (text blocks), `out/ptc-hello-map.xml` (base map + elements; `--into <map.xml>` uses a downloaded map; `--game-map` also writes `plazma-burst-2/data/maps/ptc-hello.xml`). The game run passed (F17). Left, in the website editor (user):
 1. Replace a map with `out/ptc-hello-map.xml`, test it: chat shows `ptc hello: count = 2`.
@@ -92,17 +99,17 @@ M1 state: `npm run emit-sample` writes `out/ptc-hello.xml` (elements), `out/ptc-
 
 ---
 
-## 5. Assembler draft (M2)
+## 5. Assembler (M2)
 
-Not final. Shape only:
+Done; reference in `docs/assembly.md`. The draft it grew from:
 
 ```
 start:
-    set   i, 0
+    set   $i, 0
 loop:
-    add   i, 1
-    jgt   i, 10, done
-    jmp   loop
+    add   $i, 1
+    jgt   $i, 10, @done
+    jmp   @loop
 done:
     say   "finished"
 ```
@@ -115,8 +122,8 @@ done:
 
 1. ~~**XML import**~~: answered, F13.
 2. **Text paste**: format answered (F14). Still open: does the editor keep a *custom* `uid:` (e.g. `#ptc_hello_add`) from pasted text? Jumps between triggers depend on it.
-3. **High-level syntax** for M4: Pascal-like, Lua-like, or your own EBNF.
-4. **Variable prefix**: is `~` the community convention to keep (F9)?
+3. ~~**High-level syntax**~~: chose a small C-like language (`docs/language.md`). Say if you want another syntax; only the parser changes.
+4. **Variable prefix**: `~<prefix>_name~` is kept: the `~` on both ends stops one name from matching inside another (F9). Still open whether the community uses another convention.
 5. ~~**Trigger placement**~~: an option (`Layout` in `src/emit/xml-emitter.ts`: origin, spacing, columns).
 
 ---
@@ -138,20 +145,22 @@ done:
 
 ### Live check in the game (M3)
 
-Tested on 2026-11-02 with the CDP (remote debugging) approach:
+`npm run live-check` (`src/tools/live-check/`) does this; verified 2026-11-02:
 
-1. Put the compiled map at `plazma-burst-2/data/maps/<name>.xml` (the map ID becomes `local-<name>`).
-2. Start the app with remote debugging: `electron . --remote-debugging-port=9333` from `plazma-burst-2` (after `npm run build` there). The launcher page opens; in it, `pb2servers.list().then((d) => pb2servers.play(d.official.id))` opens the game.
-3. On the game page, wait until `typeof pb2dev === "object"` **and** `stage.currentFrameLabel === "menu"` (posting during `startup` is ignored), then `window.postMessage("rt:local-<name>:sp", "*")` opens Campaign › Choose difficulty for that map.
-4. Click "Normal" (x 640, y 440 in the 1280×720 window); wait until `stage.currentFrameLabel === "gaming"`.
-5. Run console commands with `pb2dev.run("vars")`, `pb2dev.run("triggers")`; output arrives as `console.info` lines starting with `[pb2dev] `.
-6. A single trigger can run without a map: `pb2dev.run("triggers exec <trigger text>")`.
+1. It builds its own copy of the app in `/tmp/ptc-pb2-live` once (`--rebuild` again): `src`, `editions`, `hooks`, `test` and the package files copied, `node_modules` and `game` linked, `data/names.js` and `data/opcodes.js` copied, no logins. Reason: the sister repo's `dist/` was rebuilt at 09:16 without the dev console, and with that build local maps stayed at "Loading...". The copy is never written back.
+2. The map goes to `/tmp/ptc-pb2-live/data/maps/ptc-live.xml` (map ID `local-ptc-live`).
+3. `electron . --remote-debugging-port=9333` in the copy; on the launcher page `pb2servers.list().then((list) => pb2servers.play(list.official.id))`.
+4. On the game page, wait for `stage.currentFrameLabel === "menu"` (a message during `startup` is ignored), then `window.postMessage("rt:local-ptc-live:sp", "*")` opens Campaign › Choose difficulty.
+5. Press SPACE (Normal); wait for `stage.currentFrameLabel === "gaming"`, then 8 seconds.
+6. Read `globalThis[PB2_NAMES.mapVars]`.
+
+By hand with the console edition: `pb2dev.run("vars")`, `pb2dev.run("triggers")`; a single trigger runs with `pb2dev.run("triggers exec <trigger text>")`.
 
 Caution: `pb2dev.run("reset")` clears the user's saved console settings in `plazma-burst-2/data/dev-overrides.json`. Do not run it.
 
 ### Text-format notes
 
-- Some aliases contain spaces, e.g. `next if VarA == ValueB`, `continue if VarA > VarB ` (trailing space). `op<N>` works for every action: prefer it unless the alias is verified to round-trip.
+- Some aliases contain spaces, e.g. `next if VarA == ValueB`, `continue if VarA > VarB ` (trailing space). The text emitter writes aliases exactly as the editor does (F14).
 - Values are not escaped: `""1""` means the value `"1"` with quotes.
 - Whole numbers become numbers when loaded; uids become trigger/region indexes.
 
