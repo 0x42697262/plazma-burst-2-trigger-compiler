@@ -2,12 +2,12 @@ import { MAX_ACTIONS_PER_TRIGGER, UNLIMITED_CALLS } from '../program/constants.t
 import type { Action, Trigger } from '../program/types.ts';
 import { OPCODE, SKIPS_NEXT } from '../opcodes/constants.ts';
 import type { Operand, SourceLocation } from './ir.ts';
-import { labelOperand } from './ir.ts';
+import { labelOperand, textOperand } from './ir.ts';
 import type { MachineItem } from './lower.ts';
 import type { Names } from './names.ts';
 import { CompileError } from './names.ts';
-import { FIRST_CONTINUATION } from './constants.ts';
-import { ZERO_VALUE } from './keys.ts';
+import { BEFORE_LAST, FIRST_CONTINUATION } from './constants.ts';
+import { INTERNAL_VARIABLE, ZERO_VALUE } from './keys.ts';
 import { TEXT } from './text.ts';
 
 type PlacedAction = { opcode: number; targetA: Operand; targetB: Operand; location: SourceLocation | null };
@@ -143,10 +143,45 @@ const removePassThroughs = (blocks: readonly Block[]): { kept: Block[]; aliases:
   return { kept, aliases: new Map([...aliases.keys()].map((label) => [label, finalLabel(label)])) };
 };
 
+const followAlias = (operand: Operand, aliases: ReadonlyMap<string, string>): Operand =>
+  (operand.kind === 'label' && aliases.has(operand.label) ? labelOperand(aliases.get(operand.label) ?? operand.label) : operand);
+
+const stopAction = (names: Names): PlacedAction => {
+  const name = textOperand(names.internalVariable(INTERNAL_VARIABLE.stop));
+  return { opcode: OPCODE.continueIfGreater, targetA: name, targetB: name, location: null };
+};
+
+const isStop = (action: PlacedAction | undefined, stop: PlacedAction): boolean =>
+  action !== undefined && action.opcode === stop.opcode && action.targetA.kind === 'text' && stop.targetA.kind === 'text' && action.targetA.text === stop.targetA.text;
+
+const removeExitBlocks = (blocks: Block[], names: Names): Block[] => {
+  const exits = new Set(blocks
+    .filter((block, index) => !block.entry && block.actions.length === 0 && (!block.fallsThrough || index === blocks.length - 1))
+    .map((block) => block.label));
+  if (exits.size === 0) return blocks;
+  const stop = stopAction(names);
+  blocks.forEach((block, index) => {
+    const next = blocks[index + 1];
+    if (block.fallsThrough && next && exits.has(next.label)) block.fallsThrough = false;
+    block.actions = block.actions.map((action) =>
+      (action.opcode === OPCODE.switchToTrigger && action.targetA.kind === 'label' && exits.has(action.targetA.label) ? stop : action));
+    while (isStop(block.actions[block.actions.length - 1], stop) && !SKIPS_NEXT.has(block.actions.at(BEFORE_LAST)?.opcode ?? 0)) {
+      block.actions.pop();
+    }
+  });
+  const referenced = new Set(blocks.flatMap((block) => block.actions.flatMap((action) =>
+    [action.targetA, action.targetB].flatMap((operand) => (operand.kind === 'label' ? [operand.label] : [])))));
+  return blocks.filter((block) => !exits.has(block.label) || referenced.has(block.label));
+};
+
 export function layout(items: readonly MachineItem[], names: Names): LayoutResult {
   const warnings: string[] = [];
   checkDuplicates(items);
-  const { kept: blocks, aliases } = removePassThroughs(buildBlocks(items, warnings));
+  const { kept, aliases } = removePassThroughs(buildBlocks(items, warnings));
+  for (const block of kept) {
+    block.actions = block.actions.map((action) => ({ ...action, targetA: followAlias(action.targetA, aliases), targetB: followAlias(action.targetB, aliases) }));
+  }
+  const blocks = removeExitBlocks(kept, names);
   blocks.forEach((block, index) => {
     const next = blocks[index + 1];
     if (block.fallsThrough && next) block.actions.push(jumpAction(next.label));

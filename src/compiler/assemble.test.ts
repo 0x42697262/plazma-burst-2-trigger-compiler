@@ -128,6 +128,21 @@ start:
     assert.equal(vars['~t_x~'], 50);
   });
 
+  it('replaces a jump to an empty exit trigger with a stop', () => {
+    const { program, vars } = run(`
+start:
+    set $i, 0
+loop:
+    add $i, 1
+    jge $i, 3, @end
+    jmp @loop
+end:
+`, { loopGuard: null });
+    assert.equal(vars['~t_i~'], 3);
+    assert.deepEqual(program.triggers.map((trigger) => trigger.uid), ['#t_start', '#t_loop']);
+    assert.ok(program.triggers[1]?.actions.some((action) => action.opcode === 110));
+  });
+
   it('warns about unreachable code and unknown targets', () => {
     const { warnings } = compileAssembly(`
 start:
