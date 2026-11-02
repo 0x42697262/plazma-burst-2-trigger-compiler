@@ -11,14 +11,16 @@ import { prefixFromFile } from '../../cli/main.ts';
 import { createNames } from '../../compiler/names.ts';
 import { CASES_DIRECTORIES, GAME_NAMES_FILE, REPOSITORY_ROOT, MAP_FILE, MAP_NAME, SANDBOX } from './paths.ts';
 import { prepareSandbox } from './sandbox.ts';
-import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, DIRECT_INDEX_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
+import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, DIRECT_INDEX_FLAG, PCODE_FLAG, PCODE_TARGET, ONLY_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
 import {
   CLICK_ATTEMPTS, CLICK_PAUSE, CONSOLE_TIMEOUT, DEBUG_PORT, ENTER_KEY_CODE, FIRST_USER_ARGUMENT, GAMING_TIMEOUT, LAUNCH_TIMEOUT, MENU_TIMEOUT, MILLISECONDS,
-  RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_PLAYERS, SPACE_KEY_CODE,
+  RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_MAX_STEPS, PCODE_LOOP_GUARD, SIMULATED_PLAYERS, SPACE_KEY_CODE,
 } from './constants.ts';
 import { TEXT } from './text.ts';
 import { Session, listTargets, sleep, waitFor } from './cdp.ts';
 import { compareSnapshots, encodeVariables } from './compare.ts';
+import type { CompileOptions } from '../../compiler/compile.ts';
+import { DEFAULT_TARGET, VM_VARIABLE } from '../../pcode/keys.ts';
 import type { Snapshot } from './compare.ts';
 
 type Case = { name: string; prefix: string; xml: string; simulated: Snapshot; errors: string[] };
@@ -27,7 +29,7 @@ const print = (line: string): void => {
   process.stdout.write(line + TEXT.lineEnd);
 };
 
-function loadCases(directIndex: boolean): Case[] {
+function loadCases(options: Partial<CompileOptions>): Case[] {
   const files = CASES_DIRECTORIES.flatMap((folder) => fs.readdirSync(folder)
     .filter((file) => CASE_EXTENSIONS.includes(path.extname(file))).sort()
     .map((file) => path.join(folder, file)));
@@ -35,8 +37,8 @@ function loadCases(directIndex: boolean): Case[] {
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(file);
-    const result = frontEnd.compile(source, prefix, { directIndex }, file);
-    const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS });
+    const result = frontEnd.compile(source, prefix, options, file);
+    const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS, maxSteps: SIMULATED_MAX_STEPS });
     simulation.tick(SIMULATED_FRAMES);
     return { name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), simulated: encodeVariables(simulation.variables), errors: simulation.errors };
   });
@@ -96,7 +98,11 @@ async function readGameVariables(variablesName: string): Promise<Snapshot> {
 
 async function main(): Promise<number> {
   const flags = process.argv.slice(FIRST_USER_ARGUMENT);
-  const cases = loadCases(flags.includes(DIRECT_INDEX_FLAG));
+  const pcode = flags.includes(PCODE_FLAG);
+  const only = flags.flatMap((flag, position) => (flag === ONLY_FLAG ? [flags[position + 1] ?? ''] : []));
+  const cases = loadCases({
+    directIndex: flags.includes(DIRECT_INDEX_FLAG), target: pcode ? PCODE_TARGET : DEFAULT_TARGET, ...(pcode ? { loopGuard: PCODE_LOOP_GUARD } : {}),
+  }).filter((entry) => only.length === 0 || only.some((part) => entry.name.includes(part)));
   prepareSandbox(flags.includes(REBUILD_FLAG), print);
   const map = cases.reduce((combined, entry) => appendToMap(combined, entry.xml), BASE_MAP);
   fs.writeFileSync(MAP_FILE, map);
@@ -111,7 +117,9 @@ async function main(): Promise<number> {
   const game = await readGameVariables(mapVariablesName());
   let passed = 0;
   for (const entry of cases) {
-    const mismatches = compareSnapshots(entry.simulated, game, createNames(entry.prefix).ownsVariable);
+    const names = createNames(entry.prefix);
+    const mapIndependent = (name: string): boolean => names.ownsVariable(name) && name !== names.internalVariable(VM_VARIABLE.base);
+    const mismatches = compareSnapshots(entry.simulated, game, mapIndependent);
     print(TEXT.caseResult(entry.name, mismatches.length === 0));
     for (const mismatch of mismatches) {
       print(TEXT.mismatch(mismatch.name, mismatch.simulated, mismatch.game));
