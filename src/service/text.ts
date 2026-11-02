@@ -49,7 +49,7 @@ export const TEXT = Object.freeze({
     else: 'if (condition) { } else { }',
     while: 'while (condition) { }',
     for: 'for (let i = 0; i < n; i += 1) { } or for player p { }',
-    player: 'for player p { }: each player in a multiplayer match.',
+    player: 'for player p { }: each player in a multiplayer match. At the top level, `player hero = "#player*1";` declares a player slot (a map object).',
     match: 'match (value) { pattern, pattern => statement; _ => statement; }',
     break: 'Leaves the loop.',
     continue: 'Goes to the next round of the loop.',

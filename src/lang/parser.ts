@@ -112,7 +112,8 @@ class Parser {
       this.expect(PUNCTUATOR.semicolon);
       return { kind: 'extern', name, hostName, location };
     }
-    if (this.current.kind === 'identifier' && isObjectKeyword(this.current.text) && this.peek(1).kind === 'identifier') {
+    const playerSlot = this.current.kind === 'keyword' && this.current.text === KEYWORD.player;
+    if ((playerSlot || (this.current.kind === 'identifier' && isObjectKeyword(this.current.text))) && this.peek(1).kind === 'identifier') {
       return this.objectDeclaration(location);
     }
     const exported = this.accept(KEYWORD.export);

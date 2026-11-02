@@ -65,6 +65,8 @@ function declarationsOf(source: string): Declaration[] {
       }
     } else if (token.kind === 'identifier' && depth === 0 && isObjectKeyword(token.text) && next.kind === 'identifier') {
       add(next, SYMBOL_KIND.object);
+    } else if (token.kind === 'keyword' && token.text === KEYWORD.player && next.kind === 'identifier' && depth === 0) {
+      add(next, SYMBOL_KIND.object);
     } else if (token.kind === 'keyword' && token.text === KEYWORD.player && next.kind === 'identifier') {
       found.push({ ...declarationAt(source, next, SYMBOL_KIND.variable), topLevel: false });
     } else if (token.kind === 'keyword' && (token.text === KEYWORD.on || token.text === KEYWORD.every) && depth === 0) {

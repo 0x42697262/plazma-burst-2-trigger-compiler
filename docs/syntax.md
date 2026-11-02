@@ -262,7 +262,7 @@ bob is 27
 // Named values (Color.*, Team.*...) come from the editor's own lists.
 region spawn = "#spawn" at 0, -100;
 region exits[] = ["#exit1", "#exit2", "#exit3"];
-character hero = "#player*0";
+player hero = "#player*0";
 const BIG = 500;
 var color = Color.NoirLime;   // never changes, so it counts as a fixed value
 
