@@ -24,8 +24,10 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 
 1. Unit tests next to the code (`*.test.ts`), run with `npm test`.
 2. The simulator runs compiled programs in the tests, without the game.
-3. `npm run live-check` runs `examples/live/*` in the real game and compares every variable with
-   the simulator (type and value); it must stay at all programs matching. Last run: 17 of 17
+3. The tutorial test runs every program in `examples/tutorial/` and checks its chat output, and
+   checks that `docs/tutorial.md` quotes the files exactly.
+4. `npm run live-check` runs `examples/live/*` and `examples/tutorial/*` in the real game and compares every variable with
+   the simulator (type and value); it must stay at all programs matching. Last run: 37 of 37
    (2026-11-02). Steps: [game-facts.md](game-facts.md#the-live-check).
 
 ## History

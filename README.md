@@ -39,6 +39,11 @@ Every one of the game's 531 actions can be used: in `.ptc` with `action(op, a, b
 alias or `op<N>`. The language has builtins for variables, text, arrays, timing, players and
 sync; the simulator runs 63 actions (all the compiler emits) and skips the others, listing them.
 
+## Learn it
+
+[docs/tutorial.md](docs/tutorial.md): 20 programs, from a first loop to chat commands, player
+selection, a calculator, three parsers and data structures. Each is in `examples/tutorial/`.
+
 ## Two source languages
 
 - `.ptc`: a small C-like language. Reference: [docs/language.md](docs/language.md).

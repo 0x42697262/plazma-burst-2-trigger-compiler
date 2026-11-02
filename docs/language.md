@@ -33,6 +33,7 @@ on start {
 | `export function f() { ... }` | function with a stable uid `#<prefix>_f`, for the map's own triggers and regions |
 | `on start { ... }` | runs at map start (a start timer, before every other timer); several blocks run one after the other, each with its own scope (`return` ends only its block) |
 | `on join { ... }` | runs each time a player joins (action 228). One per program; the game keeps one join trigger for the whole map, so the host map's own, or a second compiled program's, replaces it |
+| `on chat { ... }` | runs for every chat line (action 156); `chatText()`, `talker()` and `talkerName()` tell what was said and by whom. One chat receiver per map (F31) |
 | `every 30 { ... }` | runs every 30 frames (a timer) |
 
 ## Statements
@@ -74,6 +75,10 @@ Text escapes: `\" \\ \n \{ \}`.
 | `slot()`, `initiator()`, `name(slot)`, `time()` | current player slot, player-initiator slot, displayed name, milliseconds since 1970 (a wall clock: compare two readings) |
 | `sync(x)` / `sync(x, mode)` | sends variable (or fixed array element) `x` to every player in a multiplayer match. Modes: `replace` (default, 223), `default` (224, only where unset), `max` (225), `min` (226), `longest` (227). The map needs a Var Sync engine mark: the XML output adds one (F30) |
 | `push(list, value)` | writes `value` at index `len(list)` and adds 1 to the length |
+| `pop(list)` | takes 1 from the length and gives the element there (nothing when the array is empty) |
+| `clear(list)` | sets the length to 0 |
+| `chatText()`, `talker()`, `talkerName()` | in `on chat`: the text, the writer's slot, the writer's displayed name |
+| `team(slot)` | the team number of the player in a slot |
 | `action(op, a, b)` | any action, by number or alias. A name argument gives that variable's game name, `@f` gives function `f`'s uid, text gives itself; `{x}` inside text gives x's game name |
 
 ## Arrays
@@ -132,7 +137,7 @@ declaration    = "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
                | "const" identifier "=" expression ";"
                | "extern" identifier [ "=" string ] ";"
                | [ "export" ] "function" identifier "(" [ identifier { "," identifier } ] ")" block
-               | "on" ( "start" | "join" ) block
+               | "on" ( "start" | "join" | "chat" ) block
                | "every" number block ;
 
 block          = "{" { statement } "}" ;

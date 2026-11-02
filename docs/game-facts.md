@@ -40,6 +40,7 @@ Action numbers are always the client's. The community manual is off by one aroun
 | F28 | 185 gives `"Empty"` for an inactive slot; 188 reads `chars[vars[B]]` with no active check (an unknown slot throws, and the frame is dropped) | cases 185/188, `_strings.js` | Simulator matches |
 | F29 | In 22 saved maps (765 variable names), map makers mostly name variables `var_name` (333); none wrap names in `~…~`; 44 names lie inside other names (`~level` in `~levelBox`) | `plazma-burst-2/data/maps/*.xml`, 2026-11-02 | `~<prefix>_name~` cannot lie inside a host name, but a plain host name (`level`) can lie inside ours: with `--into` the compiler warns about that |
 | F30 | Sync actions 223–227 throw when the map has no Var Sync engine mark (`<inf mark="var_sync">`; the flag is set by the loader and never cleared), so the rest of the trigger is dropped. With the mark they send the variable only in multiplayer; a name or value over 2048 characters also throws. 6 of the 22 saved maps use them, each with one mark | `actions.js` cases 223–227, `frame2.js:12062`; saved maps; live `lang-sync.ptc` (with the mark the trigger goes on) | The XML gets the mark when a program syncs; the simulator throws without it |
+| F31 | 156 sets one trigger as the map's chat receiver; the game runs it for every chat line, with the writer's slot and text kept for 159 (slot), 160 (text), 158 (displayed name, `Empty` when no character) and 157 (login) | `actions.js` cases 156–160, `frame2.js:10478` (`$HТс1I`) | `on chat` registers with 156 at start; a second receiver replaces the first |
 
 ## Open checks (need a player)
 
@@ -52,6 +53,7 @@ Action numbers are always the client's. The community manual is off by one aroun
    them in local maps (F26)?
 4. `for player` (action 508) in a multiplayer match with 2 or more players (F25).
 5. `sync(x)` in a multiplayer match: the other players get the value (F30).
+6. `on chat` in the game: write `= 3 + 4 * 2` with `examples/tutorial/11-infix.ptc` in a map; the chat answers `3 4 2 * + = 11`.
 
 ## Where things are in the client
 
