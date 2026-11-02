@@ -1,4 +1,4 @@
-import type { Declaration, Expression, Import, Location, MatchArm, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
+import type { Declaration, Expression, Import, Location, MatchArm, ObjectTree, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
 import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
 import { COMPOUND_ASSIGNMENTS, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
@@ -153,7 +153,17 @@ class Parser {
   private objectDeclaration(location: Location): Declaration {
     const keyword = this.next().text;
     const name = this.identifier();
+    let dimensions = 0;
+    while (this.accept(PUNCTUATOR.openBracket)) {
+      this.expect(PUNCTUATOR.closeBracket);
+      dimensions += 1;
+    }
     this.expect(PUNCTUATOR.assign);
+    if (dimensions > 0) {
+      const tree = this.objectTree(dimensions, name, location);
+      this.expect(PUNCTUATOR.semicolon);
+      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, location };
+    }
     if (this.current.kind !== 'string') this.fail(TEXT.string);
     const uid = this.stringText(this.next());
     if (!uid.startsWith(UID_MARK)) throw new SourceError(location.line, TEXT.objectUid(name));
@@ -166,7 +176,26 @@ class Parser {
       positionY = this.signedNumber();
     }
     this.expect(PUNCTUATOR.semicolon);
-    return { kind: 'object', keyword, name, uid, x: positionX, y: positionY, location };
+    return { kind: 'object', keyword, name, uid, x: positionX, y: positionY, tree: null, location };
+  }
+
+  private objectTree(depth: number, name: string, location: Location): ObjectTree[] {
+    this.expect(PUNCTUATOR.openBracket);
+    const items: ObjectTree[] = [];
+    if (!this.isPunctuator(PUNCTUATOR.closeBracket)) {
+      do {
+        if (depth > 1) {
+          items.push(this.objectTree(depth - 1, name, location));
+        } else {
+          if (this.current.kind !== 'string') this.fail(TEXT.string);
+          const uid = this.stringText(this.next());
+          if (!uid.startsWith(UID_MARK)) throw new SourceError(location.line, TEXT.objectUid(name), this.file);
+          items.push(uid);
+        }
+      } while (this.accept(PUNCTUATOR.comma));
+    }
+    this.expect(PUNCTUATOR.closeBracket);
+    return items;
   }
 
   private isWord(word: string): boolean {
@@ -305,7 +334,7 @@ class Parser {
 
   private targetOf(expression: Expression): Target {
     if (expression.kind === 'name') return { kind: 'name', name: expression.name };
-    if (expression.kind === 'index') return { kind: 'index', array: expression.array, index: expression.index };
+    if (expression.kind === 'index' && !expression.more) return { kind: 'index', array: expression.array, index: expression.index };
     throw new SourceError(expression.location.line, TEXT.assignTarget);
   }
 
@@ -376,7 +405,12 @@ class Parser {
     if (this.accept(PUNCTUATOR.openBracket)) {
       const index = this.expression();
       this.expect(PUNCTUATOR.closeBracket);
-      return { kind: 'index', array: name, index, location };
+      const more: Expression[] = [];
+      while (this.accept(PUNCTUATOR.openBracket)) {
+        more.push(this.expression());
+        this.expect(PUNCTUATOR.closeBracket);
+      }
+      return more.length > 0 ? { kind: 'index', array: name, index, more, location } : { kind: 'index', array: name, index, location };
     }
     return { kind: 'name', name, location };
   }

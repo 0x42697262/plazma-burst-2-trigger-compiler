@@ -1,4 +1,5 @@
 import type { Names } from '../compiler/names.ts';
+import type { ObjectTree } from './ast.ts';
 import { ARRAY_LENGTH, ELEMENT_CLOSE, ELEMENT_OPEN, LOCAL_SEPARATOR, RETURN_NAME, SHADOW_SEPARATOR, STACK_NAME, TEMP_NAME } from './keys.ts';
 import { FIRST_SHADOW } from './constants.ts';
 import { VARIABLE_MARK, INTERNAL_MARK, USER_SEPARATOR } from '../compiler/keys.ts';
@@ -7,7 +8,8 @@ export type SymbolEntry =
   | { kind: 'variable'; name: string; constant: false }
   | { kind: 'constant'; text: string }
   | { kind: 'array'; base: string; length: string }
-  | { kind: 'object'; keyword: string; uid: string };
+  | { kind: 'object'; keyword: string; uid: string }
+  | { kind: 'objectArray'; keyword: string; tree: ObjectTree[]; dimensions: number };
 
 export type FunctionInfo = { name: string; params: string[]; paramVariables: string[]; returnVariable: string; exported: boolean };
 

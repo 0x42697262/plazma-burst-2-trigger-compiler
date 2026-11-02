@@ -10,7 +10,7 @@ export type Expression =
   | { kind: 'boolean'; value: boolean; location: Location }
   | { kind: 'named'; group: string; member: string; paramKind: string; text: string; location: Location }
   | { kind: 'name'; name: string; location: Location }
-  | { kind: 'index'; array: string; index: Expression; location: Location }
+  | { kind: 'index'; array: string; index: Expression; more?: Expression[]; location: Location }
   | { kind: 'call'; callee: string; args: Expression[]; location: Location }
   | { kind: 'reference'; name: string; location: Location }
   | { kind: 'unary'; operator: '-' | '!'; operand: Expression; location: Location }
@@ -39,10 +39,12 @@ export type Declaration =
   | { kind: 'var'; name: string; array: boolean; value: Expression | null; exported: boolean; location: Location }
   | { kind: 'const'; name: string; value: Expression; location: Location }
   | { kind: 'extern'; name: string; hostName: string; location: Location }
-  | { kind: 'object'; keyword: string; name: string; uid: string; x: number | null; y: number | null; location: Location }
+  | { kind: 'object'; keyword: string; name: string; uid: string; x: number | null; y: number | null; tree: ObjectTree[] | null; location: Location }
   | { kind: 'function'; name: string; params: string[]; body: Statement[]; exported: boolean; location: Location }
   | { kind: 'on'; event: 'start' | 'join' | 'chat'; body: Statement[]; location: Location }
   | { kind: 'every'; frames: number; body: Statement[]; location: Location };
+
+export type ObjectTree = string | ObjectTree[];
 
 export type Import = { path: string; location: Location };
 

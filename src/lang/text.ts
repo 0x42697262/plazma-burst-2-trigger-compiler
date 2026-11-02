@@ -59,5 +59,11 @@ export const TEXT = Object.freeze({
   unknownValueGroup: (name: string, groups: readonly string[]): string => `unknown value group "${name}"; the groups are ${groups.join(', ')} (see docs/actions.md)`,
   unknownValueMember: (group: string, member: string): string => `${group} has no value "${member}" (see docs/actions.md)`,
   wrongValueGroup: (action: number, side: string, kind: string, group: string): string => `action ${action} takes ${kind} as ${side}, not a ${group} value`,
+  objectIndexCount: (name: string, dimensions: number, got: number): string => `"${name}" needs ${dimensions} index(es), got ${got}`,
+  objectIndexRange: (name: string, index: string): string => `"${name}" has no element ${index}`,
+  objectLengthIndex: (name: string): string => `len(${name}[...]) needs fixed indexes`,
+  elementPath: (name: string, path: readonly string[]): string => `${name}${path.map((index) => `[${index}]`).join('')}`,
+  indexList: (indexes: readonly (string | null)[]): string => indexes.map((index) => `[${index ?? '?'}]`).join(''),
+  oneIndex: (name: string): string => `"${name}" is an array of values: it takes one index`,
   sayColor: 'the color of say(...) must be a number or a string',
 });

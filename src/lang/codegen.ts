@@ -9,11 +9,11 @@ import { objectKind } from '../objects/objects.ts';
 import { OBJECT_PARAM_KINDS } from '../objects/keys.ts';
 import type { Names } from '../compiler/names.ts';
 import { CompileError } from '../compiler/names.ts';
-import type { Declaration, Expression, Location, SourceFile, Statement, TemplatePart } from './ast.ts';
+import type { Declaration, Expression, Location, ObjectTree, SourceFile, Statement, TemplatePart } from './ast.ts';
 import { SourceError } from './lexer.ts';
 import {
   ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
-  WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND, ARRAY_INDEX_PLACEHOLDER, COLOR_KIND,
+  WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND, ARRAY_INDEX_PLACEHOLDER, COLOR_KIND, KEY_SEPARATOR,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
 import { ACTION_ARGUMENTS, DEFAULT_SAY_COLOR, SAY_ARGUMENTS, SYNC_ARGUMENTS, UNLIMITED_TIMER_CALLS } from './constants.ts';
@@ -23,6 +23,8 @@ import {
 import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
 import { callGraph, reachable, usedFunctions, writtenNames } from './calls.ts';
+
+type ObjectSelection = { keys: string[]; choices: { parts: string[]; operand: Operand }[] };
 
 const NEGATED: Readonly<Record<string, Condition>> = { '==': 'ne', '!=': 'eq', '<': 'ge', '<=': 'gt', '>': 'le', '>=': 'lt' };
 const DIRECT: Readonly<Record<string, Condition>> = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
@@ -107,6 +109,15 @@ function flattenConcat(expression: Expression): Expression[] {
       (part.kind === 'text' ? { kind: 'string', parts: [part], location: expression.location } : part.expression));
   }
   return [expression];
+}
+
+function depthOf(tree: readonly ObjectTree[]): number {
+  const first = tree[0];
+  return Array.isArray(first) ? 1 + depthOf(first) : 1;
+}
+
+function leavesOf(tree: readonly ObjectTree[], path: string[]): (readonly [string[], string])[] {
+  return tree.flatMap((item, index) => (Array.isArray(item) ? leavesOf(item, [...path, String(index)]) : [[[...path, String(index)], item] as const]));
 }
 
 function hasBreak(statements: readonly Statement[]): boolean {
@@ -278,8 +289,15 @@ export class Generator {
           break;
         case 'object':
           define(declaration.name, declaration.location);
-          this.globals.set(declaration.name, { kind: 'object', keyword: declaration.keyword, uid: declaration.uid });
-          this.objects.push({ keyword: declaration.keyword, name: declaration.name, uid: declaration.uid, x: declaration.x, y: declaration.y });
+          if (declaration.tree === null) {
+            this.globals.set(declaration.name, { kind: 'object', keyword: declaration.keyword, uid: declaration.uid });
+            this.objects.push({ keyword: declaration.keyword, name: declaration.name, uid: declaration.uid, x: declaration.x, y: declaration.y });
+          } else {
+            this.globals.set(declaration.name, { kind: 'objectArray', keyword: declaration.keyword, tree: declaration.tree, dimensions: depthOf(declaration.tree) });
+            for (const [path, uid] of leavesOf(declaration.tree, [])) {
+              this.objects.push({ keyword: declaration.keyword, name: TEXT.elementPath(declaration.name, path), uid, x: null, y: null });
+            }
+          }
           break;
         case 'extern':
           define(declaration.name, declaration.location);
@@ -355,12 +373,13 @@ export class Generator {
     const entry = this.lookup(name, location);
     if (entry.kind === 'constant') return fail(location, TEXT.constantAssignment(name));
     if (entry.kind === 'array') return fail(location, TEXT.arrayAsValue(name));
-    if (entry.kind === 'object') return fail(location, TEXT.objectAsValue(name));
+    if (entry.kind === 'object' || entry.kind === 'objectArray') return fail(location, TEXT.objectAsValue(name));
     return entry.name;
   }
 
   private arrayOf(name: string, location: Location): Extract<SymbolEntry, { kind: 'array' }> {
     const entry = this.lookup(name, location);
+    if (entry.kind === 'objectArray') return fail(location, TEXT.objectAsValue(name));
     return entry.kind === 'array' ? entry : fail(location, TEXT.notArray(name));
   }
 
@@ -677,10 +696,11 @@ export class Generator {
         const entry = this.lookup(expression.name, expression.location);
         if (entry.kind === 'constant') return literal(entry.text);
         if (entry.kind === 'array') return fail(expression.location, TEXT.arrayAsValue(expression.name));
-        if (entry.kind === 'object') return fail(expression.location, TEXT.objectAsValue(expression.name));
+        if (entry.kind === 'object' || entry.kind === 'objectArray') return fail(expression.location, TEXT.objectAsValue(expression.name));
         return variable(entry.name);
       }
       case 'index': {
+        if (expression.more) fail(expression.location, TEXT.oneIndex(expression.array));
         const array = this.arrayOf(expression.array, expression.location);
         const fixedIndex = this.staticIndex(expression.index);
         if (fixedIndex !== null) return variable(elementName(this.names, array.base, fixedIndex));
@@ -761,6 +781,7 @@ export class Generator {
         this.move(this.value(expression), destination);
         return;
       case 'index': {
+        if (expression.more) fail(expression.location, TEXT.oneIndex(expression.array));
         const array = this.arrayOf(expression.array, expression.location);
         if (this.staticIndex(expression.index) !== null) {
           this.move(this.value(expression), destination);
@@ -1006,6 +1027,11 @@ export class Generator {
     switch (name) {
       case BUILTIN.len: {
         const target = first();
+        const objectCount = this.objectArrayLength(target);
+        if (objectCount !== null) {
+          this.act(OPCODE.setVariable, destination, String(objectCount));
+          return;
+        }
         const entry = target.kind === 'name' ? this.lookup(target.name, target.location) : null;
         if (entry?.kind === 'array') {
           this.act(OPCODE.copyVariable, destination, entry.length);
@@ -1281,7 +1307,7 @@ export class Generator {
       const inner = part.expression;
       if (inner.kind !== 'name') return null;
       const entry = this.lookup(inner.name, inner.location);
-      if (entry.kind === 'array' || entry.kind === 'object') return null;
+      if (entry.kind === 'array' || entry.kind === 'object' || entry.kind === 'objectArray') return null;
       text += entry.kind === 'constant' ? entry.text : entry.name;
     }
     return text;
@@ -1308,6 +1334,7 @@ export class Generator {
         return textOperand(entry.uid);
       }
       if (entry.kind === 'constant') return textOperand(entry.text);
+      if (entry.kind === 'objectArray') return fail(expression.location, TEXT.objectIndexCount(expression.name, entry.dimensions, 0));
       if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));
       if (entry.kind === 'array') return textOperand(entry.length);
       if (takesVariableName(opcode, side)) return textOperand(entry.name);
@@ -1334,7 +1361,74 @@ export class Generator {
       ? opcodeByNumber(Number(which.text))
       : which.kind === 'name' ? opcodeByName(which.name) : isLiteralExpression(which) ? opcodeByName(literalText(which)) : null;
     if (!opcode) return fail(which.location, TEXT.unknownAction(which.kind === 'name' ? which.name : literalText(which)));
-    this.act(opcode.number, this.rawOperand(expression.args[1], opcode, SIDE.a), this.rawOperand(expression.args[2], opcode, SIDE.b));
+    const sides = [SIDE.a, SIDE.b];
+    const selections = sides.map((side, position) => this.objectSelection(expression.args[position + 1], opcode, side));
+    if (selections.every((selection) => selection === null)) {
+      this.act(opcode.number, this.rawOperand(expression.args[1], opcode, SIDE.a), this.rawOperand(expression.args[2], opcode, SIDE.b));
+      return;
+    }
+    const choices = sides.map((side, position) => {
+      const selection = selections[position];
+      if (selection) return selection.choices;
+      return [{ parts: [] as string[], operand: this.rawOperand(expression.args[position + 1], opcode, side) }];
+    });
+    const keys = selections.flatMap((selection) => selection?.keys ?? []);
+    let key: string | null = keys[0] ?? null;
+    if (keys.length > 1) {
+      key = this.frame.temp();
+      this.act(OPCODE.replaceInValue, key, keys.join(KEY_SEPARATOR));
+    }
+    for (const first of choices[0] ?? []) {
+      for (const second of choices[1] ?? []) {
+        if (key !== null) this.act(OPCODE.skipIfNotEqualValue, key, [...first.parts, ...second.parts].join(KEY_SEPARATOR));
+        this.act(opcode.number, first.operand, second.operand);
+      }
+    }
+  }
+
+  private objectArrayLength(target: Expression): number | null {
+    const name = target.kind === 'name' || target.kind === 'index' ? (target.kind === 'name' ? target.name : target.array) : null;
+    const entry = name === null ? null : this.frame.lookup(name) ?? this.globals.get(name);
+    if (entry?.kind !== 'objectArray') return null;
+    let tree: ObjectTree = entry.tree;
+    const indexes = target.kind === 'index' ? [target.index, ...(target.more ?? [])] : [];
+    for (const index of indexes) {
+      const text = this.compileTimeText(index) ?? fail(index.location, TEXT.objectLengthIndex(name ?? EMPTY_TEXT));
+      const next: ObjectTree | undefined = Array.isArray(tree) ? tree[Number(text)] : undefined;
+      if (next === undefined || !Array.isArray(next) || String(Number(text)) !== text) return fail(index.location, TEXT.objectIndexRange(name ?? EMPTY_TEXT, text));
+      tree = next;
+    }
+    return Array.isArray(tree) ? tree.length : 0;
+  }
+
+  private objectSelection(argument: Expression | undefined, opcode: Opcode, side: string): ObjectSelection | null {
+    if (argument?.kind !== 'index') return null;
+    const entry = this.lookup(argument.array, argument.location);
+    if (entry.kind !== 'objectArray') return null;
+    const kind = side === SIDE.a ? opcode.paramA : opcode.paramB;
+    if (objectKind(entry.keyword)?.paramKind !== kind) fail(argument.location, TEXT.wrongObject(opcode.number, side, kind, argument.array, entry.keyword));
+    const indexes = [argument.index, ...(argument.more ?? [])];
+    if (indexes.length !== entry.dimensions) fail(argument.location, TEXT.objectIndexCount(argument.array, entry.dimensions, indexes.length));
+    const keys: string[] = [];
+    const fixed = indexes.map((index) => {
+      const text = this.compileTimeText(index);
+      if (text === null) keys.push(this.variableValue(index));
+      return text;
+    });
+    const choices: { parts: string[]; operand: Operand }[] = [];
+    const walk = (tree: readonly ObjectTree[], depth: number, parts: string[]): void => {
+      const wanted = fixed[depth];
+      tree.forEach((item, index) => {
+        const text = String(index);
+        if (wanted !== null && wanted !== undefined && wanted !== text) return;
+        const nextParts = wanted === null ? [...parts, text] : parts;
+        if (Array.isArray(item)) walk(item, depth + 1, nextParts);
+        else choices.push({ parts: nextParts, operand: textOperand(item) });
+      });
+    };
+    walk(entry.tree, 0, []);
+    if (choices.length === 0) fail(argument.location, TEXT.objectIndexRange(argument.array, TEXT.indexList(fixed)));
+    return { keys, choices };
   }
 }
 
