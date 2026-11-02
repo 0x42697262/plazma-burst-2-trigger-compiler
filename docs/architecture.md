@@ -14,7 +14,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Lowering | `src/compiler/lower.ts` | Branches to skip actions and switches (361/364/365/123 + 363) |
 | Layout | `src/compiler/layout.ts` | Every jump target starts a trigger; blocks over 100 actions continue in the next trigger (F1) without separating a skip from what it skips; fallthrough becomes a 363; empty exits become a stop (F20) |
 | Checks | `src/compiler/check.ts`, `host.ts` | Warnings: unknown targets, 362, text-format limits, XML entities (F26), host variable names inside replaced text (F9, F29) |
-| Names | `src/compiler/names.ts` | Variables `~<prefix>_name~`, internal `~<prefix>:name~`; triggers `#<prefix>_label`, internal `#<prefix>:label` |
+| Names | `src/compiler/names.ts` | Variables `~<prefix>_name~`, internal `~<prefix>:name~`; triggers `#<prefix>_label`, internal `#<prefix>:label`; with a seed, the names become short seeded tokens |
 | Emitters | `src/emit/` | XML elements (grid placement, `maxcalls -1`), editor text (F12, F14), appending to a map |
 | Simulator | `src/sim/` | The game's trigger runner for the actions the compiler uses, with load-time conversion (F18) and XML escaping (F26) |
 | CLI | `src/cli/` | `npm run compile` |
@@ -23,6 +23,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Compile-time constants | `src/lang/comptime.ts` | `const` values worked out in the simulator, `secret` checks, `env()` |
 | Standard library | `std/` | `.ptc` files for `import "std/..."` (`hash.ptc`); read by `src/cli/sources.ts`, bundled into the web page |
 | P-code target | `src/pcode/` | `--target pcode`: instructions as text plus one trigger per kind of instruction ([pcode.md](pcode.md)) |
+| Obfuscation | `src/obfuscate/` | `--obfuscate`: encoded texts and a start routine with the integrity check, dispatched jumps, grouped actions and fixed-outcome checks around the layout ([obfuscation.md](obfuscation.md)) |
 | Web page | `src/web/`, `src/tools/build-web/` | CodeMirror editor (Vim mode), compiler and simulator in the browser; built into `site/` |
 | Tools | `src/tools/` | `live-check`, `snapshot-opcodes`, `actions-doc` (writes `docs/actions.md`), `emit-sample` (the hand-built M1 sample), the repository's lint rules |
 

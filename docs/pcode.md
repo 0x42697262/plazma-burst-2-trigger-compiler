@@ -46,6 +46,8 @@ trigger count stops growing with the program.
 - The target turns on `--direct-index` and turns off the number-text protection (F36): the code
   text is one value that the website editor does not change.
 - Text may not contain U+241F.
+- With `--obfuscate`, the handlers are shuffled and the code text holds handler numbers shifted by
+  the integrity check value ([obfuscation.md](obfuscation.md)).
 - A uid of one of the program's own labels used as a value gives the index of its entry trigger.
 
 ## Checks
