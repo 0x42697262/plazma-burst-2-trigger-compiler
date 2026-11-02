@@ -1,5 +1,6 @@
 import { compileSource } from '../lang/compile.ts';
 import { compileAssembly } from '../compiler/assemble.ts';
+import type { CompileOptions } from '../compiler/compile.ts';
 import { tokenize } from '../lang/lexer.ts';
 import type { Token } from '../lang/lexer.ts';
 import { BUILTIN, KEYWORD, KEYWORDS, PUNCTUATOR } from '../lang/keys.ts';
@@ -107,19 +108,19 @@ function importedSources(source: string, file: string, read: SourceReader): { fi
   return result;
 }
 
-export function diagnoseAssembly(source: string): ServiceDiagnostic[] {
+export function diagnoseAssembly(source: string, options: Partial<CompileOptions> = {}): ServiceDiagnostic[] {
   const toDiagnostic = (message: string, severity: Severity): ServiceDiagnostic => {
     const match = DIAGNOSTIC_LINE.exec(message);
     return match ? { line: Number(match[2]) - FIRST_LINE, message: match[3] ?? message, severity } : { line: 0, message, severity };
   };
   try {
-    return compileAssembly(source, SERVICE_PREFIX).warnings.map((warning) => toDiagnostic(warning, SEVERITY.warning));
+    return compileAssembly(source, SERVICE_PREFIX, options).warnings.map((warning) => toDiagnostic(warning, SEVERITY.warning));
   } catch (error) {
     return [toDiagnostic(error instanceof Error ? error.message : String(error), SEVERITY.error)];
   }
 }
 
-export function diagnose(source: string, file: string, read: SourceReader): ServiceDiagnostic[] {
+export function diagnose(source: string, file: string, read: SourceReader, options: Partial<CompileOptions> = {}): ServiceDiagnostic[] {
   const importLine = (label: string): number => {
     const wanted = resolvePath(directoryOf(file), label);
     return importsOf(source).find((entry) => resolvePath(directoryOf(file), entry.path) === wanted)?.line ?? 0;
@@ -137,7 +138,7 @@ export function diagnose(source: string, file: string, read: SourceReader): Serv
       if (text === null) throw new Error(name);
       return text;
     };
-    const result = compileSource(source, SERVICE_PREFIX, {}, { file, read: reader });
+    const result = compileSource(source, SERVICE_PREFIX, options, { file, read: reader });
     return result.warnings.map((warning) => toDiagnostic(warning, SEVERITY.warning));
   } catch (error) {
     return [toDiagnostic(error instanceof Error ? error.message : String(error), SEVERITY.error)];

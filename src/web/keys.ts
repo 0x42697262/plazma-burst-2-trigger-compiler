@@ -7,6 +7,7 @@ export const ELEMENT = Object.freeze({
   prefix: 'prefix',
   guard: 'guard',
   frames: 'frames',
+  numberText: 'number-text',
   compile: 'compile',
   run: 'run',
   hostMap: 'host-map',

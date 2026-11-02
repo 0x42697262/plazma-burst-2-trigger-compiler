@@ -1,7 +1,7 @@
 import examples from 'virtual:examples';
 import { CodeEditor } from './editor.ts';
 import { Workspace } from './workspace.ts';
-import { build, simulate } from './pipeline.ts';
+import { build, checkOptions, simulate } from './pipeline.ts';
 import type { Build, Options } from './pipeline.ts';
 import { ATTRIBUTE, CLASS, EMPTY_OBJECT, ENTER, FOLDER_POSITION, KEYDOWN, LIBRARY_FOLDER, OUTPUT_BUTTONS, TAB_ACTIVE, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT } from './keys.ts';
 import { DEFAULT_FRAMES, DEFAULT_GUARD, STATUS_TIME } from './constants.ts';
@@ -29,6 +29,7 @@ const prefixInput = element<HTMLInputElement>(ELEMENT.prefix);
 const guardInput = element<HTMLInputElement>(ELEMENT.guard);
 const framesInput = element<HTMLInputElement>(ELEMENT.frames);
 const vimInput = element<HTMLInputElement>(ELEMENT.vim);
+const numberTextInput = element<HTMLInputElement>(ELEMENT.numberText);
 const output = element<HTMLPreElement>(ELEMENT.output);
 const status = element<HTMLDivElement>(ELEMENT.status);
 const tabs = element<HTMLElement>(ELEMENT.tabs);
@@ -37,6 +38,7 @@ const savedOptions = JSON.parse(storage?.getItem(STORAGE.options) ?? EMPTY_OBJEC
 prefixInput.value = savedOptions.prefix ?? '';
 guardInput.value = String(savedOptions.guard ?? DEFAULT_GUARD);
 framesInput.value = String(savedOptions.frames ?? DEFAULT_FRAMES);
+numberTextInput.checked = savedOptions.numberText ?? true;
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 
 let hostMap: string | null = null;
@@ -47,7 +49,7 @@ let shown: OutputName = OUTPUT.problems;
 let statusTimer = 0;
 
 const options = (): Options => {
-  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES) };
+  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   return value;
 };
@@ -173,6 +175,7 @@ const editor = new CodeEditor(element(ELEMENT.editor), workspace, {
     }
     editor.select(location.line, location.column);
   },
+  checkOptions: () => checkOptions(numberTextInput.checked),
 }, vimInput.checked);
 
 const examplesSelect = element<HTMLSelectElement>(ELEMENT.examples);
@@ -208,6 +211,10 @@ examplesSelect.addEventListener(EVENT.change, () => {
   show(OUTPUT.problems);
 });
 
+numberTextInput.addEventListener(EVENT.change, () => {
+  options();
+  editor.relint();
+});
 vimInput.addEventListener(EVENT.change, () => {
   storage?.setItem(STORAGE.vim, String(vimInput.checked));
   editor.setVim(vimInput.checked);

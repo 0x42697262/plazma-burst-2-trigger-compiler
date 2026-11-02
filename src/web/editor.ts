@@ -7,7 +7,7 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirro
 import { bracketMatching, defaultHighlightStyle, indentOnInput, syntaxHighlighting } from '@codemirror/language';
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
 import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
-import { linter, lintKeymap } from '@codemirror/lint';
+import { forceLinting, linter, lintKeymap } from '@codemirror/lint';
 import type { Diagnostic } from '@codemirror/lint';
 import { vim } from '@replit/codemirror-vim';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -16,11 +16,12 @@ import type { ServiceLocation } from '../service/service.ts';
 import { ptcLanguage, pasmLanguage } from './highlight.ts';
 import { renderMarkdown } from './markdown.ts';
 import { problemsOf } from './pipeline.ts';
+import type { CompileOptions } from '../compiler/compile.ts';
 import type { Workspace } from './workspace.ts';
 import { ASSEMBLY_EXTENSION, CLASS, KEY, TAG, WORD_BEFORE } from './keys.ts';
 import { HOVER_DELAY, LINT_DELAY } from './constants.ts';
 
-export type EditorHooks = { onChange: (file: string, text: string) => void; onJump: (location: ServiceLocation) => void };
+export type EditorHooks = { onChange: (file: string, text: string) => void; onJump: (location: ServiceLocation) => void; checkOptions: () => Partial<CompileOptions> };
 
 const positionOf = (state: EditorState, offset: number): { line: number; column: number } => {
   const line = state.doc.lineAt(offset);
@@ -72,6 +73,10 @@ export class CodeEditor {
     this.view.focus();
   }
 
+  relint(): void {
+    forceLinting(this.view);
+  }
+
   setVim(on: boolean): void {
     this.vimOn = on;
     this.view.dispatch({ effects: this.vimMode.reconfigure(on ? vim() : []) });
@@ -87,7 +92,7 @@ export class CodeEditor {
   private extensions(file: string): Extension[] {
     const read = (name: string): string | null => this.workspace.get(name);
     const isAssembly = file.endsWith(ASSEMBLY_EXTENSION);
-    const lint = linter((view): Diagnostic[] => problemsOf(this.workspace, file).map((entry) => {
+    const lint = linter((view): Diagnostic[] => problemsOf(this.workspace, file, this.hooks.checkOptions()).map((entry) => {
       const line = view.state.doc.line(Math.min(entry.line + 1, view.state.doc.lines));
       return { from: line.from, to: line.to, severity: entry.severity, message: entry.message };
     }), { delay: LINT_DELAY });

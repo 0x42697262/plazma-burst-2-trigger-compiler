@@ -6,7 +6,7 @@ import { collectExamples } from '../tools/build-web/build.ts';
 import path from 'node:path';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300 };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -27,6 +27,18 @@ describe('web page logic', () => {
     assert.match(result.map, /^<player x="0" y="0" \/>\n<trigger/);
     assert.equal(simulate(result.result!, 1)[0], 'chat: 3 4 2 * + = 11');
     assert.equal(prefixFor('/work/11-infix.ptc'), 'infix');
+  });
+
+  it('writes number-like text as it is when the site editor option is off', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'var code = "007";\non start { say(code); }\n');
+    const kept = build(workspace, '/work/main.ptc', OPTIONS, null);
+    assert.match(kept.xml, /"_007"/);
+    assert.deepEqual(kept.result?.warnings, []);
+    const raw = build(workspace, '/work/main.ptc', { ...OPTIONS, numberText: false }, null);
+    assert.match(raw.xml, /"007"/);
+    assert.doesNotMatch(raw.xml, /_007/);
+    assert.ok(raw.result?.warnings.some((warning) => warning.includes('website editor')));
   });
 
   it('reports problems instead of output', () => {
