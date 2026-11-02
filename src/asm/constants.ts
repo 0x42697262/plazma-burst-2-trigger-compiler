@@ -1,0 +1,9 @@
+export const NO_OPERANDS = 0;
+export const ONE_OPERAND = 1;
+export const TWO_OPERANDS = 2;
+export const BRANCH_OPERANDS = 3;
+export const TIMER_MIN_OPERANDS = 3;
+export const TIMER_CALLS_POSITION = 3;
+export const TIMER_STATE_POSITION = 4;
+export const DEFAULT_COLOR = '0';
+export const DEFAULT_TIMER_CALLS = 1;

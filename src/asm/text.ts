@@ -1,0 +1,17 @@
+export const TEXT = Object.freeze({
+  where: (line: number, message: string): string => `line ${line}: ${message}`,
+  unclosedString: 'unclosed string',
+  badEscape: (character: string): string => `unknown escape \\${character}`,
+  badInterpolation: 'expected {$name} inside the string',
+  unknownInstruction: (name: string): string => `unknown instruction or action "${name}"`,
+  operandCount: (name: string, expected: string, got: number): string => `"${name}" takes ${expected} operand(s), got ${got}`,
+  expectedLabel: (got: string): string => `expected @label, got "${got}"`,
+  labelInValue: 'a label cannot be compared',
+  badIdentifier: (name: string): string => `"${name}" is not a valid name`,
+  unknownDirective: (name: string): string => `unknown directive ".${name}"`,
+  emptyOperand: 'empty operand',
+  badNumber: (text: string): string => `"${text}" is not a number`,
+  noLabel: 'the program has no label to start at',
+  zeroToTwo: '0 to 2',
+  exactly: (count: number): string => String(count),
+});
