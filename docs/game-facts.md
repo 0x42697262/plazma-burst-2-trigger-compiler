@@ -41,19 +41,20 @@ Action numbers are always the client's. The community manual is off by one aroun
 | F29 | In 22 saved maps (765 variable names), map makers mostly name variables `var_name` (333); none wrap names in `~…~`; 44 names lie inside other names (`~level` in `~levelBox`) | `plazma-burst-2/data/maps/*.xml`, 2026-11-02 | `~<prefix>_name~` cannot lie inside a host name, but a plain host name (`level`) can lie inside ours: with `--into` the compiler warns about that |
 | F30 | Sync actions 223–227 throw when the map has no Var Sync engine mark (`<inf mark="var_sync">`; the flag is set by the loader and never cleared), so the rest of the trigger is dropped. With the mark they send the variable only in multiplayer; a name or value over 2048 characters also throws. 6 of the 22 saved maps use them, each with one mark | `actions.js` cases 223–227, `frame2.js:12062`; saved maps; live `lang-sync.ptc` (with the mark the trigger goes on) | The XML gets the mark when a program syncs; the simulator throws without it |
 | F31 | 156 sets one trigger as the map's chat receiver; the game runs it for every chat line, with the writer's slot and text kept for 159 (slot), 160 (text), 158 (displayed name, `Empty` when no character) and 157 (login) | `actions.js` cases 156–160, `frame2.js:10478` (`$HТс1I`) | `on chat` registers with 156 at start; a second receiver replaces the first |
+| F32 | "Edit as text" (editor, `lib_gui.js` `CompileTrigger`): one trigger at a time, the selected one; lines split at `\n`; an action line needs `( "`, `", "` and `" );`, and the text before the first `(` must be an alias exactly or `op<N>` (leading spaces are not trimmed); `uid:`, `enabled:` and `maxcalls:` are trimmed and applied, a pasted uid with no duplicate check; at most 100 actions; Apply replaces all actions of the trigger | editor code, read with the user's account, 2026-11-02 | Paste each text block into its own new trigger; timers and engine marks must be added by hand |
+| F33 | Saving in the editor keeps only actions 1–99 of a trigger (`compi_obj`: `action_id < trigger_actions_limit`, which is 100) | `lib_onenterframe.js` `compi_obj` | The layout fills triggers to 99 actions; the checker warns about a 100th |
+| F34 | Saving decodes `&quot; &lt; &gt; &amp;` in every text parameter, then encodes `& " < >` again, so the game sees the same escaped text as from a local map | `lib_onenterframe.js` `compi_obj` | F26 holds on the website path too |
+| F35 | The editor's object clipboard (Ctrl+C / Ctrl+V) renames a pasted uid only if the map already has it, and then updates references to it among the pasted objects only | `lib_controlevents.js` paste, `lib_classes.js` `RandomizeName` | Copying compiled triggers between maps keeps their uids unless they clash |
 
 ## Open checks (need a player)
 
-1. Website editor, XML: replace a map with compiled XML (`npm run emit-sample`, then
-   `out/ptc-hello-map.xml`) and test it: the chat shows `ptc hello: count = 2`.
-2. Website editor, text: paste a block of `out/ptc-hello.txt` into a new trigger. Does a custom
-   `uid:` (e.g. `#ptc_hello_add`) stay? Jumps between triggers depend on it. The code that parses
-   pasted text is inside the logged-in editor page, so it could not be read.
-3. Website path for `& < > "`: does the editor and server round-trip keep them as the game sees
-   them in local maps (F26)?
-4. `for player` (action 508) in a multiplayer match with 2 or more players (F25).
-5. `sync(x)` in a multiplayer match: the other players get the value (F30).
-6. `on chat` in the game: write `= 3 + 4 * 2` with `examples/tutorial/11-infix.ptc` in a map; the chat answers `3 4 2 * + = 11`.
+1. Website path end to end: replace a map with compiled XML on the site's map page, play it, and
+   see the program run. The editor code (F32–F35) says it works; the replace step itself runs on
+   the server, whose code cannot be read, and it changes a map on the account.
+2. `for player` (action 508) in a multiplayer match with 2 or more players (F25).
+3. `sync(x)` in a multiplayer match: the other players get the value (F30).
+4. `on chat` in the game: write `= 3 + 4 * 2` with `examples/tutorial/11-infix.ptc` in a map; the
+   chat answers `3 4 2 * + = 11`.
 
 ## Where things are in the client
 
