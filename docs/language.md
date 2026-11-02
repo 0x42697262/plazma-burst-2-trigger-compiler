@@ -271,6 +271,9 @@ jumped stops (the rest of that event's code does not run; a caller of a function
   number gives `"Empty"`.
 - `drop(text, n)` with `n` below minus the length wraps around (`drop("hello", -9)` is `"h"`).
 - Whole numbers written as text load as numbers; `"007"` stays text (F18).
+- Text that looks like a number but is not written as one (`"007"`, `"1.50"`, `"0123456789."`)
+  would become a number after a save in the website editor (F36). The compiler stores it as `"_007"`
+  and removes the `_` when the program runs (one more action), so it stays text.
 - The game reads `& < > "` and line breaks in literal text as XML entities (`&amp; &lt; &gt; &quot; &#10;`, F26);
   `say` shows `< > "` correctly. The compiler warns about such values.
 - An array index is used as text: `list[k]` with `k = "1.0"` is not `list[1]`.
