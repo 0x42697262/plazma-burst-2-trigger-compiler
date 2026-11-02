@@ -29,8 +29,11 @@ const SCENARIOS: Record<string, Scenario> = {
   '06-players.ptc': { expect: ['cy is it!'], variables: { found: '1' } },
   '07-arithmetic.ptc': { expect: ['17 / 5 = 3 remainder 2', 'price 50.97, 2^10 = 1024, average 18', 'kg12 is not a number'] },
   '08-chat-calculator.ptc': {
-    chat: [[0, '= 7 / 2'], [0, '=10%4'], [0, '= 1 / 0'], [0, '= 2 ^ 3'], [0, 'not for me']],
-    expect: ['12 * 3 = 36', ' 7 / 2 = 3.5', '10%4 = 2', ' 1 / 0 = cannot divide by zero', ' 2 ^ 3 = unknown operator ^'],
+    chat: [[0, '= 7 / 2'], [0, '=10%4'], [0, '= 1 / 0'], [0, '= 2 ^ 3'], [0, 'not for me'], [0, '= 69 * 420 + (69 * 3)'], [0, '= 69 * 420 ']],
+    expect: [
+      '12 * 3 = 36', ' 7 / 2 = 3.5', '10%4 = 2', ' 1 / 0 = cannot divide by zero', ' 2 ^ 3 = unknown operator ^',
+      ' 69 * 420 + (69 * 3) = one operator only; see tutorial 11 for longer sums', ' 69 * 420  = 28980',
+    ],
   },
   '09-postfix.ptc': { expect: ['3 4 + 2 * = 14', '5 1 2 + 4 * + 3 - = 14', '2 3 ^ = 8', '1 + = error: + needs two numbers'] },
   '10-prefix.ptc': { expect: ['* + 3 4 2 = 14', '- 10 / 6 3 = 8', '* + 3 4 2 = 14 (recursive)', '+ * 2 3 ^ 2 4 = 22 (recursive)'] },
