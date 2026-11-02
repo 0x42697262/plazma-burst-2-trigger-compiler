@@ -8,6 +8,7 @@ import { OPCODE } from '../opcodes/constants.ts';
 import { SHOWN_DECODED } from './keys.ts';
 import { COLOR_PARAM_KIND, OBJECT_PARAM_KINDS, TRIGGER_MARK } from './keys.ts';
 import { TEXT } from './text.ts';
+import { editorTurnsIntoNumber } from '../program/editor-text.ts';
 
 const isObjectParam = (kind: string | undefined): boolean => kind !== undefined && OBJECT_PARAM_KINDS.has(kind);
 
@@ -30,6 +31,8 @@ export function checkTriggers(program: Program, externalUids: readonly string[])
       const isLast = index === trigger.actions.length - 1;
       if (isLast && SKIPS_NEXT.has(action.opcode)) warnings.push(TEXT.skipAtEnd(trigger.uid));
       const params = [[opcode?.paramA, action.targetA], [opcode?.paramB, action.targetB]] as const;
+      const numberLike = [action.targetA, action.targetB].find(editorTurnsIntoNumber);
+      if (numberLike !== undefined) warnings.push(TEXT.editorNumber(trigger.uid, numberLike));
       for (const [kind, value] of params) {
         if (!value.startsWith(TRIGGER_MARK) || kind === COLOR_PARAM_KIND) continue;
         if (isObjectParam(kind)) {

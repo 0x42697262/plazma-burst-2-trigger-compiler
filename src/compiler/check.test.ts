@@ -10,4 +10,11 @@ describe('trigger checks', () => {
     const fits = trigger('#fits', Array.from({ length: 99 }, () => action(102, 'x', '1')));
     assert.deepEqual(checkTriggers({ triggers: [fits], timers: [] }, []), []);
   });
+
+  it('warns about text that the website editor turns into a number', () => {
+    const risky = trigger('#risky', [action(100, '~x~', '0123456789.')]);
+    assert.ok(checkTriggers({ triggers: [risky], timers: [] }, []).some((warning) => warning.includes('into the number 123456789')));
+    const plain = trigger('#plain', [action(100, '~x~', '12'), action(100, '~y~', '_007')]);
+    assert.deepEqual(checkTriggers({ triggers: [plain], timers: [] }, []), []);
+  });
 });
