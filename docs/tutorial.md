@@ -108,34 +108,23 @@ The respawn region calls `respawn()`, which sends the player to one of four spaw
 <!-- file: 03-random-respawn.ptc -->
 ```ptc
 // A respawn region that sends the player to one of four spawn regions at random.
-// Object targets (regions, doors, characters) are fixed when the map loads, so a
-// random choice picks between fixed actions with if / else if.
+// Object targets (regions, doors, characters) are fixed when the map loads; an object
+// array lets the compiler pick the right one with a changing index.
 region respawnZone = "#respawn_region";
-region spawn1 = "#SPAWN1";
-region spawn2 = "#SPAWN2";
-region spawn3 = "#SPAWN3";
-region spawn4 = "#SPAWN4";
+region spawns[] = ["#SPAWN1", "#SPAWN2", "#SPAWN3", "#SPAWN4"];
 var lastSpawn = -1;
 
 export function respawn() {
-  let pick = random(4);
-  lastSpawn = pick;
-  if (pick == 0) {
-    action(TeleportInitiatorFromTo, respawnZone, spawn1);
-  } else if (pick == 1) {
-    action(TeleportInitiatorFromTo, respawnZone, spawn2);
-  } else if (pick == 2) {
-    action(TeleportInitiatorFromTo, respawnZone, spawn3);
-  } else {
-    action(TeleportInitiatorFromTo, respawnZone, spawn4);
-  }
+  lastSpawn = random(len(spawns));
+  action(TeleportInitiatorFromTo, respawnZone, spawns[lastSpawn]);
 }
 ```
 
-- `random(4)` gives a whole number from 0 to 3.
-- The target region cannot come from a variable: there is one `action` per region, and the
-  `if` chain picks one.
-- `respawnZone` and `spawn1` to `spawn4` are declared regions; passing one of them where action 70
+- `random(len(spawns))` gives a whole number from 0 to 3.
+- `spawns` is an object array. The game fixes every object target when the map loads, so
+  `spawns[lastSpawn]` cannot be looked up while the map runs; the compiler writes one guarded
+  `action` per element instead (4 here), and only the one whose index matches runs.
+- `respawnZone` and the elements of `spawns` are declared regions; passing them where action 70
   expects something else would not compile.
 - "Player-initiator" is the player who used the region.
 

@@ -1,0 +1,15 @@
+// Object arrays in the game: arrays of triggers, picked with changing indexes.
+var log = "";
+export function a() { log ..= "a"; }
+export function b() { log ..= "b"; }
+export function c() { log ..= "c"; }
+export function d() { log ..= "d"; }
+trigger flat[] = ["#langobjectarrays_a", "#langobjectarrays_b", "#langobjectarrays_c", "#langobjectarrays_d"];
+trigger grid[][] = [["#langobjectarrays_a", "#langobjectarrays_b"], ["#langobjectarrays_c", "#langobjectarrays_d"]];
+on start {
+  for (let i = 3; i >= 0; i -= 1) { action(ExecTrigger, flat[i]); }
+  for (let x = 0; x < 2; x += 1) {
+    for (let y = 0; y < 2; y += 1) { action(ExecTrigger, grid[y][x]); }
+  }
+  log ..= "|" .. len(flat) .. len(grid[1]);
+}
