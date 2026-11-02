@@ -41,10 +41,12 @@ const writeFile = (file: string, content: string, output: Output): void => {
   output.out(TEXT.wrote(file));
 };
 
+const showValue = (value: unknown): string => (typeof value === 'string' || Array.isArray(value) ? JSON.stringify(value) : stringOf(value));
+
 const simulate = (result: CompileResult, frames: number, output: Output): void => {
   const simulation = new Simulation(result.program);
   simulation.tick(frames);
-  for (const [name, value] of Object.entries(simulation.variables)) output.out(TEXT.variable(name, JSON.stringify(value) ?? stringOf(value)));
+  for (const [name, value] of Object.entries(simulation.variables)) output.out(TEXT.variable(name, showValue(value)));
   for (const line of simulation.chat) output.out(TEXT.chat(line));
   for (const line of simulation.errors) output.out(TEXT.simError(line));
 };
