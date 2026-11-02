@@ -5,6 +5,7 @@ import { loadValue, replaceVariables } from './values.ts';
 import { action, startTimer, trigger } from '../program/build.ts';
 import type { Program } from '../program/types.ts';
 import { HELLO, HELLO_EXPECTED } from '../samples/hello.fixture.ts';
+import { SIMULATED_ACTIONS } from './actions.ts';
 
 const program = (...triggers: Program['triggers']): Program => ({ triggers, timers: [] });
 
@@ -150,5 +151,17 @@ describe('simulator', () => {
     assert.equal(simulation.variables.byVariable, 'old');
     assert.equal(simulation.variables.never, undefined);
     assert.equal(simulation.errors.length, 1);
+  });
+});
+
+describe('simulated action list', () => {
+  it('lists exactly the actions the simulator runs', () => {
+    const handled: number[] = [];
+    for (let opcode = -1; opcode <= 600; opcode++) {
+      const simulation = new Simulation(program(trigger('#a', [action(opcode, 'x', 'y')])));
+      simulation.run(0);
+      if (!simulation.unsimulated.has(opcode)) handled.push(opcode);
+    }
+    assert.deepEqual(handled, [...SIMULATED_ACTIONS].sort((first, second) => first - second));
   });
 });
