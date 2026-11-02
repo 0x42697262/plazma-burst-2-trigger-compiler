@@ -30,6 +30,7 @@ const guardInput = element<HTMLInputElement>(ELEMENT.guard);
 const framesInput = element<HTMLInputElement>(ELEMENT.frames);
 const vimInput = element<HTMLInputElement>(ELEMENT.vim);
 const numberTextInput = element<HTMLInputElement>(ELEMENT.numberText);
+const directIndexInput = element<HTMLInputElement>(ELEMENT.directIndex);
 const output = element<HTMLPreElement>(ELEMENT.output);
 const status = element<HTMLDivElement>(ELEMENT.status);
 const tabs = element<HTMLElement>(ELEMENT.tabs);
@@ -39,6 +40,7 @@ prefixInput.value = savedOptions.prefix ?? '';
 guardInput.value = String(savedOptions.guard ?? DEFAULT_GUARD);
 framesInput.value = String(savedOptions.frames ?? DEFAULT_FRAMES);
 numberTextInput.checked = savedOptions.numberText ?? true;
+directIndexInput.checked = savedOptions.directIndex ?? false;
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 
 let hostMap: string | null = null;
@@ -49,7 +51,7 @@ let shown: OutputName = OUTPUT.problems;
 let statusTimer = 0;
 
 const options = (): Options => {
-  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked };
+  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   return value;
 };
@@ -175,7 +177,7 @@ const editor = new CodeEditor(element(ELEMENT.editor), workspace, {
     }
     editor.select(location.line, location.column);
   },
-  checkOptions: () => checkOptions(numberTextInput.checked),
+  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked),
 }, vimInput.checked);
 
 const examplesSelect = element<HTMLSelectElement>(ELEMENT.examples);
@@ -211,10 +213,12 @@ examplesSelect.addEventListener(EVENT.change, () => {
   show(OUTPUT.problems);
 });
 
-numberTextInput.addEventListener(EVENT.change, () => {
-  options();
-  editor.relint();
-});
+for (const input of [numberTextInput, directIndexInput]) {
+  input.addEventListener(EVENT.change, () => {
+    options();
+    editor.relint();
+  });
+}
 vimInput.addEventListener(EVENT.change, () => {
   storage?.setItem(STORAGE.vim, String(vimInput.checked));
   editor.setVim(vimInput.checked);

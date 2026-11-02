@@ -8,6 +8,7 @@ export const ELEMENT = Object.freeze({
   guard: 'guard',
   frames: 'frames',
   numberText: 'number-text',
+  directIndex: 'direct-index',
   compile: 'compile',
   run: 'run',
   hostMap: 'host-map',
