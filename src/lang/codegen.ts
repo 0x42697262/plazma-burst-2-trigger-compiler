@@ -957,7 +957,30 @@ export class Generator {
     this.act(OPCODE.setVariable, work, otherwise);
   }
 
+  private constantTruth(expression: Expression): boolean | null {
+    if (isLiteralExpression(expression)) {
+      const text = literalText(expression);
+      return text !== FALSE_TEXT && text !== EMPTY_TEXT;
+    }
+    if (expression.kind === 'unary' && expression.operator === '!') {
+      const inner = this.constantTruth(expression.operand);
+      return inner === null ? null : !inner;
+    }
+    if (expression.kind === 'binary' && (expression.operator === '&&' || expression.operator === '||')) {
+      const left = this.constantTruth(expression.left);
+      const right = this.constantTruth(expression.right);
+      if (left === null || right === null) return null;
+      return expression.operator === '&&' ? left && right : left || right;
+    }
+    return null;
+  }
+
   private booleanInto(expression: Expression, destination: string): void {
+    const known = this.constantTruth(expression);
+    if (known !== null) {
+      this.act(OPCODE.setVariable, destination, known ? TRUE_TEXT : FALSE_TEXT);
+      return;
+    }
     const falseLabel = this.fresh(LABEL.else);
     const end = this.fresh(LABEL.end);
     this.condition(expression, false, falseLabel);

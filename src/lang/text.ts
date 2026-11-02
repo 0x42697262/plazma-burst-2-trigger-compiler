@@ -65,5 +65,5 @@ export const TEXT = Object.freeze({
   elementPath: (name: string, path: readonly string[]): string => `${name}${path.map((index) => `[${index}]`).join('')}`,
   indexList: (indexes: readonly (string | null)[]): string => indexes.map((index) => `[${index ?? '?'}]`).join(''),
   oneIndex: (name: string): string => `"${name}" is an array of values: it takes one index`,
-  sayColor: 'the color of say(...) must be a number or a string',
+  sayColor: 'the color of say(...) must be a fixed value: a number, text, a named value, a constant, or a variable that never changes',
 });
