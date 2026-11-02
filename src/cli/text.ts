@@ -5,6 +5,7 @@ export const TEXT = Object.freeze({
     '  --out <dir>       output folder (default: out)',
     '  --into <map.xml>  also write the map with the triggers appended',
     '  --replace         with --into, remove this program\'s old triggers and timers from the map first (updates it in place)',
+    '  --name-seed <s>   derive the name prefix from a seed (reproducible, source-independent names; use with --replace to update in place)',
     '  --guard <n>       stop loops after n jumps back per event (default 100000)',
     '  --no-guard        no loop guard',
     '  --no-start        no start timer',
@@ -31,6 +32,7 @@ export const TEXT = Object.freeze({
   badFrames: (value: string): string => `--frames needs a positive whole number, got "${value}".`,
   badPosition: (value: string): string => `--at needs two whole numbers like 1000,-500, got "${value}".`,
   replaceNeedsInto: '--replace needs --into <map.xml>.',
+  seedWithPrefix: '--name-seed and --prefix cannot be used together.',
   textHasNoTimers: (timers: readonly string[]): string => `the trigger text has no timers; in the editor, add timers for: ${timers.join(', ')}`,
   textNeedsVarSync: 'the program syncs variables: in the editor, add a Var Sync engine mark to the map, or every sync stops its trigger',
   objectCreated: (keyword: string, uid: string, positionX: number, positionY: number): string =>

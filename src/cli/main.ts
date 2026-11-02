@@ -9,7 +9,7 @@ import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap, removeOwned } from '../emit/merge.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
-import { createNames } from '../compiler/names.ts';
+import { createNames, seededPrefix } from '../compiler/names.ts';
 import { DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
@@ -64,6 +64,16 @@ const writeFile = (file: string, content: string, output: Output): void => {
   output.out(TEXT.wrote(file));
 };
 
+const readBuildUids = (file: string): string[] => {
+  if (!fs.existsSync(file)) return [];
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, FILE_ENCODING)) as { uids?: unknown };
+    return Array.isArray(parsed.uids) ? parsed.uids.filter((uid): uid is string => typeof uid === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+
 const showValue = (value: unknown): string => (typeof value === 'string' || Array.isArray(value) ? JSON.stringify(value) : stringOf(value));
 
 const simulate = (result: CompileResult, frames: number, output: Output): void => {
@@ -95,7 +105,9 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const options = optionsOf(parsed, hostMap);
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
-    const prefix = lastValue(parsed, FLAG.prefix) ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
+    const nameSeed = lastValue(parsed, FLAG.nameSeed);
+    if (nameSeed !== null && lastValue(parsed, FLAG.prefix) !== null) throw new UsageError(TEXT.seedWithPrefix);
+    const prefix = nameSeed !== null ? seededPrefix(nameSeed) : lastValue(parsed, FLAG.prefix) ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
     const result = frontEnd.compile(source, prefix, options, file);
     for (const warning of result.warnings) output.err(TEXT.warning(warning));
     const actions = result.program.triggers.reduce((total, trigger) => total + trigger.actions.length, 0);
@@ -126,10 +138,14 @@ export function main(argumentsList: readonly string[], output: Output): number {
     writeFile(base + OUTPUT.sourceMap, JSON.stringify(result.sourceMap, null, JSON_INDENT), output);
     if (hostMap !== null) {
       const names = createNames(prefix);
-      const host = replacing ? removeOwned(hostMap, names.ownsUid) : hostMap;
+      const buildPath = base + OUTPUT.build;
+      const recorded = new Set(replacing ? readBuildUids(buildPath) : []);
+      const host = replacing ? removeOwned(hostMap, (uid) => recorded.has(uid) || names.ownsUid(uid)) : hostMap;
       for (const warning of checkHostNames(result.program, host)) output.err(TEXT.warning(warning));
       for (const warning of checkHostUses(host, names.ownsVariable, result.exports)) output.err(TEXT.warning(warning));
       writeFile(base + OUTPUT.map, appendToMap(host, xml), output);
+      const producedUids = [...result.program.triggers.map((trigger) => trigger.uid), ...result.program.timers.map((timer) => timer.uid)];
+      writeFile(buildPath, JSON.stringify({ prefix, uids: producedUids }, null, JSON_INDENT), output);
     }
     if (parsed.flags.has(FLAG.run)) simulate(result, frames, output);
     return 0;

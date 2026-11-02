@@ -35,6 +35,7 @@ const numberTextInput = element<HTMLInputElement>(ELEMENT.numberText);
 const directIndexInput = element<HTMLInputElement>(ELEMENT.directIndex);
 const targetSelect = element<HTMLSelectElement>(ELEMENT.target);
 const replaceInput = element<HTMLInputElement>(ELEMENT.replace);
+const nameSeedInput = element<HTMLInputElement>(ELEMENT.nameSeed);
 const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
 const environmentButton = element<HTMLButtonElement>(ELEMENT.environmentButton);
 const environmentPanel = element<HTMLDivElement>(ELEMENT.environmentPanel);
@@ -51,6 +52,7 @@ numberTextInput.checked = savedOptions.numberText ?? true;
 directIndexInput.checked = savedOptions.directIndex ?? false;
 targetSelect.value = savedOptions.target ?? DEFAULT_TARGET;
 replaceInput.checked = savedOptions.replace ?? false;
+nameSeedInput.value = savedOptions.nameSeed ?? '';
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 
 let hostMap: string | null = null;
@@ -61,7 +63,7 @@ let shown: OutputName = OUTPUT.problems;
 let statusTimer = 0;
 
 const options = (): Options => {
-  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked };
+  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked, nameSeed: nameSeedInput.value };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   return value;
 };
@@ -123,8 +125,15 @@ const show = (name: OutputName): void => {
   }
 };
 
+const buildStore = (): Record<string, string[]> => JSON.parse(storage?.getItem(STORAGE.build) ?? EMPTY_OBJECT) as Record<string, string[]>;
+
 const compile = (): Build => {
-  last = build(workspace, editor.activeFile, options(), hostMap, environment());
+  const file = editor.activeFile;
+  const recorded = buildStore()[file] ?? [];
+  last = build(workspace, file, options(), hostMap, environment(), recorded);
+  if (hostMap !== null && last.map !== '') {
+    storage?.setItem(STORAGE.build, JSON.stringify({ ...buildStore(), [file]: last.uids }));
+  }
   status.textContent = summary(last);
   return last;
 };
@@ -237,6 +246,10 @@ for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInp
     editor.relint();
   });
 }
+nameSeedInput.addEventListener(EVENT.input, () => {
+  options();
+  editor.relint();
+});
 vimInput.addEventListener(EVENT.change, () => {
   storage?.setItem(STORAGE.vim, String(vimInput.checked));
   editor.setVim(vimInput.checked);

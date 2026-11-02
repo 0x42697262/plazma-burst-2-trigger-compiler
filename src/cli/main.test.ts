@@ -97,6 +97,41 @@ describe('compile CLI', () => {
     assert.ok(lines.err.some((line) => line.includes('website editor turns the value "007"')));
   });
 
+  it('derives names from a seed, reproducibly and apart from --prefix', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 's.ptc');
+    fs.writeFileSync(source, 'var n = 0;\non start { n += 1; say("hi"); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder, '--name-seed', '42'], output), 0);
+    const first = fs.readFileSync(path.join(folder, 's.xml'), 'utf8');
+    assert.match(first, /uid="#z[0-9a-z]+:start"/);
+    assert.doesNotMatch(first, /#s[_:]/);
+    assert.equal(main([source, '--out', folder, '--name-seed', '42'], output), 0);
+    assert.equal(fs.readFileSync(path.join(folder, 's.xml'), 'utf8'), first);
+    assert.equal(main([source, '--out', folder, '--name-seed', '99'], output), 0);
+    assert.notEqual(fs.readFileSync(path.join(folder, 's.xml'), 'utf8'), first);
+    assert.equal(main([source, '--out', folder, '--name-seed', '1', '--prefix', 'p'], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /--name-seed and --prefix cannot be used together/);
+  });
+
+  it('records a build manifest and replaces across renamed builds', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'm.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(host, '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n');
+    fs.writeFileSync(source, 'var n = 0;\non start { n += 1; say("v1"); }\n');
+    const { output } = capture();
+    assert.equal(main([source, '--out', folder, '--name-seed', '1', '--into', host], output), 0);
+    const manifest = JSON.parse(fs.readFileSync(path.join(folder, 'm.build.json'), 'utf8')) as { prefix: string; uids: string[] };
+    assert.ok(manifest.uids.length >= 1 && manifest.uids.every((uid) => uid.startsWith(`#${manifest.prefix}`)));
+    fs.copyFileSync(path.join(folder, 'm-map.xml'), host);
+    fs.writeFileSync(source, 'var n = 0;\nvar tag = "v2";\non start { n += 2; say("v2"); }\n');
+    assert.equal(main([source, '--out', folder, '--name-seed', '2', '--into', host, '--replace'], output), 0);
+    const merged = fs.readFileSync(path.join(folder, 'm-map.xml'), 'utf8');
+    assert.ok(merged.includes('#gate1') && merged.includes('"v2"') && !merged.includes('"v1"'));
+    for (const uid of manifest.uids) assert.ok(!merged.includes(uid), `stale ${uid}`);
+  });
+
   it('updates a program already in a map with --replace, keeping other elements', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'p.ptc');

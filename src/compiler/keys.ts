@@ -1,4 +1,5 @@
 export const PREFIX_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
+export const SEED_PREFIX_LETTER = 'z';
 export const VARIABLE_MARK = '~';
 export const TRIGGER_MARK = '#';
 export const USER_SEPARATOR = '_';

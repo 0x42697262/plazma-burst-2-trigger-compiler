@@ -1,7 +1,17 @@
-import { CONTINUATION_SEPARATOR, INTERNAL_MARK, PREFIX_PATTERN, TRIGGER_MARK, USER_SEPARATOR, VARIABLE_MARK } from './keys.ts';
+import { CONTINUATION_SEPARATOR, INTERNAL_MARK, PREFIX_PATTERN, SEED_PREFIX_LETTER, TRIGGER_MARK, USER_SEPARATOR, VARIABLE_MARK } from './keys.ts';
+import { BASE36, FNV_OFFSET_BASIS, FNV_PRIME } from './constants.ts';
 import { TEXT } from './text.ts';
 
 export class CompileError extends Error {}
+
+export function seededPrefix(seed: string): string {
+  let hash = FNV_OFFSET_BASIS >>> 0;
+  for (const character of seed) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, FNV_PRIME) >>> 0;
+  }
+  return SEED_PREFIX_LETTER + hash.toString(BASE36);
+}
 
 export type Names = {
   prefix: string;

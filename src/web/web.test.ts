@@ -7,7 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '' };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -28,6 +28,21 @@ describe('web page logic', () => {
     assert.match(result.map, /^<player x="0" y="0" \/>\n<trigger/);
     assert.equal(simulate(result.result!, 1)[0], 'chat: 3 4 2 * + = 11');
     assert.equal(prefixFor('/work/11-infix.ptc'), 'infix');
+  });
+
+  it('derives names from a seed and replaces across renamed builds with the recorded uids', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'var n = 0;\non start { n += 1; say("v1"); }\n');
+    workspace.activate('/work/main.ptc');
+    const host = '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n';
+    const first = build(workspace, '/work/main.ptc', { ...OPTIONS, nameSeed: '1' }, host);
+    assert.match(first.map, /uid="#z[0-9a-z]+:start"/);
+    assert.ok(first.uids.length >= 1);
+    const withBuild = first.map;
+    workspace.set('/work/main.ptc', 'var n = 0;\nvar tag = "v2";\non start { n += 2; say("v2"); }\n');
+    const second = build(workspace, '/work/main.ptc', { ...OPTIONS, nameSeed: '2', replace: true }, withBuild, {}, first.uids);
+    assert.ok(second.map.includes('#gate1') && second.map.includes('"v2"') && !second.map.includes('"v1"'));
+    for (const uid of first.uids) assert.ok(!second.map.includes(uid), `stale ${uid}`);
   });
 
   it('replaces an older build of the program in the host map when asked', () => {

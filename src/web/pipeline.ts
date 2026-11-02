@@ -8,7 +8,7 @@ import { XML_LINE_END } from '../emit/keys.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { checkObjects, objectElement } from '../objects/objects.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
-import { createNames } from '../compiler/names.ts';
+import { createNames, seededPrefix } from '../compiler/names.ts';
 import { Simulation } from '../sim/simulator.ts';
 import { stringOf } from '../sim/values.ts';
 import { diagnose, diagnoseAssembly } from '../service/service.ts';
@@ -19,7 +19,7 @@ import { TEXT } from './text.ts';
 import type { Workspace } from './workspace.ts';
 import type { Target } from '../pcode/keys.ts';
 
-export type Options = { prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean };
+export type Options = { prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string };
 export type Problem = ServiceDiagnostic & { file: string };
 export type Build = {
   result: CompileResult | null;
@@ -28,6 +28,7 @@ export type Build = {
   text: string;
   map: string;
   notes: string[];
+  uids: string[];
 };
 
 export const prefixFor = (file: string): string => {
@@ -58,12 +59,12 @@ export function problemsOf(workspace: Workspace, file: string, options: Partial<
   return found.map((entry) => ({ ...entry, file }));
 }
 
-export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null, environment: Environment = {}): Build {
+export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null, environment: Environment = {}, recordedUids: readonly string[] = []): Build {
   const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex, options.target, environment));
-  const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [] };
+  const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [], uids: [] };
   if (problems.some((entry) => entry.severity === 'error')) return empty;
   const source = workspace.get(file) ?? '';
-  const prefix = options.prefix === '' ? prefixFor(file) : options.prefix;
+  const prefix = options.nameSeed.trim() !== '' ? seededPrefix(options.nameSeed.trim()) : options.prefix === '' ? prefixFor(file) : options.prefix;
   const compileOptions: Partial<CompileOptions> = {
     loopGuard: options.guard > 0 ? options.guard : null,
     varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : 'add',
@@ -96,9 +97,11 @@ export function build(workspace: Workspace, file: string, options: Options, host
     notes.push(error instanceof Error ? error.message : String(error));
   }
   let map = '';
+  const uids = [...result.program.triggers.map((trigger) => trigger.uid), ...result.program.timers.map((timer) => timer.uid)];
   if (hostMap !== null) {
     const names = createNames(prefix);
-    const host = options.replace ? removeOwned(hostMap, names.ownsUid) : hostMap;
+    const recorded = new Set(recordedUids);
+    const host = options.replace ? removeOwned(hostMap, (uid) => recorded.has(uid) || names.ownsUid(uid)) : hostMap;
     notes.push(...checkHostNames(result.program, host), ...checkHostUses(host, names.ownsVariable, result.exports));
     try {
       map = appendToMap(host, xml);
@@ -106,7 +109,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
       notes.push(error instanceof Error ? error.message : String(error));
     }
   }
-  return { result, problems, xml, text, map, notes };
+  return { result, problems, xml, text, map, notes, uids };
 }
 
 export function simulate(result: CompileResult, frames: number): string[] {

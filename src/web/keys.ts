@@ -19,6 +19,7 @@ export const ELEMENT = Object.freeze({
   hostMapName: 'host-map-name',
   hostMapButton: 'host-map-button',
   replace: 'replace',
+  nameSeed: 'name-seed',
   outputTabs: 'output-tabs',
   output: 'output',
   copy: 'copy',
@@ -26,7 +27,7 @@ export const ELEMENT = Object.freeze({
   status: 'status',
 });
 export const OUTPUT = Object.freeze({ problems: 'problems', xml: 'xml', text: 'text', map: 'map', run: 'run' } as const);
-export const STORAGE = Object.freeze({ files: 'ptc.files', active: 'ptc.active', vim: 'ptc.vim', options: 'ptc.options', example: 'ptc.example' });
+export const STORAGE = Object.freeze({ files: 'ptc.files', active: 'ptc.active', vim: 'ptc.vim', options: 'ptc.options', example: 'ptc.example', build: 'ptc.build' });
 export const WORKSPACE_ROOT = '/work/';
 export const DEFAULT_FILE = '/work/main.ptc';
 export const EXAMPLES_ROOT = '/examples/';
