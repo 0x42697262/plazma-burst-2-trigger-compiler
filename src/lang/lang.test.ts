@@ -397,6 +397,31 @@ on start { x = "{fx()}"; y = fy() .. 1 .. 2; list[0] = "q"; list[0] = g() .. "!"
   });
 });
 
+describe('language: review round 3', () => {
+  it('indexes an array by its own element', () => {
+    const { sim } = run('var p[]; var r = 0;\non start { push(p, 0); push(p, 1); r = p[p[1]]; p[p[0]] = 9; }');
+    assert.equal(sim.variables['~t_r~'], 1);
+    assert.equal(sim.variables['~t_p[0]~'], 9);
+    assert.equal(sim.variables['0'], undefined);
+  });
+
+  it('subtracts text literals like parseFloat', () => {
+    const { get } = run('var a = 0 - " 2"; var b = 10 - "4x"; var c = 1 - -1;');
+    assert.deepEqual(['a', 'b', 'c'].map(get), [-2, 6, 2]);
+  });
+
+  it('keeps a text index as text', () => {
+    const { get } = run('var a[]; var r = 0; var s = 0;\non start { a[0] = 5; a["0.0"] = 7; r = a[0]; s = a["0.0"]; }');
+    assert.deepEqual(['r', 's'].map(get), [5, 7]);
+  });
+
+  it('leaves out functions nobody calls, with a warning', () => {
+    const { warnings, program } = compileSource('function unused() { say("x"); }\nfunction used() { }\non start { used(); }', 't');
+    assert.deepEqual(warnings, ['line 1: the function "unused" is never called; it was left out']);
+    assert.ok(!program.triggers.some((trigger) => trigger.uid === '#t_unused'));
+  });
+});
+
 describe('language: errors', () => {
   const error = (source: string, pattern: RegExp) => assert.throws(() => compileSource(source, 't'), pattern);
 

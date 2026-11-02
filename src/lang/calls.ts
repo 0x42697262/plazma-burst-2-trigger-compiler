@@ -7,6 +7,9 @@ function expressionCalls(expression: Expression | null, found: Set<string>): voi
       found.add(expression.callee);
       for (const argument of expression.args) expressionCalls(argument, found);
       return;
+    case 'reference':
+      found.add(expression.name);
+      return;
     case 'index':
       expressionCalls(expression.index, found);
       return;
@@ -93,4 +96,23 @@ export function reachable(graph: ReadonlyMap<string, ReadonlySet<string>>): Map<
     result.set(start, seen);
   }
   return result;
+}
+
+export function usedFunctions(file: SourceFile, graph: ReadonlyMap<string, ReadonlySet<string>>): Set<string> {
+  const pending: string[] = [];
+  for (const declaration of file.declarations) {
+    const found = new Set<string>();
+    if (declaration.kind === 'function' && declaration.exported) found.add(declaration.name);
+    if (declaration.kind === 'on' || declaration.kind === 'every') statementCalls(declaration.body, found);
+    if (declaration.kind === 'var') expressionCalls(declaration.value, found);
+    pending.push(...found);
+  }
+  const used = new Set<string>();
+  while (pending.length > 0) {
+    const name = pending.pop() as string;
+    if (used.has(name) || !graph.has(name)) continue;
+    used.add(name);
+    pending.push(...(graph.get(name) ?? []));
+  }
+  return used;
 }

@@ -7,7 +7,7 @@ import { CompileError } from '../compiler/names.ts';
 import type { Declaration, Expression, Location, SourceFile, Statement, TemplatePart } from './ast.ts';
 import { SourceError } from './lexer.ts';
 import {
-  ADDRESS_NAME, ARITHMETIC, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, NEGATIVE, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
+  ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
   WHOLE_NUMBER,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
@@ -17,7 +17,7 @@ import {
 } from './symbols.ts';
 import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
-import { callGraph, reachable } from './calls.ts';
+import { callGraph, reachable, usedFunctions } from './calls.ts';
 
 const NEGATED: Readonly<Record<string, Condition>> = { '==': 'ne', '!=': 'eq', '<': 'ge', '<=': 'gt', '>': 'le', '>=': 'lt' };
 const DIRECT: Readonly<Record<string, Condition>> = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
@@ -50,12 +50,7 @@ const literalText = (expression: Expression): string => {
   }
 };
 
-const negateLiteral = (text: string): string => (text.startsWith(NEGATIVE) ? text.slice(NEGATIVE.length) : NEGATIVE + text);
-
-const normalizeIndex = (text: string): string => {
-  const number = Number(text);
-  return text.trim() !== EMPTY_TEXT && Number.isFinite(number) ? String(number) : text;
-};
+const negateLiteral = (text: string): string => String(-parseFloat(text));
 
 function hasCall(expression: Expression): boolean {
   switch (expression.kind) {
@@ -126,6 +121,8 @@ export class Generator {
   private readonly functions = new Map<string, FunctionInfo>();
   private readonly timers: TimerSpec[] = [];
   private readonly reach: Map<string, Set<string>>;
+  private readonly used: Set<string>;
+  private readonly warnings: string[] = [];
   private readonly usesStack: boolean;
   private instructions: Instruction[] = [];
   private frame: Frame;
@@ -134,7 +131,9 @@ export class Generator {
   constructor(names: Names, file: SourceFile) {
     this.names = names;
     this.frame = new Frame(names, EMPTY_TEXT, false);
-    this.reach = reachable(callGraph(file));
+    const graph = callGraph(file);
+    this.reach = reachable(graph);
+    this.used = usedFunctions(file, graph);
     this.usesStack = [...this.reach.entries()].some(([name, targets]) => targets.has(name));
   }
 
@@ -198,9 +197,12 @@ export class Generator {
       }
     }
     for (const declaration of file.declarations) {
-      if (declaration.kind === 'function') sections.push(this.functionSection(declaration));
+      if (declaration.kind !== 'function') continue;
+      const section = this.functionSection(declaration);
+      if (this.used.has(declaration.name)) sections.push(section);
+      else this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
-    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers };
+    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings };
   }
 
   private collect(file: SourceFile): void {
@@ -514,7 +516,7 @@ export class Generator {
       if (work !== element) this.act(OPCODE.copyVariable, element, work);
       return;
     }
-    const indexName = this.stableVariable(target.index, hasCall(statement.value));
+    const indexName = this.plainIndex(this.stableVariable(target.index, hasCall(statement.value)));
     const address = this.frame.temp();
     this.act(OPCODE.replaceInValue, address, elementName(this.names, array.base, indexName));
     if (!statement.operator) {
@@ -538,8 +540,7 @@ export class Generator {
   }
 
   private staticIndex(index: Expression): string | null {
-    const text = this.compileTimeText(index);
-    return text === null ? null : normalizeIndex(text);
+    return this.compileTimeText(index);
   }
 
   private readsArrayByVariable(expression: Expression, array: string): boolean {
@@ -559,8 +560,15 @@ export class Generator {
     }
   }
 
+  private plainIndex(name: string): string {
+    if (!name.includes(ELEMENT_OPEN)) return name;
+    const temp = this.frame.temp();
+    this.act(OPCODE.copyVariable, temp, name);
+    return temp;
+  }
+
   private addressOf(base: string, index: Expression): string {
-    const indexName = this.variableValue(index);
+    const indexName = this.plainIndex(this.variableValue(index));
     const address = this.frame.temp();
     this.act(OPCODE.replaceInValue, address, elementName(this.names, base, indexName));
     return address;

@@ -38,5 +38,6 @@ export const TEXT = Object.freeze({
   reservedName: (name: string): string => `"${name}" is a builtin; pick another function name`,
   assignTarget: 'only a variable or an array element can be assigned',
   unknownEvent: (name: string): string => `unknown event "${name}"; use start or join`,
+  unusedFunction: (name: string): string => `the function "${name}" is never called; it was left out`,
   sayColor: 'the color of say(...) must be a number or a string',
 });
