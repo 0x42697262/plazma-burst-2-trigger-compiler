@@ -487,9 +487,10 @@ the work. That makes them easy to compute, and infix is usually turned into post
 ### 8.1 Tokens
 
 A parser first cuts the text into tokens: numbers (`12`, `3.5`) and single characters (`+`, `(`).
-All parsers below share this part:
+All parsers below share this part, kept in its own file and pulled in with
+`import "lib/tokenizer.ptc";`:
 
-<!-- file: 09-postfix.ptc -->
+<!-- file: lib/tokenizer.ptc -->
 ```ptc
 var tokens[];
 
@@ -534,6 +535,9 @@ function apply(operator, a, b) {
 - `tokens` is filled with text pieces: `"3 + 12"` gives `3`, `+`, `12`.
 - `contains("0123456789.", c)` is 1 when `c` is a digit or a dot.
 - `apply` computes one operator on two numbers; `^` is a power.
+- `import` adds every declaration of that file to the program, as if written there; the path is
+  relative to the importing file, and a file imported twice counts once. Unused functions of an
+  imported file are left out without a warning.
 
 ### 8.2 Postfix
 
@@ -544,7 +548,7 @@ one first), computes, and puts the result back. At the end, one number is left: 
 ```ptc
 // Postfix (reverse Polish) notation: "3 4 + 2 *" means (3 + 4) * 2.
 // Numbers go on a stack; an operator takes the top two and puts the result back.
-// ... the tokenizer, isOperator, pow and apply from 09-postfix.ptc ...
+import "lib/tokenizer.ptc";
 
 var stack[];
 
@@ -593,7 +597,7 @@ Or read left to right with recursion: an operator reads two whole expressions af
 ```ptc
 // Prefix (Polish) notation: "* + 3 4 2" means (3 + 4) * 2.
 // Two ways: a stack, reading from the right; and recursion, reading from the left.
-// ... the tokenizer, isOperator, pow and apply from 09-postfix.ptc ...
+import "lib/tokenizer.ptc";
 
 var stack[];
 var position = 0;
@@ -664,7 +668,7 @@ The shunting-yard algorithm reads infix tokens and writes postfix:
 // Infix notation, the usual one: "3 + 4 * 2". The shunting-yard algorithm turns it
 // into postfix (operators by precedence, parentheses, ^ grouping from the right),
 // then the postfix evaluator from 09 computes it.
-// ... the tokenizer, isOperator, pow and apply from 09-postfix.ptc ...
+import "lib/tokenizer.ptc";
 
 var output[];
 var operators[];
@@ -774,7 +778,7 @@ higher ones, so precedence comes from the structure:
 //   expression = term { ("+" | "-") term }
 //   term       = factor { ("*" | "/") factor }
 //   factor     = number | "(" expression ")" | "-" factor
-// ... the tokenizer, isOperator, pow and apply from 09-postfix.ptc ...
+import "lib/tokenizer.ptc";
 
 var position = 0;
 

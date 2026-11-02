@@ -1,44 +1,7 @@
 // Infix notation, the usual one: "3 + 4 * 2". The shunting-yard algorithm turns it
 // into postfix (operators by precedence, parentheses, ^ grouping from the right),
 // then the postfix evaluator from 09 computes it.
-var tokens[];
-
-function isDigit(c) { return contains("0123456789.", c); }
-
-function tokenize(text) {
-  clear(tokens);
-  let i = 0;
-  while (i < len(text)) {
-    let c = charAt(text, i);
-    if (c == " ") {
-      i += 1;
-    } else if (isDigit(c)) {
-      let digits = "";
-      while (i < len(text) && isDigit(charAt(text, i))) { digits ..= charAt(text, i); i += 1; }
-      push(tokens, digits);
-    } else {
-      push(tokens, c);
-      i += 1;
-    }
-  }
-  return len(tokens);
-}
-
-function isOperator(t) { return t == "+" || t == "-" || t == "*" || t == "/" || t == "^"; }
-
-function pow(base, exponent) {
-  let result = 1;
-  for (let i = 0; i < exponent; i += 1) { result *= base; }
-  return result;
-}
-
-function apply(operator, a, b) {
-  if (operator == "+") { return a + b; }
-  if (operator == "-") { return a - b; }
-  if (operator == "*") { return a * b; }
-  if (operator == "/") { return a / b; }
-  return pow(a, b);
-}
+import "lib/tokenizer.ptc";
 
 var output[];
 var operators[];

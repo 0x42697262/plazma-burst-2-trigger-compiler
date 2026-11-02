@@ -2,42 +2,7 @@
 //   expression = term { ("+" | "-") term }
 //   term       = factor { ("*" | "/") factor }
 //   factor     = number | "(" expression ")" | "-" factor
-var tokens[];
-
-function isDigit(c) { return contains("0123456789.", c); }
-
-function tokenize(text) {
-  clear(tokens);
-  let i = 0;
-  while (i < len(text)) {
-    let c = charAt(text, i);
-    if (c == " ") {
-      i += 1;
-    } else if (isDigit(c)) {
-      let digits = "";
-      while (i < len(text) && isDigit(charAt(text, i))) { digits ..= charAt(text, i); i += 1; }
-      push(tokens, digits);
-    } else {
-      push(tokens, c);
-      i += 1;
-    }
-  }
-  return len(tokens);
-}
-
-function pow(base, exponent) {
-  let result = 1;
-  for (let i = 0; i < exponent; i += 1) { result *= base; }
-  return result;
-}
-
-function apply(operator, a, b) {
-  if (operator == "+") { return a + b; }
-  if (operator == "-") { return a - b; }
-  if (operator == "*") { return a * b; }
-  if (operator == "/") { return a / b; }
-  return pow(a, b);
-}
+import "lib/tokenizer.ptc";
 
 var position = 0;
 

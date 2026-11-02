@@ -83,7 +83,8 @@ describe('tutorial programs', () => {
 
   for (const [file, scenario] of Object.entries(SCENARIOS)) {
     it(file, () => {
-      const result = compileSource(fs.readFileSync(path.join(FOLDER, file), 'utf8'), 'tut', { externalUids: EXTERNAL });
+      const fullPath = path.join(FOLDER, file);
+      const result = compileSource(fs.readFileSync(fullPath, 'utf8'), 'tut', { externalUids: EXTERNAL }, { file: fullPath, read: (name) => fs.readFileSync(name, 'utf8') });
       assert.deepEqual(result.warnings, []);
       const simulation = new Simulation(result.program, { players: PLAYERS, initiatorSlot: 1 });
       simulation.tick();
