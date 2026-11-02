@@ -1,20 +1,20 @@
 export const KEYWORDS: ReadonlySet<string> = new Set([
   'var', 'const', 'let', 'extern', 'function', 'export', 'on', 'every', 'if', 'else', 'while', 'for', 'player',
-  'break', 'continue', 'return', 'true', 'false', 'wait', 'import',
+  'break', 'continue', 'return', 'true', 'false', 'wait', 'import', 'match',
 ]);
 export const KEYWORD = Object.freeze({
   var: 'var', const: 'const', let: 'let', extern: 'extern', function: 'function', export: 'export', on: 'on', every: 'every',
   if: 'if', else: 'else', while: 'while', for: 'for', player: 'player', break: 'break', continue: 'continue', return: 'return',
-  true: 'true', false: 'false', wait: 'wait', import: 'import',
+  true: 'true', false: 'false', wait: 'wait', import: 'import', match: 'match',
 } as const);
 export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat' } as const);
 export const PUNCTUATORS: readonly string[] = Object.freeze([
-  '..=', '+=', '-=', '*=', '/=', '%=', '==', '!=', '<=', '>=', '&&', '||', '..',
+  '..=', '+=', '-=', '*=', '/=', '%=', '=>', '==', '!=', '<=', '>=', '&&', '||', '..',
   '(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '+', '-', '*', '/', '%', '!', '@',
 ]);
 export const PUNCTUATOR = Object.freeze({
   openParen: '(', closeParen: ')', openBrace: '{', closeBrace: '}', openBracket: '[', closeBracket: ']',
-  semicolon: ';', comma: ',', assign: '=', at: '@', minus: '-', not: '!',
+  semicolon: ';', comma: ',', assign: '=', at: '@', minus: '-', not: '!', arrow: '=>', wildcard: '_',
 } as const);
 export const COMPOUND_ASSIGNMENTS: Readonly<Record<string, BinaryOperator>> = Object.freeze({
   '+=': '+', '-=': '-', '*=': '*', '/=': '/', '%=': '%', '..=': '..',
@@ -54,7 +54,7 @@ export const ELEMENT_CLOSE = ']';
 export const ADDRESS_NAME = 'address';
 export const LABEL = Object.freeze({
   start: ':start', join: ':join', chat: ':chat', every: 'every', wait: 'wait', timer: 'timer', else: 'else', end: 'end', head: 'loop',
-  next: 'next', skip: 'skip',
+  next: 'next', skip: 'skip', arm: 'case',
 });
 export const BUILTIN = Object.freeze({
   say: 'say', push: 'push', action: 'action', len: 'len', contains: 'contains', random: 'random', floor: 'floor', round: 'round',

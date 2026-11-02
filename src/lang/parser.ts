@@ -1,4 +1,4 @@
-import type { Declaration, Expression, Import, Location, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
+import type { Declaration, Expression, Import, Location, MatchArm, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
 import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
 import { COMPOUND_ASSIGNMENTS, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, UID_MARK } from './keys.ts';
@@ -218,6 +218,7 @@ class Parser {
       this.expect(PUNCTUATOR.semicolon);
       return { kind: 'return', value, location };
     }
+    if (this.accept(KEYWORD.match)) return this.matchRest(location);
     if (this.accept(KEYWORD.wait)) {
       const frames = this.parenthesized();
       this.expect(PUNCTUATOR.semicolon);
@@ -226,6 +227,28 @@ class Parser {
     const statement = this.simpleStatement(location);
     this.expect(PUNCTUATOR.semicolon);
     return statement;
+  }
+
+  private matchRest(location: Location): Statement {
+    const subject = this.parenthesized();
+    this.expect(PUNCTUATOR.openBrace);
+    const arms: MatchArm[] = [];
+    while (!this.accept(PUNCTUATOR.closeBrace)) {
+      if (this.atEnd()) this.fail(TEXT.quoted(PUNCTUATOR.closeBrace));
+      const armLocation = this.location();
+      let patterns: Expression[] | null = null;
+      if (this.current.kind === 'identifier' && this.current.text === PUNCTUATOR.wildcard) {
+        this.next();
+      } else {
+        patterns = [];
+        do patterns.push(this.expression());
+        while (this.accept(PUNCTUATOR.comma));
+      }
+      this.expect(PUNCTUATOR.arrow);
+      const body = this.isPunctuator(PUNCTUATOR.openBrace) ? this.block() : [this.statement()];
+      arms.push({ patterns, body, location: armLocation });
+    }
+    return { kind: 'match', subject, arms, location };
   }
 
   private letRest(location: Location): Statement {

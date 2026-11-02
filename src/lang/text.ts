@@ -53,5 +53,8 @@ export const TEXT = Object.freeze({
     `action ${action} takes a fixed ${kind} as ${side}, but "${name}" can change while the map runs; use a const, or a variable that is never assigned again`,
   passesName: (action: number, side: string, name: string): string =>
     `action ${action}'s ${side} looks like a value, but "${name}" can change, so its variable name is passed instead`,
+  matchPattern: 'a match pattern must be a fixed value: a number, text, true/false, a constant or a named value',
+  matchDefaultLast: 'the "_" arm must be the last one',
+  matchDuplicate: (pattern: string): string => `the pattern ${JSON.stringify(pattern)} appears twice in this match`,
   sayColor: 'the color of say(...) must be a number or a string',
 });

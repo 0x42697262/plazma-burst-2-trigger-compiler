@@ -65,6 +65,10 @@ function statementCalls(statements: readonly Statement[], found: Set<string>): v
       case 'block':
         statementCalls(statement.body, found);
         break;
+      case 'match':
+        expressionCalls(statement.subject, found);
+        for (const arm of statement.arms) statementCalls(arm.body, found);
+        break;
       case 'wait':
         expressionCalls(statement.frames, found);
         break;
@@ -199,6 +203,10 @@ function statementWrites(statements: readonly Statement[], found: Set<string>): 
         break;
       case 'block':
         statementWrites(statement.body, found);
+        break;
+      case 'match':
+        expressionWrites(statement.subject, found);
+        for (const arm of statement.arms) statementWrites(arm.body, found);
         break;
       default:
         break;

@@ -29,7 +29,10 @@ export type Statement =
   | { kind: 'continue'; location: Location }
   | { kind: 'return'; value: Expression | null; location: Location }
   | { kind: 'wait'; frames: Expression; location: Location }
-  | { kind: 'block'; body: Statement[]; location: Location };
+  | { kind: 'block'; body: Statement[]; location: Location }
+  | { kind: 'match'; subject: Expression; arms: MatchArm[]; location: Location };
+
+export type MatchArm = { patterns: Expression[] | null; body: Statement[]; location: Location };
 
 export type Declaration =
   | { kind: 'var'; name: string; array: boolean; value: Expression | null; exported: boolean; location: Location }

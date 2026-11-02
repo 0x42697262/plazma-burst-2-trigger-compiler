@@ -116,6 +116,8 @@ function hasBreak(statements: readonly Statement[]): boolean {
         return hasBreak(statement.then) || hasBreak(statement.otherwise ?? []);
       case 'block':
         return hasBreak(statement.body);
+      case 'match':
+        return statement.arms.some((arm) => hasBreak(arm.body));
       default:
         return false;
     }
@@ -139,6 +141,8 @@ function terminates(statements: readonly Statement[]): boolean {
       return last.otherwise !== null && terminates(last.then) && terminates(last.otherwise);
     case 'block':
       return terminates(last.body);
+    case 'match':
+      return last.arms.some((arm) => arm.patterns === null) && last.arms.every((arm) => terminates(arm.body));
     default:
       return false;
   }
@@ -434,6 +438,9 @@ export class Generator {
       case 'wait':
         this.wait(statement);
         break;
+      case 'match':
+        this.matchStatement(statement);
+        break;
     }
   }
 
@@ -482,6 +489,37 @@ export class Generator {
       this.label(elseLabel);
       this.statements(otherwise);
     }
+    this.label(end);
+  }
+
+  private matchStatement(statement: Extract<Statement, { kind: 'match' }>): void {
+    const subject = this.stableValue(statement.subject, false);
+    const end = this.fresh(LABEL.end);
+    const seen = new Set<string>();
+    const labels = statement.arms.map(() => this.fresh(LABEL.arm));
+    let fallback = end;
+    statement.arms.forEach((arm, index) => {
+      const label = labels[index] ?? end;
+      if (arm.patterns === null) {
+        if (index !== statement.arms.length - 1) fail(arm.location, TEXT.matchDefaultLast);
+        fallback = label;
+        return;
+      }
+      for (const pattern of arm.patterns) {
+        const text = this.compileTimeText(pattern) ?? fail(pattern.location, TEXT.matchPattern);
+        if (seen.has(text)) fail(pattern.location, TEXT.matchDuplicate(text));
+        seen.add(text);
+        this.at(pattern.location);
+        this.branch('eq', subject, literal(text), label);
+      }
+    });
+    this.at(statement.location);
+    this.jump(fallback);
+    statement.arms.forEach((arm, index) => {
+      this.label(labels[index] ?? end);
+      this.statements(arm.body);
+      if (!terminates(arm.body)) this.jump(end);
+    });
     this.label(end);
   }
 
