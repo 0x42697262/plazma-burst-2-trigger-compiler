@@ -1,6 +1,6 @@
 # Tutorial
 
-This tutorial builds 23 small programs in the `.ptc` language, from a first loop to parsers and
+This tutorial builds 27 small programs in the `.ptc` language, from a first loop to parsers and
 classic algorithms. Every program is in [`examples/tutorial/`](../examples/tutorial/), and a test
 runs each one and checks the chat output shown here, so what you read is what the game does.
 
@@ -17,7 +17,8 @@ New to the language? Start with [syntax.md](syntax.md). Reference while reading:
 7. [A chat calculator](#7-a-chat-calculator)
 8. [Parsers: postfix, prefix, infix](#8-parsers-postfix-prefix-infix)
 9. [Data structures and algorithms](#9-data-structures-and-algorithms)
-10. [Cost, limits and pitfalls](#10-cost-limits-and-pitfalls)
+10. [Secrets: passwords, admin logins, keys](#10-secrets-passwords-admin-logins-keys)
+11. [Cost, limits and pitfalls](#11-cost-limits-and-pitfalls)
 
 ---
 
@@ -1725,10 +1726,274 @@ shell:     012234556789
 | quicksort (level 3) | partition around a pivot, sort both sides | about n·log n on average |
 | heap sort (level 3) | take the smallest from a heap until empty | about n·log n |
 
-In this game every array access costs a scan of all variables (section 10), so fewer accesses
+In this game every array access costs a scan of all variables (section 11), so fewer accesses
 matter more than in other languages: for a few dozen values, any of these is fine.
 
-## 10. Cost, limits and pitfalls
+## 10. Secrets: passwords, admin logins, keys
+
+A map's triggers can be read by anyone who has the map, so a password written into a trigger is
+no secret. These programs keep secrets out of the map: `secret const` marks a value the map must
+never contain, and `hash(text)` from the standard library (`import "std/hash.ptc";`) turns text
+into three numbers that cannot be turned back. Both run while compiling: the map gets only the
+hash, and compiling fails if a secret's text would end up in it. More in
+[passwords.md](passwords.md).
+
+### A password
+
+The map compares the hash of what a player writes with the hash of the password. Each player has
+3 tries; `counted` remembers which slots have a count, as `known` does in the dictionary above.
+
+<!-- file: 24-password.ptc -->
+```ptc
+// Password protection: "-open <password>" in chat opens the vault, with 3 tries per player.
+// The map holds only the password's hash; for a real map, read the password with
+// env("VAULT_PASSWORD") so it is not in the source file either.
+import "std/hash.ptc";
+
+secret const PASSWORD = "open sesame";
+const PASSWORD_HASH = hash(PASSWORD);
+const MAX_TRIES = 3;
+door vault = "#vault";
+region vaultOpen = "#vault_open";
+var tries[];
+var counted[];
+var opened = 0;
+
+function startsWith(text, prefix) {
+  for (let i = 0; i < len(prefix); i += 1) {
+    if (charAt(text, i) != charAt(prefix, i)) { return 0; }
+  }
+  return 1;
+}
+
+function after(text, count) {
+  let rest = "";
+  for (let i = count; i < len(text); i += 1) { rest ..= charAt(text, i); }
+  return rest;
+}
+
+function triesOf(who) {
+  if (counted[who] != 1) {
+    counted[who] = 1;
+    tries[who] = 0;
+  }
+  return tries[who];
+}
+
+on chat {
+  let text = chatText();
+  if (!startsWith(text, "-open ")) { return; }
+  let who = talker();
+  if (opened == 1) {
+    say("the vault is already open");
+  } else if (triesOf(who) >= MAX_TRIES) {
+    say("{talkerName()}: no tries left");
+  } else if (hash(after(text, 6)) == PASSWORD_HASH) {
+    opened = 1;
+    action(MovableTo, vault, vaultOpen);
+    say("{talkerName()} opened the vault");
+  } else {
+    tries[who] = triesOf(who) + 1;
+    say("{talkerName()}: wrong password ({MAX_TRIES - tries[who]} left)");
+  }
+}
+```
+
+After `-open sesame` and `-open open sesame!` by bob, three wrong tries and a right one by cy,
+`-open open sesame` by bob, `-open x` by dee and `hello` by bob:
+
+```
+bob: wrong password (2 left)
+bob: wrong password (1 left)
+cy: wrong password (2 left)
+cy: wrong password (1 left)
+cy: wrong password (0 left)
+cy: no tries left
+bob opened the vault
+the vault is already open
+```
+
+The map holds `PASSWORD_HASH`, never `open sesame`. For a real map, take the password out of the
+source as well: `secret const PASSWORD = env("VAULT_PASSWORD");`, compiled with
+`VAULT_PASSWORD='...' npm run compile -- vault.ptc` (on the web page: the "env…" box).
+
+### An admin login
+
+Each admin has a name and a password. Hashing `name:password` together means two admins with the
+same password still have different hashes, and a name alone gives nothing away.
+
+<!-- file: 25-admin-login.ptc -->
+```ptc
+// Admin login: "-login <name> <password>", then "-announce <text>" and "-logout".
+// The map holds only hash("name:password") of each admin, so two admins with the same password
+// still have different hashes, and a name alone is worth nothing.
+import "std/hash.ptc";
+
+secret const ALICE_PASSWORD = "correct horse";
+secret const BOB_PASSWORD = "battery staple";
+const ALICE_HASH = hash("alice:{ALICE_PASSWORD}");
+const BOB_HASH = hash("bob:{BOB_PASSWORD}");
+var loggedIn[];
+var adminName[];
+
+function startsWith(text, prefix) {
+  for (let i = 0; i < len(prefix); i += 1) {
+    if (charAt(text, i) != charAt(prefix, i)) { return 0; }
+  }
+  return 1;
+}
+
+function slice(text, from, to) {
+  let part = "";
+  for (let i = from; i < to; i += 1) { part ..= charAt(text, i); }
+  return part;
+}
+
+function firstSpace(text) {
+  for (let i = 0; i < len(text); i += 1) {
+    if (charAt(text, i) == " ") { return i; }
+  }
+  return len(text);
+}
+
+function accountHash(user) {
+  if (user == "alice") { return ALICE_HASH; }
+  if (user == "bob") { return BOB_HASH; }
+  return "";
+}
+
+on chat {
+  let text = chatText();
+  let who = talker();
+  if (startsWith(text, "-login ")) {
+    let rest = slice(text, 7, len(text));
+    let space = firstSpace(rest);
+    let user = slice(rest, 0, space);
+    let password = slice(rest, space + 1, len(rest));
+    let expected = accountHash(user);
+    if (expected != "" && hash("{user}:{password}") == expected) {
+      loggedIn[who] = 1;
+      adminName[who] = user;
+      say("{talkerName()} is admin {user} now");
+    } else {
+      say("{talkerName()}: wrong name or password");
+    }
+  } else if (text == "-logout") {
+    loggedIn[who] = 0;
+    say("{talkerName()} is not admin any more");
+  } else if (startsWith(text, "-announce ")) {
+    if (loggedIn[who] == 1) {
+      say("[{adminName[who]}] {slice(text, 10, len(text))}", Color.CivilSecurity);
+    } else {
+      say("{talkerName()}: admins only");
+    }
+  }
+}
+```
+
+After `-announce hi`, `-login alice battery staple`, `-login carol x`,
+`-login alice correct horse` and `-announce meeting at 8` by bob, `-announce me too` by cy, then
+`-logout` and `-announce again` by bob:
+
+```
+bob: admins only
+bob: wrong name or password
+bob: wrong name or password
+bob is admin alice now
+[alice] meeting at 8
+cy: admins only
+bob is not admin any more
+bob: admins only
+```
+
+The admin rights belong to the slot: when another player takes the slot, run `-logout` for it
+(for example in `on join`).
+
+### A key for finishing the map
+
+At the exit, each player gets a key made from their account login, so a key cannot be passed on
+to another account. The key is `hash("<salt>:<login>")` with a secret salt. The map has to finish
+that hash for any login, but it never gets the salt: `hashContinue(hash(a), b)` equals
+`hash(a + b)`, so the compiler hashes `"<salt>:"` and the map continues with the login.
+
+<!-- file: lib/end-key.ptc -->
+```ptc
+// Shared by tutorials 26 and 27: the key of an account is hash("<salt>:<login>").
+// The salt is secret: the map gets only the hash of "<salt>:" and finishes it with the login
+// (hashContinue). For a real map: secret const KEY_SALT = env("KEY_SALT");
+import "std/hash.ptc";
+
+secret const KEY_SALT = "pb2 tutorial salt";
+const KEY_START = hash("{KEY_SALT}:");
+
+function endKey(login) {
+  return hashContinue(KEY_START, login);
+}
+```
+
+<!-- file: 26-end-key.ptc -->
+```ptc
+// A key for reaching the end of the map, different for every account. The exit region runs
+// reachedEnd. The map runs on every player's game, and slot() is the player of that game, so
+// only the player who got there sees the key.
+import "lib/end-key.ptc";
+
+var finishers = 0;
+
+export function reachedEnd() {
+  let who = initiator();
+  finishers += 1;
+  if (slot() == who) {
+    say("you finished! your key: {endKey(login(who))}");
+  }
+}
+```
+
+When bob (login `bob`) reaches the exit:
+
+```
+you finished! your key: 62740094-7145360-3565303
+```
+
+`login(slot)` is the account login of the player in a slot (actions 184 and 187, F38), and
+`slot()` is the player of the game the trigger runs in, so only the finisher sees the key.
+
+To check a key a player sends you, compile this program with the same salt. It does all its work
+while compiling; `--run` shows the answer:
+
+<!-- file: 27-verify-key.ptc -->
+```ptc
+// Checks a key from tutorial 26 while compiling, with the same salt:
+//   LOGIN=bob KEY=123-456-789 npm run compile -- examples/tutorial/27-verify-key.ptc --run
+import "lib/end-key.ptc";
+
+const LOGIN = env("LOGIN", "bob");
+const KEY = env("KEY", "");
+const EXPECTED = endKey(LOGIN);
+const VALID = KEY == EXPECTED;
+
+on start {
+  if (VALID) {
+    say("{LOGIN}: the key is valid");
+  } else {
+    say("{LOGIN}: the key should be {EXPECTED}");
+  }
+}
+```
+
+```
+LOGIN=bob KEY=62740094-7145360-3565303 npm run compile -- examples/tutorial/27-verify-key.ptc --run
+```
+```
+bob: the key is valid
+```
+
+How far this protects: reading the map shows neither the salt nor any key, and a key works only
+with its own login. But the map itself can make the key for any login, so someone who copies its
+hash and its key-making triggers into a simulator, with another login, can make a key without
+finishing. It stops sharing and casual cheating, not a determined reverse engineer.
+
+## 11. Cost, limits and pitfalls
 
 - **Everything in one event runs in one frame.** A long loop does not slow down over time: it
   freezes the game until it ends. The loop guard stops an event after 100000 jumps back

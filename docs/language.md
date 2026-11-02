@@ -269,7 +269,8 @@ Text escapes: `\" \\ \n \{ \}`.
 | `clear(list)` | sets the length to 0 |
 | `chatText()`, `talker()`, `talkerName()` | in `on chat`: the text, the writer's slot, the writer's displayed name |
 | `team(slot)` | the team number of the player in a slot |
-| `env("NAME")` | in a `const` only: an environment variable while compiling |
+| `login(slot)`, `talkerLogin()` | the account login of the player in a slot (`Empty` when nobody is there), of the chat writer (F38) |
+| `env("NAME")` / `env("NAME", "fallback")` | in a `const` only: an environment variable while compiling, or the fallback when it is not set |
 | `action(op, a, b)` | any action, by number or alias. A name argument gives that variable's game name, `@f` gives function `f`'s uid, text gives itself; `{x}` inside text gives x's game name |
 
 ## Arrays

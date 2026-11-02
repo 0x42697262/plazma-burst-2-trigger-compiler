@@ -47,6 +47,7 @@ Action numbers are always the client's. The community manual is off by one aroun
 | F35 | The editor's object clipboard (Ctrl+C / Ctrl+V) renames a pasted uid only if the map already has it, and then updates references to it among the pasted objects only | `lib_controlevents.js` paste, `lib_classes.js` `RandomizeName` | Copying compiled triggers between maps keeps their uids unless they clash |
 | F36 | The website editor turns a parameter that looks like a number into that number when it loads a map: `0123456789.` shows as `123456789`. The stored map keeps the text until the next save from the editor, which writes the number. The exact rule is in editor code the account cannot read; the compiler treats any text that parses as a number but is not written as one (`007`, `1.50`, `1e3`, ` 5`, `0x10`, `0123456789.`) as affected | user, website map editor, 2026-11-02 (tutorial 8 stopped reading `0` after a save) | The compiler writes such text as `_` + text followed by "remove the first character" (action 372); the check warns about any left, e.g. in `.pasm`; `--no-number-text` turns the protection off for other map editors |
 | F37 | Speed in the desktop client: a simple action costs about 0.8–1.3 µs (the runner calls `performance.now()` twice per action, `actions.js:3–4`: `$АТII1=[]`). Actions 325/326/350/352 scan every variable name (F9), so their cost grows with the variable count: action 350 (array read by index) took about 20 µs with 1000 variables. Action 294 (value of the variable named in B) is a direct lookup | `actions.js` case 294 and the runner; live measurement, 100000-step loops, 2026-11-02 | A 60 fps frame is 16.7 ms: a few thousand simple actions per frame. Hot loops should avoid 350 (`charAt`) when the map has many variables; `--direct-index` builds array element names without 326 |
+| F38 | Login actions: 146 sets A to the login of the player-initiator; 184 to the login of the character in slot B (a fixed value), `Empty` text when that slot has no character (like 185 for names); 187 to the login of the slot in variable B, an error when the slot has no character; 157 the chat writer's login (F31). 137 gives the slot of the game's own player, so `slot() == initiator()` holds on the initiator's game only | `actions.js` cases 137, 146, 157, 184, 187 | `login(slot)` uses 184/187, `talkerLogin()` 157; tutorial 26 shows the key only where `slot() == initiator()` |
 
 ## Open checks (need a player)
 
@@ -55,7 +56,9 @@ Action numbers are always the client's. The community manual is off by one aroun
    the server, whose code cannot be read, and it changes a map on the account.
 2. `for player` (action 508) in a multiplayer match with 2 or more players (F25).
 3. `sync(x)` in a multiplayer match: the other players get the value (F30).
-4. `on chat` in the game: write `= 3 + 4 * 2` with `examples/tutorial/11-infix.ptc` in a map; the
+4. What login 146/184/187 give in single player and in multiplayer, and that tutorial 26's key
+   shows only on the finisher's game (F38).
+5. `on chat` in the game: write `= 3 + 4 * 2` with `examples/tutorial/11-infix.ptc` in a map; the
    chat answers `3 4 2 * + = 11`.
 
 ## Where things are in the client

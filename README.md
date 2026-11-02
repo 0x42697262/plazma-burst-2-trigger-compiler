@@ -51,8 +51,9 @@ sync; the simulator runs 63 actions (all the compiler emits) and skips the other
 
 [docs/syntax.md](docs/syntax.md): a short tour of the language syntax, one idea per section.
 
-[docs/tutorial.md](docs/tutorial.md): 23 programs, from a first loop to chat commands, player
-selection, a calculator, three parsers and data structures (linked list, binary tree, sorts).
+[docs/tutorial.md](docs/tutorial.md): 27 programs, from a first loop to chat commands, player
+selection, a calculator, three parsers, data structures (linked list, binary tree, sorts) and
+secrets (a password, an admin login, a per-account key).
 Each is in `examples/tutorial/`.
 
 [docs/challenges/game-of-life.md](docs/challenges/game-of-life.md): a challenge for developers,
