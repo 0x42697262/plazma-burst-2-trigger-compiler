@@ -7,6 +7,7 @@ export const TEXT = Object.freeze({
   syncValueTooLong: 'Sync action: the value is longer than 2048 characters.',
   noCharacter: (slot: string): string => `No character in slot ${slot}.`,
   stepLimit: (steps: number): string => `Stopped after ${steps} actions: endless loop?`,
+  notAllowed: (opcode: number): string => `action ${opcode} acts on the game`,
   noSuchUid: (uid: string): string => `No trigger with uid ${uid}.`,
   actionError: (uid: string, position: number, message: string): string => `Trigger ${uid}, action ${position}: ${message}`,
 });

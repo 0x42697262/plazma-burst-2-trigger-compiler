@@ -17,10 +17,11 @@ export type SimulationOptions = {
   currentSlot: number;
   initiatorSlot: number;
   frameSpeed: number;
+  allowedActions: ReadonlySet<number> | null;
 };
 
 export const DEFAULT_SIMULATION: SimulationOptions = Object.freeze({
-  maxSteps: DEFAULT_MAX_STEPS, players: [], currentSlot: 0, initiatorSlot: 0, frameSpeed: 1,
+  maxSteps: DEFAULT_MAX_STEPS, players: [], currentSlot: 0, initiatorSlot: 0, frameSpeed: 1, allowedActions: null,
 });
 
 type LoadedAction = { opcode: number; targetA: unknown; targetB: unknown };
@@ -222,6 +223,7 @@ export class Simulation {
     const skip = (): void => {
       control.position += 1;
     };
+    if (this.options.allowedActions !== null && !this.options.allowedActions.has(action.opcode)) throw new Error(TEXT.notAllowed(action.opcode));
     switch (action.opcode) {
       case OPCODE.showText:
         this.chat.push(replaceVariables(SHOWN_TEXT_ENTITIES.reduce((text, [entity, character]) => text.split(entity).join(character), stringOf(action.targetA)), vars));

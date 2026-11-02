@@ -91,3 +91,13 @@ export const SYNC_ACTIONS: ReadonlySet<number> = new Set([
 ]);
 
 export const SYNC_TEXT_LIMIT = 2048;
+
+export const COMPILE_TIME_ACTIONS: ReadonlySet<number> = new Set([
+  OPCODE.setVariable, OPCODE.setIfUndefined, OPCODE.addValue, OPCODE.multiplyValue, OPCODE.addVariable, OPCODE.multiplyVariable,
+  OPCODE.round, OPCODE.floor, OPCODE.continueIfGreater, OPCODE.continueIfLessValue, OPCODE.skipIfNotEqualValue, OPCODE.moduloValue,
+  OPCODE.copyVariable, OPCODE.moduloVariable, OPCODE.divideValue, OPCODE.divideVariable, OPCODE.powerVariable, OPCODE.powerValue,
+  OPCODE.containsValue, OPCODE.containsVariable, OPCODE.length, OPCODE.appendString, OPCODE.negate, OPCODE.loadIndirect,
+  OPCODE.replaceTemplate, OPCODE.replaceInValue, OPCODE.replaceInVariable, OPCODE.storeIndirect, OPCODE.splitByValue,
+  OPCODE.splitByVariable, OPCODE.joinByVariable, OPCODE.arrayGetIndex, OPCODE.arrayPush, OPCODE.createArray, OPCODE.skipIfEqual,
+  OPCODE.skipIfGreater, OPCODE.skipIfLess, OPCODE.removeStart, OPCODE.executeTrigger, OPCODE.switchToTrigger, OPCODE.switchToTriggerIndex,
+]);
