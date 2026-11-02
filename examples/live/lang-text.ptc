@@ -1,0 +1,9 @@
+// Character access and dropping text.
+var word = "hello";
+var i = 4;
+var first = charAt(word, 0);
+var last = charAt(word, i);
+var tail = drop(word, 2);
+var head = drop(word, -2);
+var digits = drop(12345, 1);
+var size = len(word .. "!");

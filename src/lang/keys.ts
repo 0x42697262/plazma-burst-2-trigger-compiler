@@ -59,7 +59,7 @@ export const LABEL = Object.freeze({
 });
 export const BUILTIN = Object.freeze({
   say: 'say', push: 'push', action: 'action', len: 'len', contains: 'contains', random: 'random', floor: 'floor', round: 'round',
-  slot: 'slot', initiator: 'initiator', name: 'name', time: 'time', number: 'number', text: 'text',
+  slot: 'slot', initiator: 'initiator', name: 'name', time: 'time', number: 'number', text: 'text', charAt: 'charAt', drop: 'drop',
 } as const);
 export const SPLIT_EVERY_CHARACTER = '';
 export const HIDDEN = Object.freeze({ players: 'players', count: 'count', index: 'index' });

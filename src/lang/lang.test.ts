@@ -246,6 +246,20 @@ var rounded = round(7.5);
     assert.deepEqual(['length', 'has', 'hasNot', 'hasVariable', 'asText', 'asNumber', 'floored', 'rounded'].map(get), [5, 1, 0, 1, '5', 8.5, 7, 8]);
   });
 
+  it('takes characters and drops text', () => {
+    const { get } = run(`
+var word = "hello";
+var i = 4;
+var first = charAt(word, 0);
+var last = charAt(word, i);
+var outside = charAt(word, 9);
+var tail = drop(word, 2);
+var head = drop(word, -2);
+var digits = drop(12345, 1);
+`);
+    assert.deepEqual(['first', 'last', 'outside', 'tail', 'head', 'digits'].map(get), ['h', 'o', undefined, 'llo', 'hel', '2345']);
+  });
+
   it('says text with inline variables', () => {
     const { sim } = run('var n = 2;\non start { say("n is {n}"); say("double {n * 2}", 3); say(n); }');
     assert.deepEqual(sim.chat, ['n is 2', 'double 4', '2']);
@@ -305,5 +319,6 @@ describe('language: errors', () => {
     error('on start { nothing(); }', /unknown function "nothing"/);
     error('var x;\nvar x;', /"x" is already defined/);
     error('on start { let y = say("x"); }', /"say" gives no value/);
+    error('var n = 2;\nvar s = drop("abc", n);', /drop\(\.\.\.\) must be a whole number/);
   });
 });

@@ -1,0 +1,28 @@
+// Counts to 10 at map start, greets every player, and keeps a score list.
+var count = 0;
+var scores[];
+
+function addScore(points) {
+  push(scores, points);
+  return len(scores);
+}
+
+on start {
+  while (count < 10) {
+    count += 1;
+  }
+  say("count: {count}");
+  addScore(5);
+  addScore(7);
+  say("scores: {len(scores)}, first {scores[0]}");
+}
+
+on join {
+  for player p {
+    say("welcome {name(p)}");
+  }
+}
+
+every 300 {
+  say("five more seconds passed");
+}

@@ -23,11 +23,11 @@ const NEGATED: Readonly<Record<string, Condition>> = { '==': 'ne', '!=': 'eq', '
 const DIRECT: Readonly<Record<string, Condition>> = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
 const VALUE_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.name, BUILTIN.time,
-  BUILTIN.number, BUILTIN.text,
+  BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop,
 ]);
 const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action]);
 const BUILTIN_ARITY: Readonly<Record<string, number>> = {
-  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2,
+  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2,
 };
 
 const fail = (location: Location, message: string): never => {
@@ -864,6 +864,28 @@ export class Generator {
         this.act(OPCODE.setVariable, work, EMPTY_TEXT);
         this.act(OPCODE.appendString, work, source);
         if (work !== destination) this.act(OPCODE.copyVariable, destination, work);
+        return;
+      }
+      case BUILTIN.charAt: {
+        const source = this.stableValue(first(), hasCall(this.argument(expression, 1)));
+        const index = this.value(this.argument(expression, 1));
+        const work = this.frame.temp();
+        this.act(OPCODE.setVariable, work, EMPTY_TEXT);
+        this.act(OPCODE.appendString, work, this.asVariable(source));
+        this.act(OPCODE.splitByValue, work, SPLIT_EVERY_CHARACTER);
+        this.act(OPCODE.arrayGetIndex, work, index.kind === 'literal' ? index.text : index.name);
+        this.act(OPCODE.copyVariable, destination, work);
+        return;
+      }
+      case BUILTIN.drop: {
+        const count = this.argument(expression, 1);
+        if (count.kind !== 'number' || !WHOLE_NUMBER.test(count.text)) return fail(count.location, TEXT.dropCount);
+        const source = this.variableValue(first());
+        const work = this.frame.temp();
+        this.act(OPCODE.setVariable, work, EMPTY_TEXT);
+        this.act(OPCODE.appendString, work, source);
+        this.act(OPCODE.removeStart, count.text, work);
+        this.act(OPCODE.copyVariable, destination, work);
         return;
       }
       case BUILTIN.slot:

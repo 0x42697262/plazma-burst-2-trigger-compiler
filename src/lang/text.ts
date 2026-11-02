@@ -32,5 +32,6 @@ export const TEXT = Object.freeze({
   labelArgument: 'a trigger reference (@name) works only inside action(...)',
   valueOfVoid: (name: string): string => `"${name}" gives no value`,
   quoted: (text: string): string => `"${text}"`,
+  dropCount: 'the count of drop(...) must be a whole number',
   sayColor: 'the color of say(...) must be a number or a string',
 });
