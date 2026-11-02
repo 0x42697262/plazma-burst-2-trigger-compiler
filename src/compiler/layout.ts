@@ -1,4 +1,4 @@
-import { MAX_ACTIONS_PER_TRIGGER, UNLIMITED_CALLS } from '../program/constants.ts';
+import { EDITOR_SAVED_ACTIONS, UNLIMITED_CALLS } from '../program/constants.ts';
 import type { Action, Trigger } from '../program/types.ts';
 import { OPCODE, SKIPS_NEXT } from '../opcodes/constants.ts';
 import type { Operand, SourceLocation } from './ir.ts';
@@ -91,12 +91,12 @@ const splitBlock = (block: Block, names: Names): Chunk[] => {
   let part = FIRST_CONTINUATION;
   let remaining = block.actions.length;
   for (const group of groups) {
-    if (current.length + remaining <= MAX_ACTIONS_PER_TRIGGER) {
+    if (current.length + remaining <= EDITOR_SAVED_ACTIONS) {
       current.push(...group);
       remaining -= group.length;
       continue;
     }
-    if (current.length + group.length > MAX_ACTIONS_PER_TRIGGER - 1) {
+    if (current.length + group.length > EDITOR_SAVED_ACTIONS - 1) {
       const next = names.continuationLabel(block.label, part);
       part += 1;
       current.push(jumpAction(next));

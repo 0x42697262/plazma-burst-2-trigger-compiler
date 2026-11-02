@@ -16,5 +16,6 @@ export const TEXT = Object.freeze({
   hostUsesUnexported: (name: string): string => `The host map uses ${name}, which the program does not export: it may change or disappear when the program changes.`,
   hostNameInText: (uid: string, name: string, value: string): string =>
     `Trigger ${uid}: the host map's variable "${name}" appears inside ${JSON.stringify(value)}; the game will replace it with its value (F9).`,
+  editorDropsAction: (uid: string, position: number): string => `Trigger ${uid} has an action ${position}; the website editor drops it when the map is saved (it keeps 99).`,
   hashValue: (uid: string, value: string): string => `Trigger ${uid}: the value "${value}" starts with "#"; the game replaces it with an object index if a uid matches.`,
 });

@@ -1,4 +1,5 @@
 import type { Program } from '../program/types.ts';
+import { EDITOR_SAVED_ACTIONS } from '../program/constants.ts';
 import { opcodeByNumber } from '../opcodes/table.ts';
 import { AVOIDED, SKIPS_NEXT } from '../opcodes/constants.ts';
 import { isWritableAsText } from '../emit/trigger-text-emitter.ts';
@@ -25,6 +26,7 @@ export function checkTriggers(program: Program, externalUids: readonly string[])
       }
       const opcode = opcodeByNumber(action.opcode);
       if (AVOIDED.has(action.opcode)) warnings.push(TEXT.switchByIndex(trigger.uid));
+      if (index === EDITOR_SAVED_ACTIONS) warnings.push(TEXT.editorDropsAction(trigger.uid, EDITOR_SAVED_ACTIONS + 1));
       const isLast = index === trigger.actions.length - 1;
       if (isLast && SKIPS_NEXT.has(action.opcode)) warnings.push(TEXT.skipAtEnd(trigger.uid));
       const params = [[opcode?.paramA, action.targetA], [opcode?.paramB, action.targetB]] as const;

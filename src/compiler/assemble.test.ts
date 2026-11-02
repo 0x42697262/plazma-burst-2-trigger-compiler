@@ -58,7 +58,7 @@ second:
     assert.equal(vars['~t_x~'], 250);
     assert.equal(vars['~t_done~'], 1);
     assert.equal(program.triggers.length, 3);
-    for (const trigger of program.triggers) assert.ok(trigger.actions.length <= 100);
+    for (const trigger of program.triggers) assert.ok(trigger.actions.length <= 99, 'the website editor keeps 99 actions per trigger');
   });
 
   it('never splits a skip action from the action it skips', () => {
