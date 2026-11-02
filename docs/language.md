@@ -115,3 +115,76 @@ jumped stops (the rest of that event's code does not run; a caller of a function
 - The game reads `& < > "` and line breaks in literal text as XML entities (`&amp; &lt; &gt; &quot; &#10;`, F26);
   `say` shows `< > "` correctly. The compiler warns about such values.
 - An array index is used as text: `list[k]` with `k = "1.0"` is not `list[1]`.
+
+## Grammar (EBNF)
+
+Notation: `=` defines, `|` or, `[ ]` optional, `{ }` zero or more, `( )` grouping, `"x"` literal
+text, `;` ends a rule. Spaces, line breaks, `// line` and `/* block */` comments may stand between
+any two tokens. Words in the keyword list are not identifiers.
+
+```ebnf
+program        = { declaration } ;
+
+declaration    = "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
+               | "const" identifier "=" expression ";"
+               | "extern" identifier [ "=" string ] ";"
+               | [ "export" ] "function" identifier "(" [ identifier { "," identifier } ] ")" block
+               | "on" ( "start" | "join" ) block
+               | "every" number block ;
+
+block          = "{" { statement } "}" ;
+
+statement      = block
+               | "let" identifier [ "=" expression ] ";"
+               | "if" "(" expression ")" block [ "else" ( if-rest | block ) ]
+               | "while" "(" expression ")" block
+               | "for" "(" [ for-init ] ";" [ expression ] ";" [ simple ] ")" block
+               | "for" "player" identifier block
+               | "break" ";"
+               | "continue" ";"
+               | "return" [ expression ] ";"
+               | "wait" "(" expression ")" ";"
+               | simple ";" ;
+
+if-rest        = "if" "(" expression ")" block [ "else" ( if-rest | block ) ] ;
+for-init       = "let" identifier [ "=" expression ] | simple ;
+simple         = expression [ assign-op expression ] ;
+assign-op      = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "..=" ;
+
+expression     = or ;
+or             = and { "||" and } ;
+and            = compare { "&&" compare } ;
+compare        = join { ( "==" | "!=" | "<" | "<=" | ">" | ">=" ) join } ;
+join           = sum { ".." sum } ;
+sum            = product { ( "+" | "-" ) product } ;
+product        = unary { ( "*" | "/" | "%" ) unary } ;
+unary          = ( "-" | "!" ) unary | primary ;
+primary        = number
+               | string
+               | "true" | "false"
+               | "@" identifier
+               | "(" expression ")"
+               | identifier "(" [ expression { "," expression } ] ")"
+               | identifier "[" expression "]"
+               | identifier ;
+
+identifier     = letter { letter | digit } ;
+letter         = "A" … "Z" | "a" … "z" | "_" ;
+digit          = "0" … "9" ;
+number         = digit { digit } [ "." digit { digit } ] ;
+string         = '"' { character | escape | "{" expression "}" } '"' ;
+escape         = "\" ( '"' | "\" | "n" | "{" | "}" ) ;
+character      = ? any character except '"', "\", "{", "}" and a line break ? ;
+
+keyword        = "var" | "const" | "let" | "extern" | "function" | "export" | "on" | "every"
+               | "if" | "else" | "while" | "for" | "player" | "break" | "continue" | "return"
+               | "true" | "false" | "wait" ;
+```
+
+Rules the grammar does not show:
+
+- The left side of an `assign-op` must be an `identifier` or `identifier "[" expression "]"`.
+- Binary operators of the same level group from the left: `a - b - c` is `(a - b) - c`.
+- `"@" identifier` (a function's trigger) is allowed only as an argument of `action(...)`.
+- In `every`, `wait` and `drop`, the number must be a whole number above 0 (for `drop`: any whole
+  number); `wait` and `drop` also accept a constant.

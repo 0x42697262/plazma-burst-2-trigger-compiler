@@ -52,3 +52,58 @@ an action, `jmp`, `call` or `ret`, not before a label, a conditional jump or `ad
 
 Every label that is jumped to starts a new trigger. Code longer than 100 actions continues in
 the next trigger; a skip action is never separated from the action it skips.
+
+## Grammar (EBNF)
+
+Same notation as in [language.md](language.md#grammar-ebnf). The assembler reads one line at a time;
+a comment (`;` or `//` outside a string) runs to the end of the line.
+
+```ebnf
+program        = { line } ;
+line           = { label-def } [ directive | instruction ] [ comment ] line-break ;
+
+label-def      = identifier ":" ;
+directive      = "." ( "prefix" name
+                     | "start" identifier
+                     | "entry" identifier { identifier }
+                     | "extern" uid { uid }
+                     | "timer" identifier label-ref delay [ calls ] [ "disabled" ]
+                     | "timer" identifier label-ref delay "disabled" calls ) ;
+
+instruction    = "jmp" label-ref
+               | "call" label-ref
+               | "ret"
+               | branch value "," value "," label-ref
+               | "set" operand "," operand
+               | "add" operand "," operand
+               | "say" operand [ "," operand ]
+               | action-name [ operand [ "," operand ] ] ;
+
+branch         = "jeq" | "jne" | "jlt" | "jle" | "jgt" | "jge" ;
+action-name    = alias | "op" [ "-" ] digit { digit } ;
+alias          = ? an action alias without spaces, e.g. VarSetValue ? ;
+
+operand        = variable | host | label-ref | string | bare ;
+value          = variable | host | string | bare ;
+variable       = "$" identifier ;
+host           = "%" { ? any character except "," ? } ;
+label-ref      = "@" identifier ;
+string         = '"' { character | escape | "{" variable "}" } '"' ;
+escape         = "\" ( '"' | "\" | "n" | "{" | "}" ) ;
+bare           = ? any text without "," that does not start with $ % @ or " ? ;
+
+delay          = digit { digit } ;
+calls          = "-1" | digit { digit } ;
+uid            = ? any text without spaces, e.g. #trigger*5 ? ;
+name           = letter { letter | digit } ;
+identifier     = letter_ { letter_ | digit } ;
+letter         = "A" … "Z" | "a" … "z" ;
+letter_        = letter | "_" ;
+digit          = "0" … "9" ;
+character      = ? any character except '"', "\", "{", "}" and a line break ? ;
+comment        = ( ";" | "//" ) { ? any character ? } ;
+```
+
+Rules the grammar does not show: operands are trimmed of spaces; `calls` must be `-1` or above 0;
+every label used by `.start`, `.entry` and `.timer` must be defined; a timer name must not also be
+a label.
