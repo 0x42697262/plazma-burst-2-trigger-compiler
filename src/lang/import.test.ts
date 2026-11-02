@@ -19,6 +19,16 @@ const write = (name: string, text: string): string => {
 const compileFile = (file: string) => compileSource(fs.readFileSync(file, 'utf8'), 't', {}, { file, read: (name) => fs.readFileSync(name, 'utf8') });
 
 describe('import', () => {
+  it('finds imports next to a file given by a relative path', () => {
+    write('relative/main.ptc', 'import "lib/part.ptc";\non start { say("{PART}"); }\n');
+    write('relative/lib/part.ptc', 'const PART = "from lib";\n');
+    const read = (name: string): string => fs.readFileSync(path.resolve(folder, name), 'utf8');
+    const result = compileSource(read('relative/main.ptc'), 't', {}, { file: 'relative/main.ptc', read });
+    const simulation = new Simulation(result.program);
+    simulation.tick();
+    assert.deepEqual(simulation.chat, ['from lib']);
+  });
+
   it('adds the declarations of imported files, once each, relative to the importing file', () => {
     write('lib/math.ptc', 'import "shared.ptc";\nfunction double(x) { return x * 2; }\nfunction unused() { }\n');
     write('lib/shared.ptc', 'var base = 20;\n');

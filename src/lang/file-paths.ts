@@ -9,7 +9,7 @@ export const directoryOf = (file: string): string => {
 };
 
 export function resolvePath(directory: string, relative: string): string {
-  const base = relative.startsWith(PATH_SEPARATOR) ? [] : segmentsOf(directory);
+  const base = relative.startsWith(PATH_SEPARATOR) || directory === '' ? [] : segmentsOf(directory);
   const result: string[] = [];
   for (const segment of [...base, ...segmentsOf(relative)]) {
     if (segment === CURRENT_SEGMENT || (segment === '' && result.length > 0)) continue;
