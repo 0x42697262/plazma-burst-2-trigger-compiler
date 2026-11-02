@@ -3,13 +3,13 @@ import { OPCODE, SYNC_TEXT_LIMIT } from '../opcodes/constants.ts';
 import {
   CLOCK_START, DECIMAL, DEFAULT_MAX_STEPS, FALSE_FLAG, MILLISECONDS_PER_FRAME, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
 } from './constants.ts';
-import { EMPTY_SLOT_NAME, SHOWN_TEXT_ENTITIES, UID_MARK } from './keys.ts';
+import { EMPTY_LOGIN, EMPTY_SLOT_NAME, SHOWN_TEXT_ENTITIES, UID_MARK } from './keys.ts';
 import { escapeXml } from '../emit/xml-emitter.ts';
 import { TEXT } from './text.ts';
 import { add, loadValue, replaceVariables, stringOf, toFloat, toIndex, toNumber } from './values.ts';
 import type { Registry } from './values.ts';
 
-export type Player = { slot: number; name: string; active: boolean };
+export type Player = { slot: number; name: string; active: boolean; team?: number; login?: string };
 
 export type SimulationOptions = {
   maxSteps: number;
@@ -43,6 +43,9 @@ export class Simulation {
   private readonly options: SimulationOptions;
   private readonly registry: Registry = { uids: [], ids: [] };
   private joinTrigger: number | null = null;
+  private chatTrigger: number | null = null;
+  private talker: unknown = undefined;
+  private said: unknown = undefined;
   private readonly varSync: boolean;
   private steps = 0;
   private frames = 0;
@@ -84,6 +87,13 @@ export class Simulation {
 
   playerJoins(): void {
     if (this.joinTrigger !== null) this.run(this.joinTrigger);
+  }
+
+  playerSays(slot: number, text: string): void {
+    if (this.chatTrigger === null) return;
+    this.talker = slot;
+    this.said = text;
+    this.run(this.chatTrigger);
   }
 
   tick(count = 1): void {
@@ -177,6 +187,13 @@ export class Simulation {
   private playerName(slot: number): string {
     const player = this.options.players.find((entry) => entry.slot === slot);
     return player?.active ? player.name : EMPTY_SLOT_NAME;
+  }
+
+  private character(slot: unknown): Player {
+    const key = String(slot);
+    const player = this.options.players.find((entry) => String(entry.slot) === key);
+    if (!player) throw new Error(TEXT.noCharacter(key));
+    return player;
   }
 
   private characterName(slot: unknown): string {
@@ -325,6 +342,31 @@ export class Simulation {
         if (stringOf(action.targetA).length > SYNC_TEXT_LIMIT) throw new Error(TEXT.syncNameTooLong);
         if (stringOf(vars[nameA]).length > SYNC_TEXT_LIMIT) throw new Error(TEXT.syncValueTooLong);
         if (!this.varSync) throw new Error(TEXT.noVarSync);
+        break;
+      case OPCODE.setChatReceiver:
+        this.chatTrigger = toIndex(action.targetA);
+        break;
+      case OPCODE.talkerLogin: {
+        const talker = this.options.players.find((entry) => String(entry.slot) === String(this.talker));
+        vars[nameA] = talker ? talker.login ?? talker.name : EMPTY_LOGIN;
+        break;
+      }
+      case OPCODE.talkerName: {
+        const talker = this.options.players.find((entry) => String(entry.slot) === String(this.talker));
+        vars[nameA] = talker ? talker.name : EMPTY_SLOT_NAME;
+        break;
+      }
+      case OPCODE.talkerSlot:
+        vars[nameA] = this.talker;
+        break;
+      case OPCODE.chatInput:
+        vars[nameA] = this.said;
+        break;
+      case OPCODE.teamBySlot:
+        vars[nameA] = this.character(toIndex(valueB)).team;
+        break;
+      case OPCODE.teamBySlotVariable:
+        vars[nameA] = this.character(vars[nameB]).team;
         break;
       case OPCODE.onPlayerJoin:
         this.joinTrigger = toIndex(action.targetA);
