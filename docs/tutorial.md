@@ -405,7 +405,8 @@ Players write `= 12 * 3` in the chat; the map answers.
 
 <!-- file: 08-chat-calculator.ptc -->
 ```ptc
-// A chat calculator: "= 12 * 3" answers "12 * 3 = 36". One operator, two numbers.
+// A chat calculator: "= 12 * 3" answers "12 * 3 = 36". One operator, two numbers;
+// tutorial 11 handles longer sums like "= 2 * (3 + 4)".
 var lastResult = "";
 
 function isDigit(c) { return contains("0123456789.", c); }
@@ -421,7 +422,9 @@ function calculate(text) {
   i += 1;
   while (i < len(text) && charAt(text, i) == " ") { i += 1; }
   while (i < len(text) && isDigit(charAt(text, i))) { b ..= charAt(text, i); i += 1; }
+  while (i < len(text) && charAt(text, i) == " ") { i += 1; }
   if (a == "" || b == "") { return "write it like: = 12 * 3"; }
+  if (i < len(text)) { return "one operator only; see tutorial 11 for longer sums"; }
   let x = number(a);
   let y = number(b);
   if (operator == "+") { return x + y; }
@@ -447,7 +450,8 @@ on start {
 }
 ```
 
-At start, and after the chat lines `= 7 / 2`, `=10%4`, `= 1 / 0`, `= 2 ^ 3`, `not for me`:
+At start, and after the chat lines `= 7 / 2`, `=10%4`, `= 1 / 0`, `= 2 ^ 3`, `not for me` and
+`= 69 * 420 + (69 * 3)`:
 
 ```
 12 * 3 = 36
@@ -455,6 +459,7 @@ At start, and after the chat lines `= 7 / 2`, `=10%4`, `= 1 / 0`, `= 2 ^ 3`, `no
 10%4 = 2
  1 / 0 = cannot divide by zero
  2 ^ 3 = unknown operator ^
+ 69 * 420 + (69 * 3) = one operator only; see tutorial 11 for longer sums
 ```
 
 The calculator reads the text by hand: skip spaces, collect digits, take one operator, collect
