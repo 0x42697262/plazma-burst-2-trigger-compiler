@@ -1,9 +1,9 @@
 import type { Program } from '../program/types.ts';
 import { OPCODE } from '../opcodes/constants.ts';
 import {
-  CLOCK_START, DEFAULT_MAX_STEPS, FALSE_FLAG, MILLISECONDS_PER_FRAME, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
+  CLOCK_START, DECIMAL, DEFAULT_MAX_STEPS, FALSE_FLAG, MILLISECONDS_PER_FRAME, MAX_FRAMES, NOT_FOUND, RANDOM_INCREMENT, RANDOM_MODULUS, RANDOM_MULTIPLIER, RANDOM_SEED, TRUE_FLAG, UNLIMITED,
 } from './constants.ts';
-import { EMPTY_SLOT_NAME, SHOWN_TEXT_ENTITIES } from './keys.ts';
+import { EMPTY_SLOT_NAME, SHOWN_TEXT_ENTITIES, UID_MARK } from './keys.ts';
 import { escapeXml } from '../emit/xml-emitter.ts';
 import { TEXT } from './text.ts';
 import { add, loadValue, replaceVariables, stringOf, toFloat, toIndex, toNumber } from './values.ts';
@@ -62,7 +62,7 @@ export class Simulation {
       })),
     }));
     this.timers = program.timers.map((timer) => ({
-      uid: timer.uid, enabled: timer.enabled, calls: timer.maxCalls, delay: timer.delay, counter: 0, target: loadValue(timer.target, this.registry),
+      uid: timer.uid, enabled: timer.enabled, calls: timer.maxCalls, delay: timer.delay, counter: 0, target: this.timerTarget(timer.target),
     }));
   }
 
@@ -129,8 +129,12 @@ export class Simulation {
     }
   }
 
+  private timerTarget(raw: string): unknown {
+    return raw.startsWith(UID_MARK) ? loadValue(escapeXml(raw), this.registry) : parseInt(raw, DECIMAL);
+  }
+
   private register(uid: string, id: number): void {
-    this.registry.uids.push(uid);
+    this.registry.uids.push(escapeXml(uid));
     this.registry.ids.push(id);
   }
 

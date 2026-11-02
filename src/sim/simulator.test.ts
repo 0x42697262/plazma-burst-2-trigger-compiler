@@ -128,6 +128,18 @@ describe('simulator', () => {
     assert.deepEqual(simulation.chat, ['say <"hi"> &amp; bye']);
   });
 
+  it('resolves uids with special characters like the game', () => {
+    const simulation = new Simulation(program(trigger('#main', [action(99, '#b&c')]), trigger('#b&c', [action(100, 'called', '1')])));
+    simulation.run(0);
+    assert.equal(simulation.variables.called, 1);
+  });
+
+  it('reads a timer target without # as a trigger index', () => {
+    const simulation = new Simulation({ triggers: [trigger('#a', []), trigger('#b', [action(100, 'hit', '1')])], timers: [{ uid: '#t', target: '1.7', enabled: true, maxCalls: 1, delay: 0 }] });
+    simulation.tick();
+    assert.equal(simulation.variables.hit, 1);
+  });
+
   it('names players like the game: Empty for an inactive slot, and no active check by variable', () => {
     const players = [{ slot: 0, name: 'ann', active: true }, { slot: 1, name: 'old', active: false }];
     const simulation = new Simulation(program(trigger('#a', [
