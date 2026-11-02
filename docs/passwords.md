@@ -30,8 +30,9 @@ MAP_PASSWORD='open sesame' npm run compile -- vault.ptc
    `23762524-31648875-43034097`.
 4. In the game, `hash(chatText())` runs the same function on what the player wrote and compares.
 
-On the web page there is no environment: write `secret const PASSWORD = "open sesame";` instead.
-The source then holds the password (in the browser's storage), the map still does not.
+On the web page, click "env…" and write `MAP_PASSWORD=open sesame` in the box. The box is not
+saved: it is empty again when the page is opened next time, and the password is in neither the
+source nor the map.
 
 ## What it protects, and what not
 

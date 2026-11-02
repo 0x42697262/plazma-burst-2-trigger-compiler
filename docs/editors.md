@@ -15,6 +15,8 @@ sent anywhere. Files are kept in the browser's local storage.
   `--no-number-text`.
 - "direct index" (off by default): same as `--direct-index`, for maps with many variables.
 - "target": `triggers` (default) or `pcode`, same as `--target` ([pcode.md](pcode.md)).
+- "env…": values for `env("NAME")` in constants, one `NAME=value` per line. Not saved: the box is
+  empty when the page opens again ([passwords.md](passwords.md)).
 - Several files: `+` adds one (for `import`); an example loads with the files it imports.
 - Compile (Ctrl+Enter): XML, trigger text, and problems. Run (Ctrl+Shift+Enter): the simulator's
   chat lines and variables.

@@ -144,7 +144,7 @@ The simulator matches the game (`npm run live-check`, including `examples/live/l
 value worked out here equals the one the map would compute.
 
 `env("NAME")` works only in a `const` and gives the value of an environment variable while
-compiling (`MAP_PASSWORD=... npm run compile -- map.ptc`); the web page has none.
+compiling (`MAP_PASSWORD=... npm run compile -- map.ptc`); on the web page, from the "env…" box.
 
 ### Secrets
 
