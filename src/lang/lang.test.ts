@@ -442,6 +442,40 @@ on start { push(list, 1); push(list, 2); out = pop(list) .. pop(list) .. len(lis
   });
 });
 
+describe('language: number-like text', () => {
+  const NUMBER_LIKE = ['0123456789.', '007', '1.50', '1e3', ' 5', '0x10'];
+
+  it('keeps text that the website editor would turn into a number', () => {
+    const source = `var digits = "0123456789.";
+var code = "007";
+var found = 0;
+var matched = "";
+on start {
+  if (contains("0123456789.", "0")) { found = 1; }
+  if (code == "007") { found += 1; }
+  match (code) { "007" => { matched = "yes"; } _ => { matched = "no"; } }
+}`;
+    const { get, program, warnings } = run(source);
+    assert.equal(get('digits'), '0123456789.');
+    assert.equal(get('code'), '007');
+    assert.equal(get('found'), 2);
+    assert.equal(get('matched'), 'yes');
+    assert.deepEqual(warnings, []);
+    const values = program.triggers.flatMap((trigger) => trigger.actions.flatMap((action) => [action.targetA, action.targetB]));
+    for (const text of NUMBER_LIKE.slice(0, 2)) assert.ok(!values.includes(text));
+  });
+
+  it('protects every number-like text that is not the number itself', () => {
+    for (const text of NUMBER_LIKE) {
+      const { get, program } = run(`var value = "${text}";\non start { say(value); }`);
+      assert.equal(get('value'), text);
+      assert.ok(!program.triggers.some((trigger) => trigger.actions.some((action) => action.targetB === text)));
+    }
+    const { program } = run('var value = "12";\non start { say(value); }');
+    assert.ok(program.triggers.some((trigger) => trigger.actions.some((action) => action.targetB === '12')));
+  });
+});
+
 describe('language: errors', () => {
   const error = (source: string, pattern: RegExp) => assert.throws(() => compileSource(source, 't'), pattern);
 

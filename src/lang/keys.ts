@@ -62,6 +62,7 @@ export const BUILTIN = Object.freeze({
   chatText: 'chatText', talker: 'talker', talkerName: 'talkerName', team: 'team', clear: 'clear', pop: 'pop',
 } as const);
 export const SPLIT_EVERY_CHARACTER = '';
+export const NUMBER_TEXT_MARK = '_';
 export const HIDDEN = Object.freeze({ players: 'players', count: 'count', index: 'index' });
 export const WHOLE_NUMBER = /^-?[0-9]+$/;
 export const DEFAULT_SYNC_MODE = 'replace';

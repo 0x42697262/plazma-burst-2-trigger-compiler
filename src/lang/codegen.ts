@@ -11,8 +11,9 @@ import type { Names } from '../compiler/names.ts';
 import { CompileError } from '../compiler/names.ts';
 import type { Declaration, Expression, Location, ObjectTree, SourceFile, Statement, TemplatePart } from './ast.ts';
 import { SourceError } from './lexer.ts';
+import { editorTurnsIntoNumber } from '../program/editor-text.ts';
 import {
-  ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
+  ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT, NUMBER_TEXT_MARK,
   WHOLE_NUMBER, DEFAULT_SYNC_MODE, SIDE, TRIGGER_KIND, ARRAY_INDEX_PLACEHOLDER, COLOR_KIND, KEY_SEPARATOR,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
@@ -194,7 +195,19 @@ export class Generator {
 
   private act(opcode: number, targetA: string | Operand, targetB: string | Operand = FALSE_TEXT): void {
     const operand = (value: string | Operand): Operand => (typeof value === 'string' ? textOperand(value) : value);
+    if (opcode === OPCODE.setVariable && typeof targetA === 'string' && typeof targetB === 'string' && editorTurnsIntoNumber(targetB)) {
+      this.emit({ kind: 'action', opcode, targetA: operand(targetA), targetB: operand(NUMBER_TEXT_MARK + targetB), location: this.location });
+      this.emit({ kind: 'action', opcode: OPCODE.removeStart, targetA: operand(String(NUMBER_TEXT_MARK.length)), targetB: operand(targetA), location: this.location });
+      return;
+    }
     this.emit({ kind: 'action', opcode, targetA: operand(targetA), targetB: operand(targetB), location: this.location });
+  }
+
+  private protectedValue(value: Value): Value {
+    if (value.kind !== 'literal' || !editorTurnsIntoNumber(value.text)) return value;
+    const temp = this.frame.temp();
+    this.act(OPCODE.setVariable, temp, value.text);
+    return variable(temp);
   }
 
   private label(label: string, entry = false): void {
@@ -206,7 +219,7 @@ export class Generator {
   }
 
   private branch(condition: Condition, left: Value, right: Value, label: string): void {
-    this.emit({ kind: 'branch', condition, left, right, label, location: this.location });
+    this.emit({ kind: 'branch', condition, left: this.protectedValue(left), right: this.protectedValue(right), label, location: this.location });
   }
 
   private fresh(hint: string): string {
@@ -689,6 +702,10 @@ export class Generator {
   }
 
   private value(expression: Expression): Value {
+    return this.protectedValue(this.plainValue(expression));
+  }
+
+  private plainValue(expression: Expression): Value {
     this.at(expression.location);
     if (isLiteralExpression(expression)) return literal(literalText(expression));
     switch (expression.kind) {
