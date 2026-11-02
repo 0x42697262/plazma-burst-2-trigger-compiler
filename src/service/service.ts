@@ -1,4 +1,5 @@
 import { compileSource } from '../lang/compile.ts';
+import { compileAssembly } from '../compiler/assemble.ts';
 import { tokenize } from '../lang/lexer.ts';
 import type { Token } from '../lang/lexer.ts';
 import { BUILTIN, KEYWORD, KEYWORDS, PUNCTUATOR } from '../lang/keys.ts';
@@ -104,6 +105,18 @@ function importedSources(source: string, file: string, read: SourceReader): { fi
   };
   visit(source, file);
   return result;
+}
+
+export function diagnoseAssembly(source: string): ServiceDiagnostic[] {
+  const toDiagnostic = (message: string, severity: Severity): ServiceDiagnostic => {
+    const match = DIAGNOSTIC_LINE.exec(message);
+    return match ? { line: Number(match[2]) - FIRST_LINE, message: match[3] ?? message, severity } : { line: 0, message, severity };
+  };
+  try {
+    return compileAssembly(source, SERVICE_PREFIX).warnings.map((warning) => toDiagnostic(warning, SEVERITY.warning));
+  } catch (error) {
+    return [toDiagnostic(error instanceof Error ? error.message : String(error), SEVERITY.error)];
+  }
 }
 
 export function diagnose(source: string, file: string, read: SourceReader): ServiceDiagnostic[] {
