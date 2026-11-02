@@ -50,6 +50,9 @@ Declare each map object the program uses with its kind and uid:
   the editor's default settings (at `at x, y`, or in a row below the program's triggers), a uid
   used by another kind is an error. Objects the map has are never changed. `--no-create` warns
   instead of adding.
+- `--replace` (with `--into`) removes the program's own triggers and timers from the map before
+  adding the new ones, so a map that already holds an older build is updated in place. Declared
+  objects and everything else in the map stay. Without it, a uid already in the map is an error.
 - The kind words are not reserved: `var water = 1;` still works.
 
 ### Object arrays
