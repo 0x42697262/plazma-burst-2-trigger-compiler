@@ -9,7 +9,6 @@ export const CLICK_ATTEMPTS = 10;
 export const CLICK_PAUSE = 2000;
 export const SPACE_KEY_CODE = 32;
 export const RUN_SECONDS = 8;
-export const FRAMES_PER_SECOND = 30;
 export const SIMULATED_FRAMES = 200;
 export const MILLISECONDS = 1000;
 export const SOCKET_OPEN = 1;

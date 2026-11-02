@@ -10,9 +10,7 @@ export const INTERNAL_VARIABLE = Object.freeze({
   right: 'right',
   steps: 'steps',
   stop: 'stop',
-  empty: 'empty',
 });
-export const EMPTY_VALUE = '';
 export const ZERO_VALUE = '0';
 export const STEP_VALUE = '1';
 export const OBJECT_PARAM_KINDS: ReadonlySet<string> = new Set([

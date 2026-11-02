@@ -42,7 +42,6 @@ export const WHITESPACE = /\s/;
 export const TRUE_TEXT = '1';
 export const FALSE_TEXT = '0';
 export const EMPTY_TEXT = '';
-export const NEGATIVE = '-';
 export const LOCAL_SEPARATOR = '.';
 export const SHADOW_SEPARATOR = '#';
 export const RETURN_NAME = 'return';
@@ -55,7 +54,7 @@ export const ELEMENT_CLOSE = ']';
 export const ADDRESS_NAME = 'address';
 export const LABEL = Object.freeze({
   start: ':start', join: ':join', every: 'every', wait: 'wait', timer: 'timer', else: 'else', end: 'end', head: 'loop',
-  next: 'next', skip: 'skip', done: 'done',
+  next: 'next', skip: 'skip',
 });
 export const BUILTIN = Object.freeze({
   say: 'say', push: 'push', action: 'action', len: 'len', contains: 'contains', random: 'random', floor: 'floor', round: 'round',

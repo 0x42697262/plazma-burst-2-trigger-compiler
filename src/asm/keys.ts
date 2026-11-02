@@ -1,5 +1,4 @@
 export const COMMENT_MARKS: readonly string[] = Object.freeze([';', '//']);
-export const LABEL_END = ':';
 export const OPERAND_SEPARATOR = ',';
 export const QUOTE = '"';
 export const ESCAPE = '\\';
