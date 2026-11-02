@@ -32,5 +32,7 @@ export const BUILD_COMMAND: string[] = ['run', 'build'];
 export const REBUILD_FLAG = '--rebuild';
 export const DIRECT_INDEX_FLAG = '--direct-index';
 export const PCODE_FLAG = '--pcode';
+export const OBFUSCATE_FLAG = '--obfuscate';
+export const OBFUSCATE_SEED = 'live-check';
 export const ONLY_FLAG = '--only';
 export const PCODE_TARGET = 'pcode';
