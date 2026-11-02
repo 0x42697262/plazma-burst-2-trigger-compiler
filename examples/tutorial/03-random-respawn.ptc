@@ -1,19 +1,23 @@
 // A respawn region that sends the player to one of four spawn regions at random.
 // Object targets (regions, doors, characters) are fixed when the map loads, so a
 // random choice picks between fixed actions with if / else if.
-// Compile with: --extern "#respawn_region" --extern "#SPAWN1" ... --extern "#SPAWN4"
+region respawnZone = "#respawn_region";
+region spawn1 = "#SPAWN1";
+region spawn2 = "#SPAWN2";
+region spawn3 = "#SPAWN3";
+region spawn4 = "#SPAWN4";
 var lastSpawn = -1;
 
 export function respawn() {
   let pick = random(4);
   lastSpawn = pick;
   if (pick == 0) {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN1");
+    action(TeleportInitiatorFromTo, respawnZone, spawn1);
   } else if (pick == 1) {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN2");
+    action(TeleportInitiatorFromTo, respawnZone, spawn2);
   } else if (pick == 2) {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN3");
+    action(TeleportInitiatorFromTo, respawnZone, spawn3);
   } else {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN4");
+    action(TeleportInitiatorFromTo, respawnZone, spawn4);
   }
 }

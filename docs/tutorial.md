@@ -76,18 +76,29 @@ done!
 ## 3. Talking to the map: buttons, regions, doors
 
 Objects of the map (regions, doors, characters, guns) are named by their uid, such as `#SPAWN1`.
-The game turns uids into objects when the map loads, so an action's object is fixed text in the
-program. Any of the game's actions runs with `action(name or number, a, b)`.
+The game turns uids into objects when the map loads, so an object is fixed in the program. Declare
+each one with its kind:
+
+```
+region spawn1 = "#SPAWN1";
+door gate = "#door*3" at 400, -120;
+```
+
+Any of the game's actions runs with `action(name or number, a, b)`. The compiler checks every object
+you pass against what the action expects, like a strict type cast: a region where a door belongs is
+a compile error. The full list of actions and what each parameter takes: [actions.md](actions.md).
 
 An `export function` gets a fixed trigger uid, `#<prefix>_<name>`. Set a region's "Activation
 Trigger" to it in the editor and its "Activation on" to a use key, and the function runs when a
 player uses the region: that is a button.
 
-Tell the compiler which uids the map has with `--extern`, or it warns that it cannot find them:
+With `--into map.xml`, the compiler also looks the objects up in the map:
 
-```
-npm run compile -- 03-random-respawn.ptc --into map.xml --extern "#respawn_region" --extern "#SPAWN1"
-```
+- An object the map lacks is added, with the editor's default settings, at its `at x, y` or in a
+  row below the program's triggers. Drag it into place in the editor. Compiling again never moves
+  or changes an object the map already has.
+- A uid that the map uses for another kind of object is an error.
+- `--no-create` only warns about missing objects.
 
 ### A random respawn
 
@@ -98,20 +109,24 @@ The respawn region calls `respawn()`, which sends the player to one of four spaw
 // A respawn region that sends the player to one of four spawn regions at random.
 // Object targets (regions, doors, characters) are fixed when the map loads, so a
 // random choice picks between fixed actions with if / else if.
-// Compile with: --extern "#respawn_region" --extern "#SPAWN1" ... --extern "#SPAWN4"
+region respawnZone = "#respawn_region";
+region spawn1 = "#SPAWN1";
+region spawn2 = "#SPAWN2";
+region spawn3 = "#SPAWN3";
+region spawn4 = "#SPAWN4";
 var lastSpawn = -1;
 
 export function respawn() {
   let pick = random(4);
   lastSpawn = pick;
   if (pick == 0) {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN1");
+    action(TeleportInitiatorFromTo, respawnZone, spawn1);
   } else if (pick == 1) {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN2");
+    action(TeleportInitiatorFromTo, respawnZone, spawn2);
   } else if (pick == 2) {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN3");
+    action(TeleportInitiatorFromTo, respawnZone, spawn3);
   } else {
-    action(TeleportInitiatorFromTo, "#respawn_region", "#SPAWN4");
+    action(TeleportInitiatorFromTo, respawnZone, spawn4);
   }
 }
 ```
@@ -119,6 +134,8 @@ export function respawn() {
 - `random(4)` gives a whole number from 0 to 3.
 - The target region cannot come from a variable: there is one `action` per region, and the
   `if` chain picks one.
+- `respawnZone` and `spawn1` to `spawn4` are declared regions; passing one of them where action 70
+  expects something else would not compile.
 - "Player-initiator" is the player who used the region.
 
 ### A one-time "god" button
@@ -159,6 +176,8 @@ bob is already the god
 ```ptc
 // Door state that every player shares in multiplayer: "max" keeps the highest value,
 // so once any player opens the door it stays open for everybody.
+door door1 = "#door1";
+region openPlace = "#door1_open";
 var doorOpen = 0;
 var applied = 0;
 
@@ -169,7 +188,7 @@ export function openDoor() {
 
 every 30 {
   if (doorOpen == 1 && applied == 0) {
-    action(MovableTo, "#door1", "#door1_open");
+    action(MovableTo, door1, openPlace);
     applied = 1;
     say("the door is open");
   }

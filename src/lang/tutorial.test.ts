@@ -12,7 +12,7 @@ const PLAYERS = [
   { slot: 2, name: 'cy', active: true, team: 1 },
   { slot: 3, name: 'dee', active: true, team: 1 },
 ];
-const EXTERNAL = ['#respawn_region', '#SPAWN1', '#SPAWN2', '#SPAWN3', '#SPAWN4', '#door1', '#door1_open'];
+const EXTERNAL: string[] = [];
 
 type Scenario = { chat?: [number, string][]; uids?: string[]; frames?: number; expect: string[]; variables?: Record<string, unknown> };
 
