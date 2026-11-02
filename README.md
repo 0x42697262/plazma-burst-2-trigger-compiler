@@ -59,4 +59,5 @@ timers in the editor yourself (the CLI prints them). If one value cannot be writ
 | `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator |
 | `npm run snapshot-opcodes` | rebuilds the action table from `plazma-burst-2/data/opcodes.js` |
 
-The plan, and every fact about the game this relies on, are in [PLAN.md](PLAN.md).
+More: [docs/game-facts.md](docs/game-facts.md) (every game fact this relies on, with its source,
+and the checks that still need a player) and [docs/architecture.md](docs/architecture.md).

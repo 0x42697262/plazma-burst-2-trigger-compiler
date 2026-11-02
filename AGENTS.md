@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Compiler from source code to Plazma Burst 2 map triggers (XML and editor text). Plan and all research: `PLAN.md`.
+Compiler from source code to Plazma Burst 2 map triggers (XML and editor text). Start with `README.md`; game facts and research: `docs/game-facts.md`; code layout: `docs/architecture.md`.
 
 ## Rules
 
@@ -9,7 +9,7 @@ Compiler from source code to Plazma Burst 2 map triggers (XML and editor text). 
 - American English in code, docs and messages.
 - Code style: no single-letter names, no comments, no magic values (named constants), feature flags for optional behavior.
 - `~/Projects/plazma-burst-2` is a separate repo: read from it, do not edit it, except writing test maps into its `data/maps/` (never committed there). Never edit its `game/`. Never print anything from its `data/credentials.json*` or `data/netlogs/`.
-- Facts about the game come from the client code, not from the community manual. When a fact is new, add it to `PLAN.md` §1 with its source.
+- Facts about the game come from the client code, not from the community manual. When a fact is new, add it to `docs/game-facts.md` with its source.
 
 ## Stack
 

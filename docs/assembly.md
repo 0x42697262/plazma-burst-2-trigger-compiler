@@ -1,5 +1,7 @@
 # The .pasm assembler
 
+F-numbers such as (F9) point to [game-facts.md](game-facts.md).
+
 One instruction per line. `;` or `//` start a comment.
 
 ```

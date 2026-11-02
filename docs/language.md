@@ -1,5 +1,7 @@
 # The .ptc language
 
+F-numbers such as (F9) point to [game-facts.md](game-facts.md).
+
 A program is a list of declarations. Statements end with `;`. Comments: `//` and `/* */`.
 
 ```
