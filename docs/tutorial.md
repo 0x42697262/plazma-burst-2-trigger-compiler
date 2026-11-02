@@ -4,7 +4,7 @@ This tutorial builds 23 small programs in the `.ptc` language, from a first loop
 classic algorithms. Every program is in [`examples/tutorial/`](../examples/tutorial/), and a test
 runs each one and checks the chat output shown here, so what you read is what the game does.
 
-Reference while reading: [language.md](language.md). Game facts such as (F9): [game-facts.md](game-facts.md).
+New to the language? Start with [syntax.md](syntax.md). Reference while reading: [language.md](language.md). Game facts such as (F9): [game-facts.md](game-facts.md).
 
 ## Contents
 

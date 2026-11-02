@@ -42,6 +42,8 @@ sync; the simulator runs 63 actions (all the compiler emits) and skips the other
 
 ## Learn it
 
+[docs/syntax.md](docs/syntax.md): a short tour of the language syntax, one idea per section.
+
 [docs/tutorial.md](docs/tutorial.md): 23 programs, from a first loop to chat commands, player
 selection, a calculator, three parsers and data structures (linked list, binary tree, sorts).
 Each is in `examples/tutorial/`.

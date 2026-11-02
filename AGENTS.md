@@ -20,5 +20,5 @@ TypeScript on Node ≥ 22.18 (runs `.ts` directly), tests with `node:test`.
 - `npm run verify`: lint, type check, tests. Must pass before every commit.
 - `npm run snapshot-opcodes`: rebuilds `src/opcodes/snapshot.json` from `plazma-burst-2/data/opcodes.js`.
 - `npm run compile -- <file.ptc|file.pasm> [--run]`: compiles to `out/`; `--run` simulates.
-- `npm run live-check`: runs `examples/live/*` and `examples/tutorial/*` in the game (own app build in `/tmp/ptc-pb2-live`) and compares with the simulator. Opens a game window for about a minute.
+- `npm run live-check`: runs `examples/live/*`, `examples/tutorial/*` and `examples/syntax/*` in the game (own app build in `/tmp/ptc-pb2-live`) and compares with the simulator. Opens a game window for about a minute.
 - `npm run emit-sample`: writes the hand-built M1 sample to `out/` (`--game-map` also writes it into `plazma-burst-2/data/maps/`).

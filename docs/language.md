@@ -1,5 +1,7 @@
 # The .ptc language
 
+The full reference. For a gentle start, read [syntax.md](syntax.md) first.
+
 F-numbers such as (F9) point to [game-facts.md](game-facts.md).
 
 A program is a list of declarations. Statements end with `;`. Comments: `//` and `/* */`.
