@@ -1,0 +1,24 @@
+// Choosing and repeating: if / else if / else, while, for, break, continue, match.
+on start {
+  let score = 72;
+  if (score >= 90) { say("A"); } else if (score >= 70) { say("B"); } else { say("C"); }
+
+  let n = 1;
+  while (n < 100) { n *= 3; }
+  say("first power of 3 from 100: {n}");
+
+  let odds = "";
+  for (let i = 0; i < 10; i += 1) {
+    if (i == 7) { break; }
+    if (i % 2 == 0) { continue; }
+    odds ..= i .. " ";
+  }
+  say("odd numbers before 7: {odds}");
+
+  let command = "-hi";
+  match (command) {
+    "-hi", "-hello" => say("hello!");
+    "-bye" => say("bye!");
+    _ => say("unknown {command}");
+  }
+}

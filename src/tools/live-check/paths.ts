@@ -13,6 +13,7 @@ export const GAME_NAMES_FILE = path.join(GAME_REPOSITORY, 'data', 'names.js');
 export const CASES_DIRECTORIES: readonly string[] = Object.freeze([
   path.join(REPOSITORY_ROOT, 'examples', 'live'),
   path.join(REPOSITORY_ROOT, 'examples', 'tutorial'),
+  path.join(REPOSITORY_ROOT, 'examples', 'syntax'),
 ]);
 export const MAP_NAME = 'ptc-live';
 export const MAP_FILE = path.join(SANDBOX_MAPS, `${MAP_NAME}.xml`);

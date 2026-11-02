@@ -1,0 +1,14 @@
+// Ten common mistakes are shown in the syntax guide with the compiler's message.
+// This file compiles: it shows the fixed version of each.
+const RED = "#FF0000";
+var list[];
+
+function double(x) { return x * 2; }
+
+on start {
+  let total = 0;            // declare before use
+  total = double(4);        // a function with one parameter gets one argument
+  push(list, total);        // arrays are used through push, list[i], len
+  say("total {total}", RED); // the color is a fixed value
+  say("first {list[0]}");
+}

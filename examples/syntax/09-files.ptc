@@ -1,0 +1,11 @@
+// Files and sharing: import another file, export variables, use the host map's variables.
+import "lib/greetings.ptc";
+
+export var score = 0;    // meant to be read by the host map
+extern lives;            // the host map's own variable "lives"
+
+on start {
+  score = 10;
+  lives = 3;
+  say(shout("score {score}, lives {lives}"));
+}

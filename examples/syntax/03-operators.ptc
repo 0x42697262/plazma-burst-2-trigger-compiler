@@ -1,0 +1,17 @@
+// Operators, from lowest to highest precedence:
+//   ||   &&   == != < <= > >=   ..   + -   * / %   unary - !
+on start {
+  say("2 + 3 * 4 = {2 + 3 * 4}");
+  say("(2 + 3) * 4 = {(2 + 3) * 4}");
+  say("7 / 2 = {7 / 2}, 7 % 2 = {7 % 2}");
+  say("the text 4 plus 1 = {"4" + 1}: text is read as a number");
+  say("a joined with 1 = {"a" .. 1}");
+  say("5 equals the text 5: {5 == "5"}; 3 is less than 5: {3 < 5}");
+  say("true and false: {true && false}; not false: {!false}");
+  let total = 10;
+  total += 5;
+  total *= 2;
+  let word = "ab";
+  word ..= "c";
+  say("total {total}, word {word}");
+}

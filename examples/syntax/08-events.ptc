@@ -1,0 +1,17 @@
+// Events and time: on start, on chat, on join, every N frames, wait(frames).
+var ticks = 0;
+var steps = "";
+
+on start {
+  steps = "a";
+  wait(3);
+  steps ..= "b";
+}
+
+on chat {
+  say("{talkerName()} said {chatText()}");
+}
+
+every 10 {
+  if (ticks < 3) { ticks += 1; }
+}

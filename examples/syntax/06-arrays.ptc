@@ -1,0 +1,18 @@
+// Arrays (lists): push, pop, len, clear, list[i]. Text indexes make dictionaries.
+var list[];
+var ages[];
+
+on start {
+  push(list, "a");
+  push(list, "b");
+  push(list, "c");
+  list[1] = "B";
+  say("{len(list)} items: {list[0]} {list[1]} {list[2]}");
+  say("popped {pop(list)}, {len(list)} left");
+  clear(list);
+  say("after clear: {len(list)}");
+
+  ages["ann"] = 31;
+  ages["bob"] = 27;
+  say("bob is {ages["bob"]}");
+}

@@ -1,0 +1,14 @@
+// Values: numbers, text, true/false. No type names: a variable holds whatever you put in it.
+var count = 3;             // global: lives for the whole map
+const LIMIT = 10;          // constant: written into the actions, never changes
+var label = "items";
+
+on start {
+  let half = count / 2;    // local: lives in this block
+  let flag = true;         // true is 1, false is 0
+  let nothing;             // no value yet
+  say("{count} {label}, half is {half}, limit {LIMIT}, flag {flag}");
+  say("text and numbers mix: " .. count .. " + 1 = " .. (count + 1));
+  label = 42;              // the same variable can hold a number later
+  say("label is now {label}");
+}

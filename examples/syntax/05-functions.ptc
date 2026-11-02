@@ -1,0 +1,22 @@
+// Functions: parameters, return values, recursion. "export" gives a fixed trigger uid.
+function area(width, height) {
+  return width * height;
+}
+
+function factorial(n) {
+  if (n <= 1) { return 1; }
+  return n * factorial(n - 1);
+}
+
+function greet(name) {
+  say("hi {name}");
+}
+
+export function button() {
+  say("someone pressed the button");
+}
+
+on start {
+  say("area {area(3, 4)}, 5! = {factorial(5)}");
+  greet("ann");
+}

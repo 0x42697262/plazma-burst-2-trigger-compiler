@@ -1,0 +1,4 @@
+// A small library: imported by 09-files.ptc.
+function shout(text) {
+  return text .. "!";
+}

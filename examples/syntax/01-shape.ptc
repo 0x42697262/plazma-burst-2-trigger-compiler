@@ -1,0 +1,9 @@
+// A program is a list of declarations. Code runs inside blocks such as "on start".
+// Comments start with // or sit between /* and */.
+
+var greeting = "hello";   /* a global variable */
+
+on start {
+  say(greeting);           // every statement ends with ;
+  say("from the map");
+}
