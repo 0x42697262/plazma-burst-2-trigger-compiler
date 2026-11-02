@@ -49,5 +49,9 @@ export const TEXT = Object.freeze({
   needsObject: (action: number, side: string, expected: string): string =>
     `action ${action} takes ${expected} as ${side}: give a declared object, its uid text, or @function for a trigger`,
   referenceNotTrigger: (action: number, side: string, expected: string): string => `action ${action} takes ${expected} as ${side}, not a function's trigger`,
+  needsFixedValue: (action: number, side: string, kind: string, name: string): string =>
+    `action ${action} takes a fixed ${kind} as ${side}, but "${name}" can change while the map runs; use a const, or a variable that is never assigned again`,
+  passesName: (action: number, side: string, name: string): string =>
+    `action ${action}'s ${side} looks like a value, but "${name}" can change, so its variable name is passed instead`,
   sayColor: 'the color of say(...) must be a number or a string',
 });

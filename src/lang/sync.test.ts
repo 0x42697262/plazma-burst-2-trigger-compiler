@@ -58,7 +58,7 @@ describe('variable sync', () => {
   it('refuses what cannot be synced', () => {
     assert.throws(() => compileSource('var x;\non start { sync(x, "sum"); }', 't'), /sync mode must be one of replace, default, max, min, longest/);
     assert.throws(() => compileSource('var x;\non start { sync(x, "constructor"); }', 't'), /sync mode/);
-    assert.throws(() => compileSource('var l[]; var i = 0;\non start { sync(l[i]); }', 't'), /fixed index/);
+    assert.throws(() => compileSource('var l[]; var i = 0;\non start { i += 1; sync(l[i]); }', 't'), /fixed index/);
     assert.throws(() => compileSource('const C = 1;\non start { sync(C); }', 't'), /needs a variable/);
     assert.throws(() => compileSource('var x;\non start { let y = sync(x); }', 't'), /"sync" gives no value/);
   });

@@ -3,6 +3,8 @@ import { opcodeByName, opcodeByNumber } from '../opcodes/table.ts';
 import { labelOperand, literal, textOperand, variable } from '../compiler/ir.ts';
 import type { Condition, ExportedVariable, Instruction, Module, ObjectDeclaration, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
 import type { Opcode } from '../opcodes/table.ts';
+import { takesVariableName } from '../opcodes/table.ts';
+import { LOOSE_VALUE_KINDS } from '../opcodes/keys.ts';
 import { objectKind } from '../objects/objects.ts';
 import { OBJECT_PARAM_KINDS } from '../objects/keys.ts';
 import type { Names } from '../compiler/names.ts';
@@ -20,7 +22,7 @@ import {
 } from './symbols.ts';
 import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
-import { callGraph, reachable, usedFunctions } from './calls.ts';
+import { callGraph, reachable, usedFunctions, writtenNames } from './calls.ts';
 
 const NEGATED: Readonly<Record<string, Condition>> = { '==': 'ne', '!=': 'eq', '<': 'ge', '<=': 'gt', '>': 'le', '>=': 'lt' };
 const DIRECT: Readonly<Record<string, Condition>> = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
@@ -151,6 +153,8 @@ export class Generator {
   private readonly exports: ExportedVariable[] = [];
   private readonly reach: Map<string, Set<string>>;
   private readonly used: Set<string>;
+  private readonly written: Set<string>;
+  private readonly fixed = new Map<string, string>();
   private readonly warnings: string[] = [];
   private readonly usesStack: boolean;
   private instructions: Instruction[] = [];
@@ -163,6 +167,7 @@ export class Generator {
     const graph = callGraph(file);
     this.reach = reachable(graph);
     this.used = usedFunctions(file, graph);
+    this.written = writtenNames(file);
     this.usesStack = [...this.reach.entries()].some(([name, targets]) => targets.has(name));
   }
 
@@ -251,6 +256,10 @@ export class Generator {
           this.globals.set(declaration.name, declaration.array
             ? { kind: 'array', base: declaration.name, length: arrayLengthName(this.names, declaration.name) }
             : { kind: 'variable', name: this.names.variable(declaration.name), constant: false });
+          if (!declaration.array && !declaration.exported && declaration.value && !this.written.has(declaration.name)) {
+            const text = this.fixedInitializer(declaration.value);
+            if (text !== null) this.fixed.set(this.names.variable(declaration.name), text);
+          }
           if (declaration.exported) {
             const gameName = declaration.array ? elementName(this.names, declaration.name, ARRAY_INDEX_PLACEHOLDER) : this.names.variable(declaration.name);
             this.exports.push({ name: declaration.name, gameName, lengthName: declaration.array ? arrayLengthName(this.names, declaration.name) : null });
@@ -372,6 +381,8 @@ export class Generator {
         } else {
           const name = this.frame.declare(statement.name);
           if (initial) this.into(initial, name);
+          const text = initial && !this.written.has(statement.name) ? this.fixedInitializer(initial) : null;
+          if (text !== null) this.fixed.set(name, text);
         }
         break;
       }
@@ -1204,7 +1215,16 @@ export class Generator {
     if (isLiteralExpression(expression)) return literalText(expression);
     if (expression.kind !== 'name') return null;
     const entry = this.lookup(expression.name, expression.location);
-    return entry.kind === 'constant' ? entry.text : null;
+    if (entry.kind === 'constant') return entry.text;
+    return entry.kind === 'variable' ? this.fixed.get(entry.name) ?? null : null;
+  }
+
+  private fixedInitializer(expression: Expression): string | null {
+    if (isLiteralExpression(expression)) return literalText(expression);
+    if (expression.kind !== 'name') return null;
+    const entry = this.frame.lookup(expression.name) ?? this.globals.get(expression.name);
+    if (entry?.kind === 'constant') return entry.text;
+    return entry?.kind === 'variable' ? this.fixed.get(entry.name) ?? null : null;
   }
 
   private inlineTemplate(expression: Expression): string | null {
@@ -1244,6 +1264,11 @@ export class Generator {
       if (entry.kind === 'constant') return textOperand(entry.text);
       if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));
       if (entry.kind === 'array') return textOperand(entry.length);
+      if (takesVariableName(opcode, side)) return textOperand(entry.name);
+      const fixedText = this.fixed.get(entry.name);
+      if (fixedText !== undefined) return textOperand(fixedText);
+      if (!LOOSE_VALUE_KINDS.has(kind)) return fail(expression.location, TEXT.needsFixedValue(opcode.number, side, kind, expression.name));
+      this.warnings.push(TEXT.where(expression.location.line, TEXT.passesName(opcode.number, side, expression.name), expression.location.file));
       return textOperand(entry.name);
     }
     if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));

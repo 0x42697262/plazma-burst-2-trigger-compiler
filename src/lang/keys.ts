@@ -70,3 +70,5 @@ export const ARRAY_INDEX_PLACEHOLDER = 'i';
 export const SIDE = Object.freeze({ a: 'A', b: 'B' });
 export const TRIGGER_KIND = 'trigger';
 export const UID_MARK = '#';
+export const ACTION_BUILTIN = 'action';
+export const SIDE_B = 'B';

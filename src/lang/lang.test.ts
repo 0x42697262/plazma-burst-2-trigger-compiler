@@ -457,7 +457,7 @@ describe('language: errors', () => {
     error('on start { nothing(); }', /unknown function "nothing"/);
     error('var x;\nvar x;', /"x" is already defined/);
     error('on start { let y = say("x"); }', /"say" gives no value/);
-    error('var n = 2;\nvar s = drop("abc", n);', /drop\(\.\.\.\) must be a whole number/);
+    error('var n = 2;\nvar s = drop("abc", n);\non start { n += 1; }', /drop\(\.\.\.\) must be a whole number/);
     error('function len(x) { return 1; }', /"len" is a builtin/);
     error('on start { wait(0); }', /"wait" needs a whole number/);
     error('every 5 { return 1; }', /only functions return a value/);

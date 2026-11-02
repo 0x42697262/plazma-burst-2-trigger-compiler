@@ -1,4 +1,8 @@
 import type { Expression, SourceFile, Statement } from './ast.ts';
+import { opcodeByName, opcodeByNumber, takesVariableName } from '../opcodes/table.ts';
+import type { Opcode } from '../opcodes/table.ts';
+import { SIDE_A } from '../opcodes/keys.ts';
+import { ACTION_BUILTIN, SIDE_B } from './keys.ts';
 
 function expressionCalls(expression: Expression | null, found: Set<string>): void {
   if (!expression) return;
@@ -115,4 +119,102 @@ export function usedFunctions(file: SourceFile, graph: ReadonlyMap<string, Reado
     pending.push(...(graph.get(name) ?? []));
   }
   return used;
+}
+
+const opcodeOf = (expression: Expression | undefined): Opcode | null => {
+  if (!expression) return null;
+  if (expression.kind === 'number') return opcodeByNumber(Number(expression.text));
+  if (expression.kind === 'name') return opcodeByName(expression.name);
+  if (expression.kind === 'string' && expression.parts.every((part) => part.kind === 'text')) {
+    return opcodeByName(expression.parts.map((part) => (part.kind === 'text' ? part.text : '')).join(''));
+  }
+  return null;
+};
+
+function expressionWrites(expression: Expression | null, found: Set<string>): void {
+  if (!expression) return;
+  switch (expression.kind) {
+    case 'call': {
+      if (expression.callee === ACTION_BUILTIN) {
+        const opcode = opcodeOf(expression.args[0]);
+        expression.args.slice(1).forEach((argument, index) => {
+          const side = index === 0 ? SIDE_A : SIDE_B;
+          if (argument.kind === 'name' && (opcode === null || takesVariableName(opcode, side))) found.add(argument.name);
+        });
+      }
+      for (const argument of expression.args) expressionWrites(argument, found);
+      return;
+    }
+    case 'index':
+      expressionWrites(expression.index, found);
+      return;
+    case 'unary':
+      expressionWrites(expression.operand, found);
+      return;
+    case 'binary':
+      expressionWrites(expression.left, found);
+      expressionWrites(expression.right, found);
+      return;
+    case 'string':
+      for (const part of expression.parts) if (part.kind === 'expression') expressionWrites(part.expression, found);
+      return;
+    default:
+      return;
+  }
+}
+
+function statementWrites(statements: readonly Statement[], found: Set<string>): void {
+  for (const statement of statements) {
+    switch (statement.kind) {
+      case 'assign':
+        if (statement.target.kind === 'name') found.add(statement.target.name);
+        else expressionWrites(statement.target.index, found);
+        expressionWrites(statement.value, found);
+        break;
+      case 'let':
+      case 'return':
+        expressionWrites(statement.value, found);
+        break;
+      case 'expression':
+        expressionWrites(statement.expression, found);
+        break;
+      case 'if':
+        expressionWrites(statement.condition, found);
+        statementWrites(statement.then, found);
+        statementWrites(statement.otherwise ?? [], found);
+        break;
+      case 'while':
+        expressionWrites(statement.condition, found);
+        statementWrites(statement.body, found);
+        break;
+      case 'for':
+        statementWrites(statement.init ? [statement.init] : [], found);
+        expressionWrites(statement.condition, found);
+        statementWrites(statement.step ? [statement.step] : [], found);
+        statementWrites(statement.body, found);
+        break;
+      case 'forPlayer':
+        found.add(statement.name);
+        statementWrites(statement.body, found);
+        break;
+      case 'block':
+        statementWrites(statement.body, found);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+export function writtenNames(file: SourceFile): Set<string> {
+  const found = new Set<string>();
+  for (const declaration of file.declarations) {
+    if (declaration.kind === 'function') {
+      for (const parameter of declaration.params) found.add(parameter);
+      statementWrites(declaration.body, found);
+    }
+    if (declaration.kind === 'on' || declaration.kind === 'every') statementWrites(declaration.body, found);
+    if (declaration.kind === 'var') expressionWrites(declaration.value, found);
+  }
+  return found;
 }

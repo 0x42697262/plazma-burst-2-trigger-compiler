@@ -1,6 +1,6 @@
 import snapshot from './snapshot.json' with { type: 'json' };
 import { AVOIDED, OPCODE, TEMPLATE_REPLACED_A, TEMPLATE_REPLACED_B } from './constants.ts';
-import { COMPARISON, OP_PREFIX } from './keys.ts';
+import { COMPARISON, NAME_SLOT, OP_PREFIX, SIDE_A } from './keys.ts';
 
 export type Comparison = (typeof COMPARISON)[keyof typeof COMPARISON];
 
@@ -62,3 +62,7 @@ export const opcodeByName = (name: string): Opcode | null => {
 };
 
 export const textName = (opcode: Opcode): string => `${OP_PREFIX}${opcode.number}`;
+
+
+export const takesVariableName = (opcode: Opcode, side: string): boolean =>
+  (side === SIDE_A ? opcode.templateReplacedA : opcode.templateReplacedB) || NAME_SLOT(side).test(opcode.description);
