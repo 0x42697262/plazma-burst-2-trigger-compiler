@@ -13,6 +13,10 @@ npm run compile -- game.ptc --obfuscate-seed release-3 --into map.xml --replace
 |---|---|
 | `--obfuscate` | turn it on; the seed is the `--name-seed` if given, else the prefix |
 | `--obfuscate-seed <s>` | turn it on with this seed. The same seed gives the same build; a new seed per release changes every generated name, so two releases do not line up |
+| `--obfuscate-seed random` | turn it on with a new random seed at every build. The seed is printed and written to `.names.json`; give it as `--obfuscate-seed` to build the same again |
+
+On the web page, the seed box takes the same values (`random` shows the chosen seed with the
+problems), and "new seed" puts a fresh random seed in the box.
 
 Unless `--prefix` or `--name-seed` is given, the prefix also comes from the seed (`z...`, like
 `--name-seed`). `--replace` with the `.build.json` record updates a map in place across seeds.

@@ -92,7 +92,7 @@ simulator runs.
 | `--no-create` | with `--into`: do not add declared map objects the map lacks; warn instead |
 | `--replace` | with `--into`: remove this program's old triggers and timers from the map first, to update it in place |
 | `--name-seed <s>` | derive the name prefix from a seed: reproducible, source-independent names. Pair with `--replace` to update a map across renamed builds (a `.build.json` next to the output records the uids) |
-| `--obfuscate`, `--obfuscate-seed <s>` | shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check that turns a changed copy of the map off; about 3× slower ([docs/obfuscation.md](docs/obfuscation.md)) |
+| `--obfuscate`, `--obfuscate-seed <s\|random>` | shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check that turns a changed copy of the map off; about 3× slower ([docs/obfuscation.md](docs/obfuscation.md)) |
 | `--target <name>` | `triggers` (default) compiles to triggers; `pcode` compiles to p-code run by a fixed set of triggers: about 20× slower, experimental ([docs/pcode.md](docs/pcode.md)) |
 | `--direct-index` | build array element names from pieces instead of scanning every variable: 2 more actions per array access, faster in maps with many variables (F37) |
 | `--no-number-text` | write number-like text such as `"007"` as it is, for map editors other than the website one; by default it is kept safe from the website editor, which turns it into a number (F36) |
