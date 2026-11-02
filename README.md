@@ -58,6 +58,9 @@ Each is in `examples/tutorial/`.
 [docs/challenges/game-of-life.md](docs/challenges/game-of-life.md): a challenge for developers,
 Conway's Game of Life in a map.
 
+[docs/passwords.md](docs/passwords.md): a chat password whose text is nowhere in the map
+(compile-time constants, `secret`, `env()` and `std/hash.ptc`).
+
 [docs/actions.md](docs/actions.md): all 531 actions, how to call each one, and which the
 simulator runs.
 

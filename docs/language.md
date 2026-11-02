@@ -122,6 +122,44 @@ never-changing `i` is as cheap as `list[2]`.
     compiler warns when the host map uses one of the program's variables that is not exported:
     those names can change when the program changes.
 - There is no private/public/protected: the game could not enforce them.
+- `import "std/name.ptc";` imports from the standard library that comes with the compiler
+  (`std/` in this repository; the web page has it built in). `std/hash.ptc` gives `hash(text)`.
+
+## Compile-time constants
+
+A `const` is worked out while compiling: its value may be any expression, also calls to the
+program's own functions, as long as nothing in it acts on the game (no `say`, no map objects, no
+players, no `random`, no `time`, no chat). The compiler runs it in the simulator and writes only
+the result into the actions; a function used only this way is not written into the map.
+
+```
+function square(n) { return n * n; }
+const AREA = square(7);                 // the map gets 49
+const LABEL = "area {AREA}";            // the map gets "area 49"
+```
+
+A constant can use the constants declared before it and the starting values of variables. Anything
+that acts on the game, or does not finish, is a compile error: `cannot compute R while compiling`.
+The simulator matches the game (`npm run live-check`, including `examples/live/lang-hash.ptc`), so a
+value worked out here equals the one the map would compute.
+
+`env("NAME")` works only in a `const` and gives the value of an environment variable while
+compiling (`MAP_PASSWORD=... npm run compile -- map.ptc`); the web page has none.
+
+### Secrets
+
+`secret const NAME = value;` marks a value that must not reach the map, like a password:
+
+- Any expression that uses a secret is worked out while compiling, wherever it stands:
+  `var pass = hash(PASSWORD);` writes only the hash.
+- After compiling, every action of the map is searched for the secret's text. If it is there, for
+  example from `chatText() == PASSWORD`, `var copy = PASSWORD;` or a function that returns its
+  argument, compiling fails and names the trigger and line.
+- A secret needs at least 4 characters, so the search means something. It finds the text as it is;
+  a secret changed on purpose (written backwards) is not found.
+
+`secret` is a word only before `const`; elsewhere it is an ordinary name. See
+[passwords.md](passwords.md) for a complete example.
 
 ## Values and types
 
@@ -158,7 +196,8 @@ Collections:
 |---|---|
 | `var x;` / `var x = expr;` | global variable, set at map start, in file order (`var a = b + 1; var b = 2;` reads `b` before it is set) |
 | `var list[];` | array (see below) |
-| `const NAME = 5;` | constant: a number, text, `true` or `false`; written into the actions |
+| `const NAME = 5;` / `const AREA = square(7);` | constant, worked out while compiling and written into the actions (see Compile-time constants) |
+| `secret const PASSWORD = env("MAP_PASSWORD");` | a constant that may only feed other constants: compiling fails if its text would be written into the map |
 | `extern score;` / `extern s = "host name";` | a variable of the host map, used by its own name |
 | `water pool = "#water*1";` / `door gate = "#door*3" at 400, -120;` | a map object (see below) |
 | `region spawns[] = ["#S1", "#S2"];` / `decor grid[][] = [["#a", "#b"], ["#c", "#d"]];` | an array of map objects, nested to any depth |
@@ -230,6 +269,7 @@ Text escapes: `\" \\ \n \{ \}`.
 | `clear(list)` | sets the length to 0 |
 | `chatText()`, `talker()`, `talkerName()` | in `on chat`: the text, the writer's slot, the writer's displayed name |
 | `team(slot)` | the team number of the player in a slot |
+| `env("NAME")` | in a `const` only: an environment variable while compiling |
 | `action(op, a, b)` | any action, by number or alias. A name argument gives that variable's game name, `@f` gives function `f`'s uid, text gives itself; `{x}` inside text gives x's game name |
 
 ## Arrays
@@ -298,7 +338,7 @@ program        = { import | declaration } ;
 import         = "import" string ";" ;
 
 declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
-               | "const" identifier "=" expression ";"
+               | [ "secret" ] "const" identifier "=" expression ";"
                | "extern" identifier [ "=" string ] ";"
                | object-kind identifier "=" string [ "at" signed "," signed ] ";"
                | object-kind identifier "[" "]" { "[" "]" } "=" uid-list ";"
@@ -370,5 +410,8 @@ Rules the grammar does not show:
   they are ordinary identifiers.
 - Binary operators of the same level group from the left: `a - b - c` is `(a - b) - c`.
 - `"@" identifier` (a function's trigger) is allowed only as an argument of `action(...)`.
+- `"secret"` is a word only right before `"const"`; elsewhere it is an identifier. `env(...)` is allowed
+  only inside a `const` expression, with one string in quotes.
+- A `const` expression must be computable while compiling: no actions on the game.
 - In `every`, `wait` and `drop`, the number must be a whole number above 0 (for `drop`: any whole
   number); `wait` and `drop` also accept a constant.

@@ -4,6 +4,8 @@ import { compileSource } from './compile.ts';
 import { Simulation } from '../sim/simulator.ts';
 import { readSourceFile } from '../cli/sources.ts';
 import type { CompileOptions } from '../compiler/compile.ts';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const MAIN = '/virtual/main.ptc';
 const PLAYERS = [{ slot: 0, name: 'ann', active: true }];
@@ -82,6 +84,16 @@ describe('secrets and env', () => {
   it('keeps secret as an ordinary name outside "secret const"', () => {
     const { chat } = run('var secret = 5;\non start { secret += 1; say("{secret}"); }');
     assert.deepEqual(chat, ['6']);
+  });
+});
+
+describe('passwords guide', () => {
+  it('runs the program in docs/passwords.md', () => {
+    const guide = fs.readFileSync(path.resolve(import.meta.dirname, '..', '..', 'docs', 'passwords.md'), 'utf8');
+    const program = /```\n(import "std\/hash\.ptc";[\s\S]*?)```/.exec(guide)?.[1] ?? '';
+    const { chat, map } = run(program, { environment: { MAP_PASSWORD: 'open sesame' } }, ['open sesame', 'open sesame!']);
+    assert.deepEqual(chat, ['ann knows the password']);
+    assert.ok(!map.includes('open sesame'));
   });
 });
 
