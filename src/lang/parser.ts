@@ -388,7 +388,7 @@ class Parser {
     if (token.kind !== 'identifier') return this.fail(TEXT.expression);
     const name = this.identifier();
     if (this.accept(PUNCTUATOR.dot)) {
-      const member = this.identifier();
+      const member = this.current.kind === 'keyword' ? this.next().text : this.identifier();
       const group = valueGroup(name) ?? fail(location, TEXT.unknownValueGroup(name, VALUE_GROUP_LIST.map((entry) => entry.name)));
       const text = group.members.get(member) ?? fail(location, TEXT.unknownValueMember(name, member));
       return { kind: 'named', group: name, member, paramKind: group.paramKind, text, location };

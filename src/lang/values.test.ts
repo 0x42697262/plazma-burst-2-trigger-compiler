@@ -8,7 +8,12 @@ const actions = (source: string) => compileSource(source, 't').program.triggers.
 describe('named values', () => {
   it('builds readable names from the editor labels', () => {
     assert.equal(memberName("Main Hero (Player's nickname is displayed)"), 'MainHeroPlayersNicknameIsDisplayed');
-    assert.equal(memberName('1 call'), 'N1Call');
+    assert.equal(memberName('1 call'), '1Call');
+    assert.equal(valueGroup('Calls')?.members.has('1Call'), false);
+    assert.equal(valueGroup('Calls')?.members.get('Infinite'), '-1');
+    assert.equal(valueGroup('GunModel')?.members.get('gun_rifle'), 'gun_rifle');
+    assert.equal(valueGroup('Sound')?.members.get('hp_warn'), 'hp_warn');
+    assert.equal(valueGroup('Bool')?.members.get('true'), 'true');
     assert.equal(valueGroup('Color')?.members.get('NoirLime'), '2');
     assert.equal(valueGroup('Team')?.members.get('RedTeam'), '12');
     assert.equal(valueGroup('Team')?.members.get('AnyTeam'), '-1');
@@ -20,6 +25,13 @@ describe('named values', () => {
     assert.deepEqual(used.filter((action) => [42, 33, 507].includes(action.opcode)).map((action) => [action.opcode, action.targetB]), [
       [42, '2'], [33, '13'], [507, '12'],
     ]);
+  });
+
+  it('accepts the editor value as the name where it is one', () => {
+    const used = actions('gun rifle = "#gun*1";\non start { action(287, rifle, GunModel.gun_rifle); action(287, rifle, GunModel.AssaultRifleC01r); action(PlaySound, Sound.hp_warn); }');
+    assert.deepEqual(used.filter((action) => action.opcode === 287).map((action) => action.targetB), ['gun_rifle', 'gun_rifle']);
+    assert.deepEqual(used.filter((action) => action.opcode === 41).map((action) => action.targetA), ['hp_warn']);
+    assert.ok(compileSource('var flag = Bool.true;\nvar other = Bool.No;', 't'));
   });
 
   it('works in comparisons and match patterns', () => {

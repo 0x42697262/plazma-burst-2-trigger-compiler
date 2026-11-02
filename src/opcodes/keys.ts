@@ -23,5 +23,5 @@ export const PLACEHOLDER_KEY = /\[/;
 export const WORD_SPLIT = /[^A-Za-z0-9]+/;
 export const APOSTROPHES = /['’]/g;
 export const STARTS_WITH_DIGIT = /^[0-9]/;
-export const DIGIT_PREFIX = 'N';
+export const IDENTIFIER_VALUE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 export const COLLISION_SEPARATOR = '_';

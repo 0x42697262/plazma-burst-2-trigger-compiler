@@ -44,8 +44,8 @@ export function renderActions(): string {
   }
   lines.push('', TEXT.valuesTitle);
   for (const group of VALUE_GROUP_LIST) {
-    lines.push('', TEXT.valueGroup(group.name, group.paramKind, group.members.size), '', TEXT.valueHead);
-    for (const [name, value] of group.members) lines.push(TEXT.valueRow(name, cell(value), cell(group.labels.get(name) ?? '')));
+    lines.push('', TEXT.valueGroup(group.name, group.paramKind, group.entries.length), '', TEXT.valueHead);
+    for (const entry of group.entries) lines.push(TEXT.valueRow(entry.names, cell(entry.value), cell(entry.label)));
   }
   return lines.join(LINE_END) + LINE_END;
 }

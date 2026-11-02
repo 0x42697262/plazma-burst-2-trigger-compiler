@@ -735,6 +735,8 @@ needs the Var Sync engine mark (F30).
 ## Named values
 
 Fixed values from the editor's own lists, written `Group.Name`: `say("hi", Color.NoirLime)`,
+`GunModel.gun_rifle`. Where the editor's value is already a name (`gun_rifle`, `hp_warn`), it is the
+name; the label form (`GunModel.AssaultRifleC01r`) works too.
 `action(SetCharTeam, hero, Team.RedTeam)`. The compiler writes the value into the action and
 refuses a value from another group where a parameter has its own list. The raw value (`2`,
 `12`) works too.
@@ -792,8 +794,8 @@ refuses a value from another group where a parameter has its own list. The raw v
 
 | Name | Value | Editor label |
 |---|---|---|
-| `Yes` | `true` | Yes |
-| `No` | `false` | No |
+| `true` or `Yes` | `true` | Yes |
+| `false` or `No` | `false` | No |
 
 ### Toggle (`enable-disable`, 2)
 
@@ -802,11 +804,10 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `Disable` | `0` | Disable |
 | `Enable` | `1` | Enable |
 
-### Calls (`maxcalls`, 2)
+### Calls (`maxcalls`, 1)
 
 | Name | Value | Editor label |
 |---|---|---|
-| `N1Call` | `1` | 1 call |
 | `Infinite` | `-1` | Infinite |
 
 ### PusherDamage (`pushf_damage`, 1)
@@ -819,390 +820,390 @@ refuses a value from another group where a parameter has its own list. The raw v
 
 | Name | Value | Editor label |
 |---|---|---|
-| `AssaultRifleC01r` | `gun_rifle` | Assault Rifle C-01r |
-| `AssaultRifleC01rRed` | `gun_rifle_b` | Assault Rifle C-01r (Red) |
-| `PistolC01p` | `gun_pistol` | Pistol C-01p |
-| `PistolC01pRed` | `gun_pistol_b` | Pistol C-01p (Red) |
-| `PistolCSPro` | `gun_pistol2` | Pistol CS-Pro |
-| `VehicleRocketLauncherCorvette` | `gun_vehgun` | Vehicle Rocket Launcher (Corvette) |
-| `GrenadeLauncherCSSpamThemBaby` | `gun_gl` | Grenade Launcher CS-SpamThemBaby |
-| `RocketLauncherCSLitBro` | `gun_rl` | Rocket Launcher CS-LitBro |
-| `LiteRailgunV01CSHShot` | `gun_railgun` | Lite Railgun v01 CS-HShot |
-| `HeavyRailgunV04CSOneSOneK` | `gun_railgun2` | Heavy Railgun v04 CS-OneSOneK |
-| `ShotgunC01s` | `gun_shotgun` | Shotgun C-01s |
-| `ShotgunC01sBlue` | `gun_shotgun_b` | Shotgun C-01s (Blue) |
-| `AlienPistol` | `gun_apistol` | Alien Pistol |
-| `AlienRifle` | `gun_arifle` | Alien Rifle |
-| `AlienShotgun` | `gun_arifle2` | Alien Shotgun |
-| `VehicleCannonHoundWalkerCS` | `gun_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
-| `Defibrillator` | `gun_defibrillator` | Defibrillator |
-| `CSBNG` | `gun_bfg` | CS-BNG |
-| `RayGunC01y` | `gun_raygun` | Ray Gun C-01y |
-| `RayRifleTCoRR` | `gun_rayrifle` | Ray Rifle TCoRR |
-| `VehicleMinigunDrone` | `gun_vehminigun` | Vehicle Minigun (Drone) |
-| `VehicleGrenadeLauncherDrone` | `gun_vehminigl` | Vehicle Grenade Launcher (Drone) |
-| `ShotgunCSDAZ` | `gun_real_shotgun` | Shotgun CS-DAZ |
-| `AssaultRifleCSRC` | `gun_real_rifle` | Assault Rifle CS-RC |
-| `CombatRifleCSOICW` | `gun_oicw` | Combat Rifle CS-OICW |
-| `PlasmagunCSBloom` | `gun_plasmagun` | Plasmagun CS-Bloom |
-| `MinigunC02m` | `gun_minigun` | Minigun C-02m |
-| `DroneGunCSVirus` | `gun_vgun` | Drone Gun CS-Virus |
-| `SniperRifleCSYippeeKiYay` | `gun_sniper` | Sniper Rifle CS-YippeeKiYay |
-| `GrenadeC00n` | `item_grenade` | Grenade C-00n |
-| `TeleportGrenadeV03CSPortNade` | `item_port` | Teleport Grenade v03 CS-PortNade |
-| `PortableShieldV07CSQuarium` | `item_shield` | Portable Shield v07 CS-Quarium |
-| `PortableShieldV07CSQuariumAsWeaponSlot7` | `gun_sp_sh` | Portable Shield v07 CS-Quarium (as weapon slot 7) |
-| `GlockUnfinishedWeapon` | `gun_glock` | Glock (unfinished weapon) |
-| `M4A1UnfinishedWeapon` | `gun_m4a1` | M4A1 (unfinished weapon) |
-| `StarDefenderRifle` | `gun_pixel_rifle` | Star Defender Rifle |
-| `StarDefenderRocketLauncher` | `gun_pixel_rl` | Star Defender Rocket Launcher |
-| `CPAssaultRifleByDarkstar1` | `darkstar_1_assault_rifle` | CP-Assault Rifle by darkstar 1 |
-| `CSGaussRifleByDarkstar1` | `darkstar_1_gauss_rifle` | CS-GaussRifle by darkstar 1 |
-| `LightMachineGunCSLMGByDarkstar1` | `darkstar_1_minigun` | Light Machine Gun CS-LMG by darkstar 1 |
-| `PHANX92FalconetByDarkstar1` | `darkstar_1_phanx_rifle` | PHANX-92 Falconet by darkstar 1 |
-| `AlienSniperRifleByDarkstar1` | `darkstar_1_usniper` | Alien Sniper Rifle by darkstar 1 |
-| `AssaultRifleAV135ByLostmydollar` | `lostmydollar_av135` | Assault Rifle AV-135 by lostmydollar |
-| `NeedleByLostmydollar` | `lostmydollar_needle` | Needle by lostmydollar |
-| `QCcV50LittleBastardByLostmydollar` | `lostmydollar_qccv50` | QCcV-50 Little Bastard by lostmydollar |
-| `RMK36ByLostmydollar` | `lostmydollar_rmk36` | RMK-36 by lostmydollar |
-| `RPGByLostmydollar` | `lostmydollar_rpg` | RPG by lostmydollar |
-| `AlienLaserRifleByLazyRain` | `lazyrain_alien_laser_rifle` | Alien Laser Rifle by LazyRain |
-| `AlienHeaterRifleByLazyRain` | `lazyrain_alien_laser_rifle2` | Alien Heater Rifle by LazyRain |
-| `CSAutocannonByLazyRainForVehicles` | `lazyrain_cannon` | CS-Autocannon by LazyRain (for vehicles) |
-| `CSAutocannonByLazyRainSmallerHandHeld` | `lazyrain_cannon2` | CS-Autocannon by LazyRain (smaller, hand-held) |
-| `CrossfireCR45PhantomByMoonhawk` | `moonhawk_phantom` | Crossfire CR-45 Phantom by Moonhawk |
-| `CrossfireCR45PhantomDarkVersionByMoonhawk` | `moonhawk_phantom2` | Crossfire CR-45 Phantom (dark version) by Moonhawk |
-| `CrossfireCR42GhostByMoonhawk` | `moonhawk_smg` | Crossfire CR-42 Ghost by Moonhawk |
-| `EnergyRifleByDitzy` | `ditzy_energy_rifle` | Energy Rifle by Ditzy |
-| `FalkonianMarksmanRifleByRoxxar` | `roxxar_marksman_rifle` | Falkonian Marksman Rifle by Roxxar |
-| `FalkonianPistolByRoxxar` | `roxxar_pistol` | Falkonian Pistol by Roxxar |
-| `FalkonianShotgunByRoxxar` | `roxxar_rifle` | Falkonian Shotgun by Roxxar |
-| `FalkonianGrenadeLauncherByRoxxar` | `roxxar_shotgun` | Falkonian Grenade Launcher by Roxxar |
-| `CrossfireCR145VortexByMoonhawk` | `moonhawk_crossfire` | Crossfire CR-145 Vortex by Moonhawk |
-| `FalkonianPSICutterByLazyRain` | `lazyrain_psi_cutter` | Falkonian PSI Cutter by LazyRain |
-| `AndroidSniperRifleByMrJaksNes` | `mrjaksnes_android_sniper` | Android Sniper Rifle by Mr jaks nes |
-| `OEDACR30RifleByIncompetence` | `incompetence_cr30` | OEDA CR-30 Rifle by Incompetence |
-| `HeavySniperRifleRQ10ByDarkstar1` | `darkstar_1_cs_ragequit` | Heavy Sniper Rifle RQ-10 by darkstar 1 |
-| `PBFTTPVehicleCannon` | `gun_fttp_vehgun` | PB:FTTP Vehicle Cannon |
-| `ShotgunNXS25ByThetoppestkek` | `thetoppestkek_shotgun_nxs25` | Shotgun NXS-25 by thetoppestkek |
-| `Archetype27XXByIncompetence` | `incompetence_archetype_27xx` | Archetype 27XX by Incompetence |
-| `MarksmanRifleCSRMByPhsc` | `phsc_aug` | Marksman Rifle CS-RM by phsc |
-| `CrossfireCR34MarauderBrightByMoonhawk` | `moonhawk_railgun` | Crossfire CR-34 Marauder (bright) by Moonhawk |
-| `CrossfireCR34MarauderDarkByMoonhawk` | `moonhawk_railgun2` | Crossfire CR-34 Marauder (dark) by Moonhawk |
-| `MedicPistolByLazyRain` | `lazyrain_heal_pistol` | Medic Pistol by LazyRain |
-| `GrenadeLauncherCSGLHFByIncompetence` | `incompetence_glhf` | Grenade Launcher CS-GLHF by Incompetence |
-| `OEDAEA109HLauncherByIncompetence` | `incompetence_glhf2` | OEDA EA-109H Launcher by Incompetence |
-| `FalkonianAntiGravityRocketLauncherYellowByLazyRain` | `lazyrain_gravy_rl` | Falkonian Anti-Gravity Rocket Launcher (yellow) by LazyRain |
-| `FalkonianAntiGravityRocketLauncherRedByLazyRain` | `lazyrain_gravy_rl2` | Falkonian Anti-Gravity Rocket Launcher (red) by LazyRain |
-| `RocketLauncherCSBarrageByDarkstar1` | `darkstar_1_owo_rl` | Rocket Launcher CS-Barrage by darkstar 1 |
-| `PlasmaShotgunByPhsc` | `phsc_plasma_shotgun` | Plasma Shotgun by phsc |
-| `AndroidShotgunByPhsc` | `phsc_android_shotgun` | Android Shotgun by phsc |
-| `AssaultRifleCSIKByDitzy` | `ditzy_cs_ik` | Assault Rifle CS-IK by Ditzy |
-| `AssaultRifleNXR17CByDitzy` | `ditzy_cs_ik2` | Assault Rifle NXR-17C by Ditzy |
-| `CrossfireCR54ViperByPhsc` | `phsc_ph01` | Crossfire CR-54 Viper by phsc |
-| `CrossfireCR54ViperVersion2ByPhsc` | `phsc_ph01b` | Crossfire CR-54 Viper (version 2) by phsc |
-| `PHANX230CobraByDarkstar1` | `darkstar_1_railgun` | PHANX-230 Cobra by darkstar 1 |
-| `EosToxicRailgunByDarkstar1` | `darkstar_1_railgun2` | Eos Toxic Railgun by darkstar 1 |
-| `AlienRailShotgunByDarkstar1` | `darkstar_1_alien_rail_sg` | Alien Rail Shotgun by darkstar 1 |
-| `GrenadeLauncherC00tByDarkstar1` | `darkstar_1_nade_c9` | Grenade Launcher C-00t by darkstar 1 |
-| `GrenadeLauncherC00tRedByDarkstar1` | `darkstar_1_nade_c9b` | Grenade Launcher C-00t (red) by darkstar 1 |
-| `EosRocketLauncherByDarkstar1` | `darkstar_1_rl` | Eos Rocket Launcher by darkstar 1 |
-| `PHANX150BisonByDarkstar1` | `darkstar_1_bison` | PHANX-150 Bison by darkstar 1 |
-| `EosAutoShotgunByDarkstar1` | `darkstar_1_auto_sg` | Eos Auto Shotgun by darkstar 1 |
-| `ReakhohshaFocusBeamByDitzy` | `ditzy_focus_beam` | Reakhohsha Focus Beam by Ditzy |
-| `RevolverMK1ByBoom5` | `boom5_revolver` | Revolver MK1 by boom5 |
-| `ScavengerShotgunByThetoppestkek` | `thetoppestkek_scavenger_sg` | Scavenger Shotgun by thetoppestkek |
-| `AlienAcidGrenadeLauncherByLazyRain` | `lazyrain_acid_gl` | Alien Acid Grenade Launcher by LazyRain |
-| `AlienPlasmaPistolWhiteByLazyRain` | `lazyrain_plasma_smg` | Alien Plasma Pistol (white) by LazyRain |
-| `AlienPlasmaPistolYellowByLazyRain` | `lazyrain_plasma_smg2` | Alien Plasma Pistol (yellow) by LazyRain |
-| `AndroidRailgunByRoxxar` | `roxxar_android_railgun` | Android Railgun by Roxxar |
-| `InvisibleGun` | `gun_invisgun` | Invisible gun |
-| `SharkDoesNothing` | `gun_sharkgun` | Shark (does nothing) |
+| `gun_rifle` or `AssaultRifleC01r` | `gun_rifle` | Assault Rifle C-01r |
+| `gun_rifle_b` or `AssaultRifleC01rRed` | `gun_rifle_b` | Assault Rifle C-01r (Red) |
+| `gun_pistol` or `PistolC01p` | `gun_pistol` | Pistol C-01p |
+| `gun_pistol_b` or `PistolC01pRed` | `gun_pistol_b` | Pistol C-01p (Red) |
+| `gun_pistol2` or `PistolCSPro` | `gun_pistol2` | Pistol CS-Pro |
+| `gun_vehgun` or `VehicleRocketLauncherCorvette` | `gun_vehgun` | Vehicle Rocket Launcher (Corvette) |
+| `gun_gl` or `GrenadeLauncherCSSpamThemBaby` | `gun_gl` | Grenade Launcher CS-SpamThemBaby |
+| `gun_rl` or `RocketLauncherCSLitBro` | `gun_rl` | Rocket Launcher CS-LitBro |
+| `gun_railgun` or `LiteRailgunV01CSHShot` | `gun_railgun` | Lite Railgun v01 CS-HShot |
+| `gun_railgun2` or `HeavyRailgunV04CSOneSOneK` | `gun_railgun2` | Heavy Railgun v04 CS-OneSOneK |
+| `gun_shotgun` or `ShotgunC01s` | `gun_shotgun` | Shotgun C-01s |
+| `gun_shotgun_b` or `ShotgunC01sBlue` | `gun_shotgun_b` | Shotgun C-01s (Blue) |
+| `gun_apistol` or `AlienPistol` | `gun_apistol` | Alien Pistol |
+| `gun_arifle` or `AlienRifle` | `gun_arifle` | Alien Rifle |
+| `gun_arifle2` or `AlienShotgun` | `gun_arifle2` | Alien Shotgun |
+| `gun_vehcannon` or `VehicleCannonHoundWalkerCS` | `gun_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
+| `gun_defibrillator` or `Defibrillator` | `gun_defibrillator` | Defibrillator |
+| `gun_bfg` or `CSBNG` | `gun_bfg` | CS-BNG |
+| `gun_raygun` or `RayGunC01y` | `gun_raygun` | Ray Gun C-01y |
+| `gun_rayrifle` or `RayRifleTCoRR` | `gun_rayrifle` | Ray Rifle TCoRR |
+| `gun_vehminigun` or `VehicleMinigunDrone` | `gun_vehminigun` | Vehicle Minigun (Drone) |
+| `gun_vehminigl` or `VehicleGrenadeLauncherDrone` | `gun_vehminigl` | Vehicle Grenade Launcher (Drone) |
+| `gun_real_shotgun` or `ShotgunCSDAZ` | `gun_real_shotgun` | Shotgun CS-DAZ |
+| `gun_real_rifle` or `AssaultRifleCSRC` | `gun_real_rifle` | Assault Rifle CS-RC |
+| `gun_oicw` or `CombatRifleCSOICW` | `gun_oicw` | Combat Rifle CS-OICW |
+| `gun_plasmagun` or `PlasmagunCSBloom` | `gun_plasmagun` | Plasmagun CS-Bloom |
+| `gun_minigun` or `MinigunC02m` | `gun_minigun` | Minigun C-02m |
+| `gun_vgun` or `DroneGunCSVirus` | `gun_vgun` | Drone Gun CS-Virus |
+| `gun_sniper` or `SniperRifleCSYippeeKiYay` | `gun_sniper` | Sniper Rifle CS-YippeeKiYay |
+| `item_grenade` or `GrenadeC00n` | `item_grenade` | Grenade C-00n |
+| `item_port` or `TeleportGrenadeV03CSPortNade` | `item_port` | Teleport Grenade v03 CS-PortNade |
+| `item_shield` or `PortableShieldV07CSQuarium` | `item_shield` | Portable Shield v07 CS-Quarium |
+| `gun_sp_sh` or `PortableShieldV07CSQuariumAsWeaponSlot7` | `gun_sp_sh` | Portable Shield v07 CS-Quarium (as weapon slot 7) |
+| `gun_glock` or `GlockUnfinishedWeapon` | `gun_glock` | Glock (unfinished weapon) |
+| `gun_m4a1` or `M4A1UnfinishedWeapon` | `gun_m4a1` | M4A1 (unfinished weapon) |
+| `gun_pixel_rifle` or `StarDefenderRifle` | `gun_pixel_rifle` | Star Defender Rifle |
+| `gun_pixel_rl` or `StarDefenderRocketLauncher` | `gun_pixel_rl` | Star Defender Rocket Launcher |
+| `darkstar_1_assault_rifle` or `CPAssaultRifleByDarkstar1` | `darkstar_1_assault_rifle` | CP-Assault Rifle by darkstar 1 |
+| `darkstar_1_gauss_rifle` or `CSGaussRifleByDarkstar1` | `darkstar_1_gauss_rifle` | CS-GaussRifle by darkstar 1 |
+| `darkstar_1_minigun` or `LightMachineGunCSLMGByDarkstar1` | `darkstar_1_minigun` | Light Machine Gun CS-LMG by darkstar 1 |
+| `darkstar_1_phanx_rifle` or `PHANX92FalconetByDarkstar1` | `darkstar_1_phanx_rifle` | PHANX-92 Falconet by darkstar 1 |
+| `darkstar_1_usniper` or `AlienSniperRifleByDarkstar1` | `darkstar_1_usniper` | Alien Sniper Rifle by darkstar 1 |
+| `lostmydollar_av135` or `AssaultRifleAV135ByLostmydollar` | `lostmydollar_av135` | Assault Rifle AV-135 by lostmydollar |
+| `lostmydollar_needle` or `NeedleByLostmydollar` | `lostmydollar_needle` | Needle by lostmydollar |
+| `lostmydollar_qccv50` or `QCcV50LittleBastardByLostmydollar` | `lostmydollar_qccv50` | QCcV-50 Little Bastard by lostmydollar |
+| `lostmydollar_rmk36` or `RMK36ByLostmydollar` | `lostmydollar_rmk36` | RMK-36 by lostmydollar |
+| `lostmydollar_rpg` or `RPGByLostmydollar` | `lostmydollar_rpg` | RPG by lostmydollar |
+| `lazyrain_alien_laser_rifle` or `AlienLaserRifleByLazyRain` | `lazyrain_alien_laser_rifle` | Alien Laser Rifle by LazyRain |
+| `lazyrain_alien_laser_rifle2` or `AlienHeaterRifleByLazyRain` | `lazyrain_alien_laser_rifle2` | Alien Heater Rifle by LazyRain |
+| `lazyrain_cannon` or `CSAutocannonByLazyRainForVehicles` | `lazyrain_cannon` | CS-Autocannon by LazyRain (for vehicles) |
+| `lazyrain_cannon2` or `CSAutocannonByLazyRainSmallerHandHeld` | `lazyrain_cannon2` | CS-Autocannon by LazyRain (smaller, hand-held) |
+| `moonhawk_phantom` or `CrossfireCR45PhantomByMoonhawk` | `moonhawk_phantom` | Crossfire CR-45 Phantom by Moonhawk |
+| `moonhawk_phantom2` or `CrossfireCR45PhantomDarkVersionByMoonhawk` | `moonhawk_phantom2` | Crossfire CR-45 Phantom (dark version) by Moonhawk |
+| `moonhawk_smg` or `CrossfireCR42GhostByMoonhawk` | `moonhawk_smg` | Crossfire CR-42 Ghost by Moonhawk |
+| `ditzy_energy_rifle` or `EnergyRifleByDitzy` | `ditzy_energy_rifle` | Energy Rifle by Ditzy |
+| `roxxar_marksman_rifle` or `FalkonianMarksmanRifleByRoxxar` | `roxxar_marksman_rifle` | Falkonian Marksman Rifle by Roxxar |
+| `roxxar_pistol` or `FalkonianPistolByRoxxar` | `roxxar_pistol` | Falkonian Pistol by Roxxar |
+| `roxxar_rifle` or `FalkonianShotgunByRoxxar` | `roxxar_rifle` | Falkonian Shotgun by Roxxar |
+| `roxxar_shotgun` or `FalkonianGrenadeLauncherByRoxxar` | `roxxar_shotgun` | Falkonian Grenade Launcher by Roxxar |
+| `moonhawk_crossfire` or `CrossfireCR145VortexByMoonhawk` | `moonhawk_crossfire` | Crossfire CR-145 Vortex by Moonhawk |
+| `lazyrain_psi_cutter` or `FalkonianPSICutterByLazyRain` | `lazyrain_psi_cutter` | Falkonian PSI Cutter by LazyRain |
+| `mrjaksnes_android_sniper` or `AndroidSniperRifleByMrJaksNes` | `mrjaksnes_android_sniper` | Android Sniper Rifle by Mr jaks nes |
+| `incompetence_cr30` or `OEDACR30RifleByIncompetence` | `incompetence_cr30` | OEDA CR-30 Rifle by Incompetence |
+| `darkstar_1_cs_ragequit` or `HeavySniperRifleRQ10ByDarkstar1` | `darkstar_1_cs_ragequit` | Heavy Sniper Rifle RQ-10 by darkstar 1 |
+| `gun_fttp_vehgun` or `PBFTTPVehicleCannon` | `gun_fttp_vehgun` | PB:FTTP Vehicle Cannon |
+| `thetoppestkek_shotgun_nxs25` or `ShotgunNXS25ByThetoppestkek` | `thetoppestkek_shotgun_nxs25` | Shotgun NXS-25 by thetoppestkek |
+| `incompetence_archetype_27xx` or `Archetype27XXByIncompetence` | `incompetence_archetype_27xx` | Archetype 27XX by Incompetence |
+| `phsc_aug` or `MarksmanRifleCSRMByPhsc` | `phsc_aug` | Marksman Rifle CS-RM by phsc |
+| `moonhawk_railgun` or `CrossfireCR34MarauderBrightByMoonhawk` | `moonhawk_railgun` | Crossfire CR-34 Marauder (bright) by Moonhawk |
+| `moonhawk_railgun2` or `CrossfireCR34MarauderDarkByMoonhawk` | `moonhawk_railgun2` | Crossfire CR-34 Marauder (dark) by Moonhawk |
+| `lazyrain_heal_pistol` or `MedicPistolByLazyRain` | `lazyrain_heal_pistol` | Medic Pistol by LazyRain |
+| `incompetence_glhf` or `GrenadeLauncherCSGLHFByIncompetence` | `incompetence_glhf` | Grenade Launcher CS-GLHF by Incompetence |
+| `incompetence_glhf2` or `OEDAEA109HLauncherByIncompetence` | `incompetence_glhf2` | OEDA EA-109H Launcher by Incompetence |
+| `lazyrain_gravy_rl` or `FalkonianAntiGravityRocketLauncherYellowByLazyRain` | `lazyrain_gravy_rl` | Falkonian Anti-Gravity Rocket Launcher (yellow) by LazyRain |
+| `lazyrain_gravy_rl2` or `FalkonianAntiGravityRocketLauncherRedByLazyRain` | `lazyrain_gravy_rl2` | Falkonian Anti-Gravity Rocket Launcher (red) by LazyRain |
+| `darkstar_1_owo_rl` or `RocketLauncherCSBarrageByDarkstar1` | `darkstar_1_owo_rl` | Rocket Launcher CS-Barrage by darkstar 1 |
+| `phsc_plasma_shotgun` or `PlasmaShotgunByPhsc` | `phsc_plasma_shotgun` | Plasma Shotgun by phsc |
+| `phsc_android_shotgun` or `AndroidShotgunByPhsc` | `phsc_android_shotgun` | Android Shotgun by phsc |
+| `ditzy_cs_ik` or `AssaultRifleCSIKByDitzy` | `ditzy_cs_ik` | Assault Rifle CS-IK by Ditzy |
+| `ditzy_cs_ik2` or `AssaultRifleNXR17CByDitzy` | `ditzy_cs_ik2` | Assault Rifle NXR-17C by Ditzy |
+| `phsc_ph01` or `CrossfireCR54ViperByPhsc` | `phsc_ph01` | Crossfire CR-54 Viper by phsc |
+| `phsc_ph01b` or `CrossfireCR54ViperVersion2ByPhsc` | `phsc_ph01b` | Crossfire CR-54 Viper (version 2) by phsc |
+| `darkstar_1_railgun` or `PHANX230CobraByDarkstar1` | `darkstar_1_railgun` | PHANX-230 Cobra by darkstar 1 |
+| `darkstar_1_railgun2` or `EosToxicRailgunByDarkstar1` | `darkstar_1_railgun2` | Eos Toxic Railgun by darkstar 1 |
+| `darkstar_1_alien_rail_sg` or `AlienRailShotgunByDarkstar1` | `darkstar_1_alien_rail_sg` | Alien Rail Shotgun by darkstar 1 |
+| `darkstar_1_nade_c9` or `GrenadeLauncherC00tByDarkstar1` | `darkstar_1_nade_c9` | Grenade Launcher C-00t by darkstar 1 |
+| `darkstar_1_nade_c9b` or `GrenadeLauncherC00tRedByDarkstar1` | `darkstar_1_nade_c9b` | Grenade Launcher C-00t (red) by darkstar 1 |
+| `darkstar_1_rl` or `EosRocketLauncherByDarkstar1` | `darkstar_1_rl` | Eos Rocket Launcher by darkstar 1 |
+| `darkstar_1_bison` or `PHANX150BisonByDarkstar1` | `darkstar_1_bison` | PHANX-150 Bison by darkstar 1 |
+| `darkstar_1_auto_sg` or `EosAutoShotgunByDarkstar1` | `darkstar_1_auto_sg` | Eos Auto Shotgun by darkstar 1 |
+| `ditzy_focus_beam` or `ReakhohshaFocusBeamByDitzy` | `ditzy_focus_beam` | Reakhohsha Focus Beam by Ditzy |
+| `boom5_revolver` or `RevolverMK1ByBoom5` | `boom5_revolver` | Revolver MK1 by boom5 |
+| `thetoppestkek_scavenger_sg` or `ScavengerShotgunByThetoppestkek` | `thetoppestkek_scavenger_sg` | Scavenger Shotgun by thetoppestkek |
+| `lazyrain_acid_gl` or `AlienAcidGrenadeLauncherByLazyRain` | `lazyrain_acid_gl` | Alien Acid Grenade Launcher by LazyRain |
+| `lazyrain_plasma_smg` or `AlienPlasmaPistolWhiteByLazyRain` | `lazyrain_plasma_smg` | Alien Plasma Pistol (white) by LazyRain |
+| `lazyrain_plasma_smg2` or `AlienPlasmaPistolYellowByLazyRain` | `lazyrain_plasma_smg2` | Alien Plasma Pistol (yellow) by LazyRain |
+| `roxxar_android_railgun` or `AndroidRailgunByRoxxar` | `roxxar_android_railgun` | Android Railgun by Roxxar |
+| `gun_invisgun` or `InvisibleGun` | `gun_invisgun` | Invisible gun |
+| `gun_sharkgun` or `SharkDoesNothing` | `gun_sharkgun` | Shark (does nothing) |
 
 ### Sound (`sound`, 280)
 
 | Name | Value | Editor label |
 |---|---|---|
-| `SilenceForGunsOnly` | `null` | - silence - (for guns only) |
-| `BattlesuitLowHealth` | `hp_warn` | Battlesuit - Low health |
-| `BattlesuitDeath` | `hp_dead` | Battlesuit - Death |
-| `WeaponPickedUp` | `wea_pickup` | Weapon - Picked up |
-| `WeaponImpact1` | `wea2` | Weapon - Impact 1 |
-| `WeaponImpact2` | `wea1` | Weapon - Impact 2 |
-| `VehicleMinigunDrone` | `wea_vehminigun` | Vehicle minigun (Drone) |
-| `SniperRifleCSYippeeKiYay` | `wea_sniper` | Sniper Rifle CS-YippeeKiYay |
-| `AlienShotgun` | `wea_shotgun_alt` | Alien Shotgun |
-| `ShotgunC01s` | `wea_shotgun` | Shotgun C-01s |
-| `AlienRifle` | `wea_rifle_alt` | Alien Rifle |
-| `AssaultRifleC01r` | `wea_rifle` | Assault Rifle C-01r |
-| `ShotgunCSDAZReloading` | `wea_real_shotgun_r` | Shotgun CS-DAZ - Reloading |
-| `ShotgunCSDAZ` | `wea_real_shotgun` | Shotgun CS-DAZ |
-| `AssaultRifleCSRC` | `wea_real_rifle` | Assault Rifle CS-RC |
-| `HeavyRailgunV04CSOneSOneK` | `wea_rail_alt` | Heavy Railgun v04 CS-OneSOneK |
-| `PistolCSPro` | `wea_pistol2` | Pistol CS-Pro |
-| `PistolC01p` | `wea_pistol` | Pistol C-01p |
-| `PlasmagunCSBloom` | `wea_plasmagun` | Plasmagun CS-Bloom |
-| `MinigunC02m` | `wea_mingun2` | Minigun C-02m |
-| `WeaMinigunUnused` | `wea_mingun` | wea_minigun (unused) |
-| `WeaImpulseUnused` | `wea_impulse` | wea_impulse (unused) |
-| `CSBNG` | `wea_evil_shot` | CS-BNG |
-| `RayGunC01y` | `wea_energy` | Ray Gun C-01y |
-| `Defibrillator` | `wea_defibrillator` | Defibrillator |
-| `AlienPistol` | `wea_apistol` | Alien Pistol |
-| `WaterSplash3` | `water_splash3` | Water splash 3 |
-| `WaterSplash2` | `water_splash2` | Water splash 2 |
-| `WaterSplash1` | `water_splash1` | Water splash 1 |
-| `HoundWalkerCSStep` | `walker_step` | Hound Walker-CS - Step |
-| `HoundWalkerCSPhase2` | `walker_phase2` | Hound Walker-CS - Phase 2 |
-| `HoundWalkerCSPhase1` | `walker_phase1` | Hound Walker-CS - Phase 1 |
-| `HoundWalkerCSTermination` | `walker_die` | Hound Walker-CS - Termination |
-| `VehicleCannonHoundWalkerCS` | `wea_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
-| `UsurpationDestroyerHurt` | `usurpation_hurt` | Usurpation Destroyer - Hurt |
-| `UsurpationDestroyerDying` | `usurpation_dying` | Usurpation Destroyer - Dying |
-| `UsurpationDestroyerDeath3` | `usurpation_death3` | Usurpation Destroyer - Death 3 |
-| `UsurpationDestroyerDeath2` | `usurpation_death2` | Usurpation Destroyer - Death 2 |
-| `UsurpationDestroyerAlert` | `usurpation_alert` | Usurpation Destroyer - Alert |
-| `VehicleRocketLauncherCorvetteReloading` | `test_sound` | Vehicle Rocket Launcher (Corvette) - Reloading |
-| `Teleport` | `teleport_spawn` | Teleport |
-| `HeroChange` | `team_switch` | Hero change |
-| `PanelBoardActivation` | `t_switch2` | Panel Board - Activation |
-| `PanelBoardActivation2Unused` | `t_switch1` | Panel Board - Activation 2 (unused) |
-| `PanelBoardDenied` | `t_switch_denied` | Panel Board - Denied |
-| `MovableStart` | `t_door1_stop` | Movable - Start |
-| `MovableStop` | `t_door1_start` | Movable - Stop |
-| `Footstep4` | `step4` | Footstep 4 |
-| `Footstep3` | `step3` | Footstep 3 |
-| `Footstep2` | `step2` | Footstep 2 |
-| `Footstep1` | `step1` | Footstep 1 |
-| `VehicleCollisionMedium` | `steel_med` | Vehicle collision - Medium |
-| `VehicleCollisionLow` | `steel_low` | Vehicle collision - Low |
-| `VehicleCollisionFriction` | `steel_hor` | Vehicle collision - Friction |
-| `VehicleCollisionHard` | `steel_hard` | Vehicle collision - Hard |
-| `BattlesuitSlowmotionDisabled` | `slow_up` | Battlesuit - Slowmotion disabled |
-| `BattlesuitSlowmotionEnabled` | `slow_down` | Battlesuit - Slowmotion enabled |
-| `CivilSecurityGhostDeath` | `slicer_die` | Civil Security Ghost - Death |
-| `CivilSecurityGhostAlert` | `slicer_alert` | Civil Security Ghost - Alert |
-| `PortableShieldV07CSQuariumExplosion` | `shnade_offline` | Portable Shield v07 CS-Quarium - Explosion |
-| `PortableShieldV07CSQuariumHitLow` | `shnade_hit_low` | Portable Shield v07 CS-Quarium - Hit low |
-| `PortableShieldV07CSQuariumHitHard` | `shnade_hit` | Portable Shield v07 CS-Quarium - Hit hard |
-| `PortableShieldV07CSQuariumActivation` | `shnade_explode` | Portable Shield v07 CS-Quarium - Activation |
-| `PortableShieldV07CSQuariumBlip` | `shnade_act` | Portable Shield v07 CS-Quarium - Blip |
-| `ShipIncome` | `ship_incoming` | Ship - Income |
-| `ShipExplosion` | `ship_explosion` | Ship - Explosion |
-| `LiteRailgunV01CSHShotReload` | `reload` | Lite Railgun v01 CS-HShot - Reload |
-| `RocketLauncherCSLitBro` | `wea_rocket_launch` | Rocket Launcher CS-LitBro |
-| `RoboticFootstep4` | `robo_step4` | Robotic footstep 4 |
-| `RoboticFootstep3` | `robo_step3` | Robotic footstep 3 |
-| `RoboticFootstep2` | `robo_step2` | Robotic footstep 2 |
-| `RoboticFootstep1` | `robo_step1` | Robotic footstep 1 |
-| `DroneGunCSVirusShot` | `robo_bug_launch` | Drone Gun CS-Virus - Shot |
-| `DroneGunCSVirusJump` | `robo_bug_jump` | Drone Gun CS-Virus - Jump |
-| `DroneGunCSVirusHit` | `robo_bug_hit` | Drone Gun CS-Virus - Hit |
-| `RocketLauncherCSLitBroReload` | `rl_reload` | Rocket Launcher CS-LitBro - Reload |
-| `LiteRailgunV01CSHShot` | `wea_railgun` | Lite Railgun v01 CS-HShot |
-| `TeleportGrenadeV03CSPortNadeDetonation` | `portnade_explode` | Teleport Grenade v03 CS-PortNade - Detonation |
-| `TeleportGrenadeV03CSPortNadeBlip` | `portnade_act2` | Teleport Grenade v03 CS-PortNade - Blip |
-| `PlasmaExplosion` | `plasma_explosion` | Plasma explosion |
-| `NoirLimeHurt2` | `noir_hurt2` | Noir Lime - Hurt 2 |
-| `NoirLimeHurt1` | `noir_hurt1` | Noir Lime - Hurt 1 |
-| `NoirLimeDeath` | `noir_die` | Noir Lime - Death |
-| `NadeThrow` | `nade_throw` | Nade throw |
-| `MissionComplete` | `mission_done` | Mission complete |
-| `MetalHard` | `metal_ver3` | Metal - Hard |
-| `MetalMedium` | `metal_ver2` | Metal - Medium |
-| `MetalLow` | `metal_ver1` | Metal - Low |
-| `MetalFriction` | `metal_hor` | Metal - Friction |
-| `MetalHit` | `metal_hit` | Metal - Hit |
-| `MetalDestruction` | `metal_gib` | Metal - Destruction |
-| `LastTeleport` | `last_teleport` | Last teleport |
-| `MenuButtonOnMouseDown` | `s_info_off` | Menu button - onMouseDown |
-| `MenuButtonOnClick` | `s_info_act` | Menu button - onClick |
-| `MenuButtonOnMouseOver` | `s_info` | Menu button - onMouseOver |
-| `HintDisappear` | `hint_disappear` | Hint - Disappear |
-| `HintAppear` | `hint_appear` | Hint - Appear |
-| `GrenadeLauncherCSSpamThemBaby` | `wea_gl` | Grenade Launcher CS-SpamThemBaby |
-| `GrenadeC00nBlip` | `grenade_act` | Grenade C-00n - Blip |
-| `GrenadeBounce` | `grenade` | Grenade bounce |
-| `BarrelHit1` | `glass2` | Barrel - Hit 1 |
-| `BarrelHit2` | `glass1` | Barrel - Hit 2 |
-| `CyberGrubDeath1` | `g_death1` | Cyber Grub - Death 1 |
-| `CyberGrubDeath2` | `g_death2` | Cyber Grub - Death 2 |
-| `CyberGrubDeath3` | `g_death3` | Cyber Grub - Death 3 |
-| `CyberGrubHurt1` | `g_pain1` | Cyber Grub - Hurt 1 |
-| `CyberGrubHurt2` | `g_pain2` | Cyber Grub - Hurt 2 |
-| `CyberGrubHurt3` | `g_pain3` | Cyber Grub - Hurt 3 |
-| `CyberGrubAlert` | `g_welcome1` | Cyber Grub - Alert |
-| `PhoenixFalkokAlert` | `fp_welcome1` | Phoenix Falkok - Alert |
-| `PhoenixFalkokHurt4` | `fp_pain4` | Phoenix Falkok - Hurt 4 |
-| `PhoenixFalkokHurt3` | `fp_pain3` | Phoenix Falkok - Hurt 3 |
-| `PhoenixFalkokHurt2` | `fp_pain2` | Phoenix Falkok - Hurt 2 |
-| `PhoenixFalkokDeath3` | `fp_death3` | Phoenix Falkok - Death 3 |
-| `PhoenixFalkokDeath2` | `fp_death2` | Phoenix Falkok - Death 2 |
-| `PhoenixFalkokDeath1` | `fp_death1` | Phoenix Falkok - Death 1 |
-| `ImpactShot` | `fail_shot` | Impact shot |
-| `FalkokAlert` | `f_welcome1` | Falkok - Alert |
-| `FalkokHurt4` | `f_pain4` | Falkok - Hurt 4 |
-| `FalkokHurt3` | `f_pain3` | Falkok - Hurt 3 |
-| `FalkokHurt2` | `f_pain2` | Falkok - Hurt 2 |
-| `FalkokDeath3` | `f_death3` | Falkok - Death 3 |
-| `FalkokDeath2` | `f_death2` | Falkok - Death 2 |
-| `FalkokDeath1` | `f_death1` | Falkok - Death 1 |
-| `Explosion2` | `explode2` | Explosion 2 |
-| `Explosion1` | `explode1` | Explosion 1 |
-| `ExplosionUnderwater` | `explode_underwater` | Explosion underwater |
-| `UsurpationSoldierHurt` | `enemy_hurt1` | Usurpation Soldier - Hurt |
-| `UsurpationSoldierHurt3` | `enemy_hurt_3` | Usurpation Soldier - Hurt 3 |
-| `UsurpationSoldierHurt2` | `enemy_hurt_2` | Usurpation Soldier - Hurt 2 |
-| `UsurpationSoldierHurt1` | `enemy_hurt_1` | Usurpation Soldier - Hurt 1 |
-| `UsurpationSoldierDeath` | `enemy_die1` | Usurpation Soldier - Death |
-| `UsurpationSoldierDeath4` | `enemy_die_4` | Usurpation Soldier - Death 4 |
-| `UsurpationSoldierDeath3` | `enemy_die_3` | Usurpation Soldier - Death 3 |
-| `UsurpationSoldierDeath2` | `enemy_die_2` | Usurpation Soldier - Death 2 |
-| `UsurpationSoldierDeath1` | `enemy_die_1` | Usurpation Soldier - Death 1 |
-| `UsurpationSoldierAlert` | `enemy_alert` | Usurpation Soldier - Alert |
-| `DroneHurt` | `drone_hurt` | Drone - Hurt |
-| `DroneDeath` | `drone_die` | Drone - Death |
-| `CorvetteDeath` | `corvett_die` | Corvette - Death |
-| `CoolbuddyLogo` | `coolbuddy2` | Coolbuddy logo |
-| `ChatMessage` | `chat` | Chat message |
-| `LifeCapsuleHit2` | `capsule_hit2` | Life-Capsule - Hit 2 |
-| `LifeCapsuleHit1` | `capsule_hit1` | Life-Capsule - Hit 1 |
-| `CrateHard` | `box_ver3` | Crate - Hard |
-| `CrateMedium` | `box_ver2` | Crate - Medium |
-| `CrateLow` | `box_ver1` | Crate - Low |
-| `CrateFriction` | `box_hor` | Crate - Friction |
-| `CrateDestruction` | `box_die` | Crate - Destruction |
-| `BodyHard` | `body3` | Body - Hard |
-| `BodyMedium` | `body2` | Body - Medium |
-| `BodyLow` | `body1` | Body - Low |
-| `BodyFriction` | `body0` | Body - Friction |
-| `BodyFall` | `body_fall` | Body - Fall |
-| `BodyLimbBroke` | `blood_leg_arm` | Body - Limb broke |
-| `BodyHitSword` | `blood_hit_sword` | Body - Hit sword |
-| `BodyHit` | `blood_hit` | Body - Hit |
-| `BodyHeadBroke2` | `blood_head2` | Body - Head broke 2 |
-| `BodyHeadBroke1` | `blood_head` | Body - Head broke 1 |
-| `BodySpineBroke2` | `blood_body2` | Body - Spine broke 2 |
-| `BodySpineBroke1` | `blood_body` | Body - Spine broke 1 |
-| `SwordsSwing3` | `sou_blade_swing3` | Swords swing 3 |
-| `SwordsSwing2` | `sou_blade_swing2` | Swords swing 2 |
-| `SwordsSwing1` | `sou_blade_swing1` | Swords swing 1 |
-| `CSBNGExplosion` | `explode_bfg` | CS-BNG - Explosion |
-| `BarrelExplosion2` | `barrel2` | Barrel - Explosion 2 |
-| `BarrelExplosion1` | `barrel` | Barrel - Explosion 1 |
-| `Achievement` | `badge_earned` | Achievement |
-| `AndroidAlert3` | `android_welcome3` | Android - Alert 3 |
-| `AndroidAlert2` | `android_welcome2` | Android - Alert 2 |
-| `AndroidAlert1` | `android_welcome1` | Android - Alert 1 |
-| `AndroidAlert` | `android_welcome` | Android - Alert |
-| `AndroidHurt` | `android_hurt` | Android - Hurt |
-| `AndroidCelebrate` | `android_enemy_down1` | Android - Celebrate |
-| `AndroidDeath1` | `android_die_1` | Android - Death 1 |
-| `AndroidDeath` | `android_die` | Android - Death |
-| `SilencerShot` | `silenced` | Silencer shot |
-| `ChargedShot` | `charged_explosion` | Charged shot |
-| `MarineDeath1` | `hero_death1` | Marine - Death 1 |
-| `MarineDeath2` | `hero_death2` | Marine - Death 2 |
-| `MarineHurt1` | `hero_pain1` | Marine - Hurt 1 |
-| `MarineHurt2` | `hero_pain2` | Marine - Hurt 2 |
-| `MarineHurt3` | `hero_pain3` | Marine - Hurt 3 |
-| `MarineHurt4` | `hero_pain4` | Marine - Hurt 4 |
-| `MarineAlert1` | `hero_welcome1` | Marine - Alert 1 |
-| `MarineAlert2` | `hero_welcome2` | Marine - Alert 2 |
-| `MarineAlert3` | `hero_welcome3` | Marine - Alert 3 |
-| `CivilSecurityDeath1` | `marine_death1` | Civil Security - Death 1 |
-| `CivilSecurityDeath2` | `marine_death2` | Civil Security - Death 2 |
-| `CivilSecurityDeath3` | `marine_death3` | Civil Security - Death 3 |
-| `CivilSecurityDying` | `marine_dying` | Civil Security - Dying |
-| `CivilSecurityHurt1` | `marine_hurt1` | Civil Security - Hurt 1 |
-| `CivilSecurityHurt2` | `marine_hurt2` | Civil Security - Hurt 2 |
-| `CivilSecurityHurt3` | `marine_hurt3` | Civil Security - Hurt 3 |
-| `CivilSecurityAlert1` | `marine_alert` | Civil Security - Alert 1 |
-| `CivilSecurityAlert2` | `marine_alert2` | Civil Security - Alert 2 |
-| `CivilSecurityAlert3` | `marine_alert3` | Civil Security - Alert 3 |
-| `CivilSecurityAlert4` | `marine_alert4` | Civil Security - Alert 4 |
-| `RayRifleTCoRR` | `s_gun_rayrifle` | Ray Rifle TCoRR |
-| `LMG` | `wea_lmg` | LMG |
-| `RealRifleAlt` | `wea_ditzy_cs_ik2` | Real rifle alt |
-| `AndroidShotgun` | `wea_android_shotgun` | Android shotgun |
-| `AndroidSniper` | `wea_android_sniper` | Android sniper |
-| `StarDefenderDeath` | `sd_death` | Star Defender - Death |
-| `StarDefenderAlert` | `sd_welcome2` | Star Defender - Alert |
-| `StarDefenderHurt2` | `sd_hurt2` | Star Defender - Hurt 2 |
-| `StarDefenderHurt1` | `sd_hurt1` | Star Defender - Hurt 1 |
-| `HitReportFrag` | `hit_frag` | Hit report - frag |
-| `HitReportHigh` | `hit_dmg3` | Hit report - high |
-| `HitReportMedium` | `hit_dmg2` | Hit report - medium |
-| `HitReportLow` | `hit_dmg` | Hit report - low |
-| `PlasmaShotgun` | `wea_plasma_smg` | Plasma shotgun |
-| `AndroidRailgun` | `wea_android_railgun` | Android railgun |
-| `BisonRifle` | `wea_bison` | Bison rifle |
-| `C9ImpactNade` | `wea_rifle_nade` | C9 impact nade |
-| `AcidGrenadeBounce` | `grenade_wet` | Acid grenade bounce |
-| `AcidGrenadeLauncher` | `wea_acid_gl3` | Acid grenade launcher |
-| `Revolver` | `wea_revolver5` | Revolver |
-| `AlienRailShotgun` | `wea_alien_rail_sg` | Alien rail shotgun |
-| `SmallerRocket` | `wea_darkstar_rl3` | Smaller rocket |
-| `FastShotgun` | `wea_auto_sg2` | Fast shotgun |
-| `ToxicRailgun` | `wea_rail_toxic2` | Toxic railgun |
-| `EnergyRifle` | `wea_ditzy_energy_rifle` | Energy Rifle |
-| `FalkonianShotgun` | `wea_roxxar_rifle` | Falkonian Shotgun |
-| `ReakhohshaFocusBeamRechargeOld` | `beam5_recharge` | Reakhohsha Focus Beam recharge (old) |
-| `ReakhohshaFocusBeamRechargeNew` | `beam5_rechargeB` | Reakhohsha Focus Beam recharge (new) |
-| `ReakhohshaFocusBeam` | `beam5` | Reakhohsha Focus Beam |
-| `AlienLaserHeaterRifleRechargeOld` | `beam1_recharge` | Alien Laser/Heater Rifle recharge (old) |
-| `AlienLaserHeaterRifleRechargeNew` | `beam1_rechargeB` | Alien Laser/Heater Rifle recharge (new) |
-| `AlienLaserHeaterRifle` | `beam1` | Alien Laser/Heater Rifle |
-| `PHANX92Falconet` | `wea_phanx` | PHANX-92 Falconet |
-| `CrossfireCR42Ghost` | `wea_moonhawk_smg2` | Crossfire CR-42 Ghost |
-| `CrossfireSentinelHurt3` | `crossfire_sentinel_hurt3` | Crossfire Sentinel - Hurt 3 |
-| `CrossfireSentinelHurt2` | `crossfire_sentinel_hurt2` | Crossfire Sentinel - Hurt 2 |
-| `CrossfireSentinelHurt1` | `crossfire_sentinel_hurt1` | Crossfire Sentinel - Hurt 1 |
-| `CrossfireSentinelCelebrate1` | `crossfire_sentinel_celebrate1` | Crossfire Sentinel - Celebrate 1 |
-| `CrossfireSentinelCelebrate2` | `crossfire_sentinel_celebrate2` | Crossfire Sentinel - Celebrate 2 |
-| `CrossfireSentinelDeath2` | `crossfire_sentinel_death2` | Crossfire Sentinel - Death 2 |
-| `CrossfireSentinelDeath1` | `crossfire_sentinel_death1` | Crossfire Sentinel - Death 1 |
-| `CrossfireSentinelDying` | `crossfire_sentinel_dying` | Crossfire Sentinel - Dying |
-| `CrossfireSentinelAlert3` | `crossfire_sentinel_welcome3` | Crossfire Sentinel - Alert 3 |
-| `CrossfireSentinelAlert2` | `crossfire_sentinel_welcome2` | Crossfire Sentinel - Alert 2 |
-| `CrossfireSentinelAlert1` | `crossfire_sentinel_welcome1` | Crossfire Sentinel - Alert 1 |
-| `CrossfireSentinelDeath` | `crossfire_sentinel_death3` | Crossfire Sentinel - Death |
-| `VultureDeath2` | `vulture_death2` | Vulture - Death 2 |
-| `VultureDeath1` | `vulture_death1` | Vulture - Death 1 |
-| `VultureDying` | `vulture_dying` | Vulture - Dying |
-| `VultureHurt4` | `vulture_hurt4` | Vulture - Hurt 4 |
-| `VultureHurt3` | `vulture_hurt3` | Vulture - Hurt 3 |
-| `VultureHurt2` | `vulture_hurt2` | Vulture - Hurt 2 |
-| `VultureHurt1` | `vulture_hurt1` | Vulture - Hurt 1 |
-| `VultureCelebrate3` | `vulture_celebrate3` | Vulture - Celebrate 3 |
-| `VultureCelebrate2` | `vulture_celebrate2` | Vulture - Celebrate 2 |
-| `VultureCelebrate1` | `vulture_celebrate1` | Vulture - Celebrate 1 |
-| `VultureAlert3` | `vulture_welcome3` | Vulture - Alert 3 |
-| `VultureAlert2` | `vulture_welcome2` | Vulture - Alert 2 |
-| `VultureAlert1` | `vulture_welcome1` | Vulture - Alert 1 |
-| `CivilianHurt4` | `civilian_male_hurt4` | Civilian - Hurt 4 |
-| `CivilianHurt3` | `civilian_male_hurt3` | Civilian - Hurt 3 |
-| `CivilianHurt2` | `civilian_male_hurt2` | Civilian - Hurt 2 |
-| `CivilianHurt1` | `civilian_male_hurt1` | Civilian - Hurt 1 |
-| `CivilianDying2` | `civilian_male_dying2` | Civilian - Dying 2 |
-| `CivilianDying1` | `civilian_male_dying1` | Civilian - Dying 1 |
-| `CivilianAlert3` | `civilian_male_welcome3` | Civilian - Alert 3 |
-| `CivilianAlert2` | `civilian_male_welcome2` | Civilian - Alert 2 |
-| `CivilianAlert1` | `civilian_male_welcome1` | Civilian - Alert 1 |
-| `CivilianCelebrate2` | `civilian_male_celebrate2` | Civilian - Celebrate 2 |
-| `CivilianCelebrate1` | `civilian_male_celebrate1` | Civilian - Celebrate 1 |
-| `CivilianDeath2` | `civilian_male_death2` | Civilian - Death 2 |
-| `CivilianDeath1` | `civilian_male_death1` | Civilian - Death 1 |
-| `ReakhohshaOperativeAlert1` | `reakhohsha_welcome1` | Reakhohsha Operative - Alert 1 |
-| `ReakhohshaOperativeAlert2` | `reakhohsha_welcome2` | Reakhohsha Operative - Alert 2 |
-| `ReakhohshaOperativeDeath` | `reakhohsha_death3` | Reakhohsha Operative - Death |
-| `ReakhohshaOperativeHurt3` | `reakhohsha_hurt3` | Reakhohsha Operative - Hurt 3 |
-| `ReakhohshaOperativeHurt2` | `reakhohsha_hurt2` | Reakhohsha Operative - Hurt 2 |
-| `ReakhohshaOperativeHurt1` | `reakhohsha_hurt1` | Reakhohsha Operative - Hurt 1 |
-| `MiningAndroidHurt` | `android_miner_hurt` | Mining Android - Hurt |
-| `MiningAndroidAlert` | `android_miner_welcome2` | Mining Android - Alert |
-| `MiningAndroidCelebrate` | `android_miner_enemy_down` | Mining Android - Celebrate |
-| `MiningAndroidDeath` | `android_miner_die` | Mining Android - Death |
+| `null` or `SilenceForGunsOnly` | `null` | - silence - (for guns only) |
+| `hp_warn` or `BattlesuitLowHealth` | `hp_warn` | Battlesuit - Low health |
+| `hp_dead` or `BattlesuitDeath` | `hp_dead` | Battlesuit - Death |
+| `wea_pickup` or `WeaponPickedUp` | `wea_pickup` | Weapon - Picked up |
+| `wea2` or `WeaponImpact1` | `wea2` | Weapon - Impact 1 |
+| `wea1` or `WeaponImpact2` | `wea1` | Weapon - Impact 2 |
+| `wea_vehminigun` or `VehicleMinigunDrone` | `wea_vehminigun` | Vehicle minigun (Drone) |
+| `wea_sniper` or `SniperRifleCSYippeeKiYay` | `wea_sniper` | Sniper Rifle CS-YippeeKiYay |
+| `wea_shotgun_alt` or `AlienShotgun` | `wea_shotgun_alt` | Alien Shotgun |
+| `wea_shotgun` or `ShotgunC01s` | `wea_shotgun` | Shotgun C-01s |
+| `wea_rifle_alt` or `AlienRifle` | `wea_rifle_alt` | Alien Rifle |
+| `wea_rifle` or `AssaultRifleC01r` | `wea_rifle` | Assault Rifle C-01r |
+| `wea_real_shotgun_r` or `ShotgunCSDAZReloading` | `wea_real_shotgun_r` | Shotgun CS-DAZ - Reloading |
+| `wea_real_shotgun` or `ShotgunCSDAZ` | `wea_real_shotgun` | Shotgun CS-DAZ |
+| `wea_real_rifle` or `AssaultRifleCSRC` | `wea_real_rifle` | Assault Rifle CS-RC |
+| `wea_rail_alt` or `HeavyRailgunV04CSOneSOneK` | `wea_rail_alt` | Heavy Railgun v04 CS-OneSOneK |
+| `wea_pistol2` or `PistolCSPro` | `wea_pistol2` | Pistol CS-Pro |
+| `wea_pistol` or `PistolC01p` | `wea_pistol` | Pistol C-01p |
+| `wea_plasmagun` or `PlasmagunCSBloom` | `wea_plasmagun` | Plasmagun CS-Bloom |
+| `wea_mingun2` or `MinigunC02m` | `wea_mingun2` | Minigun C-02m |
+| `wea_mingun` or `WeaMinigunUnused` | `wea_mingun` | wea_minigun (unused) |
+| `wea_impulse` or `WeaImpulseUnused` | `wea_impulse` | wea_impulse (unused) |
+| `wea_evil_shot` or `CSBNG` | `wea_evil_shot` | CS-BNG |
+| `wea_energy` or `RayGunC01y` | `wea_energy` | Ray Gun C-01y |
+| `wea_defibrillator` or `Defibrillator` | `wea_defibrillator` | Defibrillator |
+| `wea_apistol` or `AlienPistol` | `wea_apistol` | Alien Pistol |
+| `water_splash3` or `WaterSplash3` | `water_splash3` | Water splash 3 |
+| `water_splash2` or `WaterSplash2` | `water_splash2` | Water splash 2 |
+| `water_splash1` or `WaterSplash1` | `water_splash1` | Water splash 1 |
+| `walker_step` or `HoundWalkerCSStep` | `walker_step` | Hound Walker-CS - Step |
+| `walker_phase2` or `HoundWalkerCSPhase2` | `walker_phase2` | Hound Walker-CS - Phase 2 |
+| `walker_phase1` or `HoundWalkerCSPhase1` | `walker_phase1` | Hound Walker-CS - Phase 1 |
+| `walker_die` or `HoundWalkerCSTermination` | `walker_die` | Hound Walker-CS - Termination |
+| `wea_vehcannon` or `VehicleCannonHoundWalkerCS` | `wea_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
+| `usurpation_hurt` or `UsurpationDestroyerHurt` | `usurpation_hurt` | Usurpation Destroyer - Hurt |
+| `usurpation_dying` or `UsurpationDestroyerDying` | `usurpation_dying` | Usurpation Destroyer - Dying |
+| `usurpation_death3` or `UsurpationDestroyerDeath3` | `usurpation_death3` | Usurpation Destroyer - Death 3 |
+| `usurpation_death2` or `UsurpationDestroyerDeath2` | `usurpation_death2` | Usurpation Destroyer - Death 2 |
+| `usurpation_alert` or `UsurpationDestroyerAlert` | `usurpation_alert` | Usurpation Destroyer - Alert |
+| `test_sound` or `VehicleRocketLauncherCorvetteReloading` | `test_sound` | Vehicle Rocket Launcher (Corvette) - Reloading |
+| `teleport_spawn` or `Teleport` | `teleport_spawn` | Teleport |
+| `team_switch` or `HeroChange` | `team_switch` | Hero change |
+| `t_switch2` or `PanelBoardActivation` | `t_switch2` | Panel Board - Activation |
+| `t_switch1` or `PanelBoardActivation2Unused` | `t_switch1` | Panel Board - Activation 2 (unused) |
+| `t_switch_denied` or `PanelBoardDenied` | `t_switch_denied` | Panel Board - Denied |
+| `t_door1_stop` or `MovableStart` | `t_door1_stop` | Movable - Start |
+| `t_door1_start` or `MovableStop` | `t_door1_start` | Movable - Stop |
+| `step4` or `Footstep4` | `step4` | Footstep 4 |
+| `step3` or `Footstep3` | `step3` | Footstep 3 |
+| `step2` or `Footstep2` | `step2` | Footstep 2 |
+| `step1` or `Footstep1` | `step1` | Footstep 1 |
+| `steel_med` or `VehicleCollisionMedium` | `steel_med` | Vehicle collision - Medium |
+| `steel_low` or `VehicleCollisionLow` | `steel_low` | Vehicle collision - Low |
+| `steel_hor` or `VehicleCollisionFriction` | `steel_hor` | Vehicle collision - Friction |
+| `steel_hard` or `VehicleCollisionHard` | `steel_hard` | Vehicle collision - Hard |
+| `slow_up` or `BattlesuitSlowmotionDisabled` | `slow_up` | Battlesuit - Slowmotion disabled |
+| `slow_down` or `BattlesuitSlowmotionEnabled` | `slow_down` | Battlesuit - Slowmotion enabled |
+| `slicer_die` or `CivilSecurityGhostDeath` | `slicer_die` | Civil Security Ghost - Death |
+| `slicer_alert` or `CivilSecurityGhostAlert` | `slicer_alert` | Civil Security Ghost - Alert |
+| `shnade_offline` or `PortableShieldV07CSQuariumExplosion` | `shnade_offline` | Portable Shield v07 CS-Quarium - Explosion |
+| `shnade_hit_low` or `PortableShieldV07CSQuariumHitLow` | `shnade_hit_low` | Portable Shield v07 CS-Quarium - Hit low |
+| `shnade_hit` or `PortableShieldV07CSQuariumHitHard` | `shnade_hit` | Portable Shield v07 CS-Quarium - Hit hard |
+| `shnade_explode` or `PortableShieldV07CSQuariumActivation` | `shnade_explode` | Portable Shield v07 CS-Quarium - Activation |
+| `shnade_act` or `PortableShieldV07CSQuariumBlip` | `shnade_act` | Portable Shield v07 CS-Quarium - Blip |
+| `ship_incoming` or `ShipIncome` | `ship_incoming` | Ship - Income |
+| `ship_explosion` or `ShipExplosion` | `ship_explosion` | Ship - Explosion |
+| `reload` or `LiteRailgunV01CSHShotReload` | `reload` | Lite Railgun v01 CS-HShot - Reload |
+| `wea_rocket_launch` or `RocketLauncherCSLitBro` | `wea_rocket_launch` | Rocket Launcher CS-LitBro |
+| `robo_step4` or `RoboticFootstep4` | `robo_step4` | Robotic footstep 4 |
+| `robo_step3` or `RoboticFootstep3` | `robo_step3` | Robotic footstep 3 |
+| `robo_step2` or `RoboticFootstep2` | `robo_step2` | Robotic footstep 2 |
+| `robo_step1` or `RoboticFootstep1` | `robo_step1` | Robotic footstep 1 |
+| `robo_bug_launch` or `DroneGunCSVirusShot` | `robo_bug_launch` | Drone Gun CS-Virus - Shot |
+| `robo_bug_jump` or `DroneGunCSVirusJump` | `robo_bug_jump` | Drone Gun CS-Virus - Jump |
+| `robo_bug_hit` or `DroneGunCSVirusHit` | `robo_bug_hit` | Drone Gun CS-Virus - Hit |
+| `rl_reload` or `RocketLauncherCSLitBroReload` | `rl_reload` | Rocket Launcher CS-LitBro - Reload |
+| `wea_railgun` or `LiteRailgunV01CSHShot` | `wea_railgun` | Lite Railgun v01 CS-HShot |
+| `portnade_explode` or `TeleportGrenadeV03CSPortNadeDetonation` | `portnade_explode` | Teleport Grenade v03 CS-PortNade - Detonation |
+| `portnade_act2` or `TeleportGrenadeV03CSPortNadeBlip` | `portnade_act2` | Teleport Grenade v03 CS-PortNade - Blip |
+| `plasma_explosion` or `PlasmaExplosion` | `plasma_explosion` | Plasma explosion |
+| `noir_hurt2` or `NoirLimeHurt2` | `noir_hurt2` | Noir Lime - Hurt 2 |
+| `noir_hurt1` or `NoirLimeHurt1` | `noir_hurt1` | Noir Lime - Hurt 1 |
+| `noir_die` or `NoirLimeDeath` | `noir_die` | Noir Lime - Death |
+| `nade_throw` or `NadeThrow` | `nade_throw` | Nade throw |
+| `mission_done` or `MissionComplete` | `mission_done` | Mission complete |
+| `metal_ver3` or `MetalHard` | `metal_ver3` | Metal - Hard |
+| `metal_ver2` or `MetalMedium` | `metal_ver2` | Metal - Medium |
+| `metal_ver1` or `MetalLow` | `metal_ver1` | Metal - Low |
+| `metal_hor` or `MetalFriction` | `metal_hor` | Metal - Friction |
+| `metal_hit` or `MetalHit` | `metal_hit` | Metal - Hit |
+| `metal_gib` or `MetalDestruction` | `metal_gib` | Metal - Destruction |
+| `last_teleport` or `LastTeleport` | `last_teleport` | Last teleport |
+| `s_info_off` or `MenuButtonOnMouseDown` | `s_info_off` | Menu button - onMouseDown |
+| `s_info_act` or `MenuButtonOnClick` | `s_info_act` | Menu button - onClick |
+| `s_info` or `MenuButtonOnMouseOver` | `s_info` | Menu button - onMouseOver |
+| `hint_disappear` or `HintDisappear` | `hint_disappear` | Hint - Disappear |
+| `hint_appear` or `HintAppear` | `hint_appear` | Hint - Appear |
+| `wea_gl` or `GrenadeLauncherCSSpamThemBaby` | `wea_gl` | Grenade Launcher CS-SpamThemBaby |
+| `grenade_act` or `GrenadeC00nBlip` | `grenade_act` | Grenade C-00n - Blip |
+| `grenade` or `GrenadeBounce` | `grenade` | Grenade bounce |
+| `glass2` or `BarrelHit1` | `glass2` | Barrel - Hit 1 |
+| `glass1` or `BarrelHit2` | `glass1` | Barrel - Hit 2 |
+| `g_death1` or `CyberGrubDeath1` | `g_death1` | Cyber Grub - Death 1 |
+| `g_death2` or `CyberGrubDeath2` | `g_death2` | Cyber Grub - Death 2 |
+| `g_death3` or `CyberGrubDeath3` | `g_death3` | Cyber Grub - Death 3 |
+| `g_pain1` or `CyberGrubHurt1` | `g_pain1` | Cyber Grub - Hurt 1 |
+| `g_pain2` or `CyberGrubHurt2` | `g_pain2` | Cyber Grub - Hurt 2 |
+| `g_pain3` or `CyberGrubHurt3` | `g_pain3` | Cyber Grub - Hurt 3 |
+| `g_welcome1` or `CyberGrubAlert` | `g_welcome1` | Cyber Grub - Alert |
+| `fp_welcome1` or `PhoenixFalkokAlert` | `fp_welcome1` | Phoenix Falkok - Alert |
+| `fp_pain4` or `PhoenixFalkokHurt4` | `fp_pain4` | Phoenix Falkok - Hurt 4 |
+| `fp_pain3` or `PhoenixFalkokHurt3` | `fp_pain3` | Phoenix Falkok - Hurt 3 |
+| `fp_pain2` or `PhoenixFalkokHurt2` | `fp_pain2` | Phoenix Falkok - Hurt 2 |
+| `fp_death3` or `PhoenixFalkokDeath3` | `fp_death3` | Phoenix Falkok - Death 3 |
+| `fp_death2` or `PhoenixFalkokDeath2` | `fp_death2` | Phoenix Falkok - Death 2 |
+| `fp_death1` or `PhoenixFalkokDeath1` | `fp_death1` | Phoenix Falkok - Death 1 |
+| `fail_shot` or `ImpactShot` | `fail_shot` | Impact shot |
+| `f_welcome1` or `FalkokAlert` | `f_welcome1` | Falkok - Alert |
+| `f_pain4` or `FalkokHurt4` | `f_pain4` | Falkok - Hurt 4 |
+| `f_pain3` or `FalkokHurt3` | `f_pain3` | Falkok - Hurt 3 |
+| `f_pain2` or `FalkokHurt2` | `f_pain2` | Falkok - Hurt 2 |
+| `f_death3` or `FalkokDeath3` | `f_death3` | Falkok - Death 3 |
+| `f_death2` or `FalkokDeath2` | `f_death2` | Falkok - Death 2 |
+| `f_death1` or `FalkokDeath1` | `f_death1` | Falkok - Death 1 |
+| `explode2` or `Explosion2` | `explode2` | Explosion 2 |
+| `explode1` or `Explosion1` | `explode1` | Explosion 1 |
+| `explode_underwater` or `ExplosionUnderwater` | `explode_underwater` | Explosion underwater |
+| `enemy_hurt1` or `UsurpationSoldierHurt` | `enemy_hurt1` | Usurpation Soldier - Hurt |
+| `enemy_hurt_3` or `UsurpationSoldierHurt3` | `enemy_hurt_3` | Usurpation Soldier - Hurt 3 |
+| `enemy_hurt_2` or `UsurpationSoldierHurt2` | `enemy_hurt_2` | Usurpation Soldier - Hurt 2 |
+| `enemy_hurt_1` or `UsurpationSoldierHurt1` | `enemy_hurt_1` | Usurpation Soldier - Hurt 1 |
+| `enemy_die1` or `UsurpationSoldierDeath` | `enemy_die1` | Usurpation Soldier - Death |
+| `enemy_die_4` or `UsurpationSoldierDeath4` | `enemy_die_4` | Usurpation Soldier - Death 4 |
+| `enemy_die_3` or `UsurpationSoldierDeath3` | `enemy_die_3` | Usurpation Soldier - Death 3 |
+| `enemy_die_2` or `UsurpationSoldierDeath2` | `enemy_die_2` | Usurpation Soldier - Death 2 |
+| `enemy_die_1` or `UsurpationSoldierDeath1` | `enemy_die_1` | Usurpation Soldier - Death 1 |
+| `enemy_alert` or `UsurpationSoldierAlert` | `enemy_alert` | Usurpation Soldier - Alert |
+| `drone_hurt` or `DroneHurt` | `drone_hurt` | Drone - Hurt |
+| `drone_die` or `DroneDeath` | `drone_die` | Drone - Death |
+| `corvett_die` or `CorvetteDeath` | `corvett_die` | Corvette - Death |
+| `coolbuddy2` or `CoolbuddyLogo` | `coolbuddy2` | Coolbuddy logo |
+| `chat` or `ChatMessage` | `chat` | Chat message |
+| `capsule_hit2` or `LifeCapsuleHit2` | `capsule_hit2` | Life-Capsule - Hit 2 |
+| `capsule_hit1` or `LifeCapsuleHit1` | `capsule_hit1` | Life-Capsule - Hit 1 |
+| `box_ver3` or `CrateHard` | `box_ver3` | Crate - Hard |
+| `box_ver2` or `CrateMedium` | `box_ver2` | Crate - Medium |
+| `box_ver1` or `CrateLow` | `box_ver1` | Crate - Low |
+| `box_hor` or `CrateFriction` | `box_hor` | Crate - Friction |
+| `box_die` or `CrateDestruction` | `box_die` | Crate - Destruction |
+| `body3` or `BodyHard` | `body3` | Body - Hard |
+| `body2` or `BodyMedium` | `body2` | Body - Medium |
+| `body1` or `BodyLow` | `body1` | Body - Low |
+| `body0` or `BodyFriction` | `body0` | Body - Friction |
+| `body_fall` or `BodyFall` | `body_fall` | Body - Fall |
+| `blood_leg_arm` or `BodyLimbBroke` | `blood_leg_arm` | Body - Limb broke |
+| `blood_hit_sword` or `BodyHitSword` | `blood_hit_sword` | Body - Hit sword |
+| `blood_hit` or `BodyHit` | `blood_hit` | Body - Hit |
+| `blood_head2` or `BodyHeadBroke2` | `blood_head2` | Body - Head broke 2 |
+| `blood_head` or `BodyHeadBroke1` | `blood_head` | Body - Head broke 1 |
+| `blood_body2` or `BodySpineBroke2` | `blood_body2` | Body - Spine broke 2 |
+| `blood_body` or `BodySpineBroke1` | `blood_body` | Body - Spine broke 1 |
+| `sou_blade_swing3` or `SwordsSwing3` | `sou_blade_swing3` | Swords swing 3 |
+| `sou_blade_swing2` or `SwordsSwing2` | `sou_blade_swing2` | Swords swing 2 |
+| `sou_blade_swing1` or `SwordsSwing1` | `sou_blade_swing1` | Swords swing 1 |
+| `explode_bfg` or `CSBNGExplosion` | `explode_bfg` | CS-BNG - Explosion |
+| `barrel2` or `BarrelExplosion2` | `barrel2` | Barrel - Explosion 2 |
+| `barrel` or `BarrelExplosion1` | `barrel` | Barrel - Explosion 1 |
+| `badge_earned` or `Achievement` | `badge_earned` | Achievement |
+| `android_welcome3` or `AndroidAlert3` | `android_welcome3` | Android - Alert 3 |
+| `android_welcome2` or `AndroidAlert2` | `android_welcome2` | Android - Alert 2 |
+| `android_welcome1` or `AndroidAlert1` | `android_welcome1` | Android - Alert 1 |
+| `android_welcome` or `AndroidAlert` | `android_welcome` | Android - Alert |
+| `android_hurt` or `AndroidHurt` | `android_hurt` | Android - Hurt |
+| `android_enemy_down1` or `AndroidCelebrate` | `android_enemy_down1` | Android - Celebrate |
+| `android_die_1` or `AndroidDeath1` | `android_die_1` | Android - Death 1 |
+| `android_die` or `AndroidDeath` | `android_die` | Android - Death |
+| `silenced` or `SilencerShot` | `silenced` | Silencer shot |
+| `charged_explosion` or `ChargedShot` | `charged_explosion` | Charged shot |
+| `hero_death1` or `MarineDeath1` | `hero_death1` | Marine - Death 1 |
+| `hero_death2` or `MarineDeath2` | `hero_death2` | Marine - Death 2 |
+| `hero_pain1` or `MarineHurt1` | `hero_pain1` | Marine - Hurt 1 |
+| `hero_pain2` or `MarineHurt2` | `hero_pain2` | Marine - Hurt 2 |
+| `hero_pain3` or `MarineHurt3` | `hero_pain3` | Marine - Hurt 3 |
+| `hero_pain4` or `MarineHurt4` | `hero_pain4` | Marine - Hurt 4 |
+| `hero_welcome1` or `MarineAlert1` | `hero_welcome1` | Marine - Alert 1 |
+| `hero_welcome2` or `MarineAlert2` | `hero_welcome2` | Marine - Alert 2 |
+| `hero_welcome3` or `MarineAlert3` | `hero_welcome3` | Marine - Alert 3 |
+| `marine_death1` or `CivilSecurityDeath1` | `marine_death1` | Civil Security - Death 1 |
+| `marine_death2` or `CivilSecurityDeath2` | `marine_death2` | Civil Security - Death 2 |
+| `marine_death3` or `CivilSecurityDeath3` | `marine_death3` | Civil Security - Death 3 |
+| `marine_dying` or `CivilSecurityDying` | `marine_dying` | Civil Security - Dying |
+| `marine_hurt1` or `CivilSecurityHurt1` | `marine_hurt1` | Civil Security - Hurt 1 |
+| `marine_hurt2` or `CivilSecurityHurt2` | `marine_hurt2` | Civil Security - Hurt 2 |
+| `marine_hurt3` or `CivilSecurityHurt3` | `marine_hurt3` | Civil Security - Hurt 3 |
+| `marine_alert` or `CivilSecurityAlert1` | `marine_alert` | Civil Security - Alert 1 |
+| `marine_alert2` or `CivilSecurityAlert2` | `marine_alert2` | Civil Security - Alert 2 |
+| `marine_alert3` or `CivilSecurityAlert3` | `marine_alert3` | Civil Security - Alert 3 |
+| `marine_alert4` or `CivilSecurityAlert4` | `marine_alert4` | Civil Security - Alert 4 |
+| `s_gun_rayrifle` or `RayRifleTCoRR` | `s_gun_rayrifle` | Ray Rifle TCoRR |
+| `wea_lmg` or `LMG` | `wea_lmg` | LMG |
+| `wea_ditzy_cs_ik2` or `RealRifleAlt` | `wea_ditzy_cs_ik2` | Real rifle alt |
+| `wea_android_shotgun` or `AndroidShotgun` | `wea_android_shotgun` | Android shotgun |
+| `wea_android_sniper` or `AndroidSniper` | `wea_android_sniper` | Android sniper |
+| `sd_death` or `StarDefenderDeath` | `sd_death` | Star Defender - Death |
+| `sd_welcome2` or `StarDefenderAlert` | `sd_welcome2` | Star Defender - Alert |
+| `sd_hurt2` or `StarDefenderHurt2` | `sd_hurt2` | Star Defender - Hurt 2 |
+| `sd_hurt1` or `StarDefenderHurt1` | `sd_hurt1` | Star Defender - Hurt 1 |
+| `hit_frag` or `HitReportFrag` | `hit_frag` | Hit report - frag |
+| `hit_dmg3` or `HitReportHigh` | `hit_dmg3` | Hit report - high |
+| `hit_dmg2` or `HitReportMedium` | `hit_dmg2` | Hit report - medium |
+| `hit_dmg` or `HitReportLow` | `hit_dmg` | Hit report - low |
+| `wea_plasma_smg` or `PlasmaShotgun` | `wea_plasma_smg` | Plasma shotgun |
+| `wea_android_railgun` or `AndroidRailgun` | `wea_android_railgun` | Android railgun |
+| `wea_bison` or `BisonRifle` | `wea_bison` | Bison rifle |
+| `wea_rifle_nade` or `C9ImpactNade` | `wea_rifle_nade` | C9 impact nade |
+| `grenade_wet` or `AcidGrenadeBounce` | `grenade_wet` | Acid grenade bounce |
+| `wea_acid_gl3` or `AcidGrenadeLauncher` | `wea_acid_gl3` | Acid grenade launcher |
+| `wea_revolver5` or `Revolver` | `wea_revolver5` | Revolver |
+| `wea_alien_rail_sg` or `AlienRailShotgun` | `wea_alien_rail_sg` | Alien rail shotgun |
+| `wea_darkstar_rl3` or `SmallerRocket` | `wea_darkstar_rl3` | Smaller rocket |
+| `wea_auto_sg2` or `FastShotgun` | `wea_auto_sg2` | Fast shotgun |
+| `wea_rail_toxic2` or `ToxicRailgun` | `wea_rail_toxic2` | Toxic railgun |
+| `wea_ditzy_energy_rifle` or `EnergyRifle` | `wea_ditzy_energy_rifle` | Energy Rifle |
+| `wea_roxxar_rifle` or `FalkonianShotgun` | `wea_roxxar_rifle` | Falkonian Shotgun |
+| `beam5_recharge` or `ReakhohshaFocusBeamRechargeOld` | `beam5_recharge` | Reakhohsha Focus Beam recharge (old) |
+| `beam5_rechargeB` or `ReakhohshaFocusBeamRechargeNew` | `beam5_rechargeB` | Reakhohsha Focus Beam recharge (new) |
+| `beam5` or `ReakhohshaFocusBeam` | `beam5` | Reakhohsha Focus Beam |
+| `beam1_recharge` or `AlienLaserHeaterRifleRechargeOld` | `beam1_recharge` | Alien Laser/Heater Rifle recharge (old) |
+| `beam1_rechargeB` or `AlienLaserHeaterRifleRechargeNew` | `beam1_rechargeB` | Alien Laser/Heater Rifle recharge (new) |
+| `beam1` or `AlienLaserHeaterRifle` | `beam1` | Alien Laser/Heater Rifle |
+| `wea_phanx` or `PHANX92Falconet` | `wea_phanx` | PHANX-92 Falconet |
+| `wea_moonhawk_smg2` or `CrossfireCR42Ghost` | `wea_moonhawk_smg2` | Crossfire CR-42 Ghost |
+| `crossfire_sentinel_hurt3` or `CrossfireSentinelHurt3` | `crossfire_sentinel_hurt3` | Crossfire Sentinel - Hurt 3 |
+| `crossfire_sentinel_hurt2` or `CrossfireSentinelHurt2` | `crossfire_sentinel_hurt2` | Crossfire Sentinel - Hurt 2 |
+| `crossfire_sentinel_hurt1` or `CrossfireSentinelHurt1` | `crossfire_sentinel_hurt1` | Crossfire Sentinel - Hurt 1 |
+| `crossfire_sentinel_celebrate1` or `CrossfireSentinelCelebrate1` | `crossfire_sentinel_celebrate1` | Crossfire Sentinel - Celebrate 1 |
+| `crossfire_sentinel_celebrate2` or `CrossfireSentinelCelebrate2` | `crossfire_sentinel_celebrate2` | Crossfire Sentinel - Celebrate 2 |
+| `crossfire_sentinel_death2` or `CrossfireSentinelDeath2` | `crossfire_sentinel_death2` | Crossfire Sentinel - Death 2 |
+| `crossfire_sentinel_death1` or `CrossfireSentinelDeath1` | `crossfire_sentinel_death1` | Crossfire Sentinel - Death 1 |
+| `crossfire_sentinel_dying` or `CrossfireSentinelDying` | `crossfire_sentinel_dying` | Crossfire Sentinel - Dying |
+| `crossfire_sentinel_welcome3` or `CrossfireSentinelAlert3` | `crossfire_sentinel_welcome3` | Crossfire Sentinel - Alert 3 |
+| `crossfire_sentinel_welcome2` or `CrossfireSentinelAlert2` | `crossfire_sentinel_welcome2` | Crossfire Sentinel - Alert 2 |
+| `crossfire_sentinel_welcome1` or `CrossfireSentinelAlert1` | `crossfire_sentinel_welcome1` | Crossfire Sentinel - Alert 1 |
+| `crossfire_sentinel_death3` or `CrossfireSentinelDeath` | `crossfire_sentinel_death3` | Crossfire Sentinel - Death |
+| `vulture_death2` or `VultureDeath2` | `vulture_death2` | Vulture - Death 2 |
+| `vulture_death1` or `VultureDeath1` | `vulture_death1` | Vulture - Death 1 |
+| `vulture_dying` or `VultureDying` | `vulture_dying` | Vulture - Dying |
+| `vulture_hurt4` or `VultureHurt4` | `vulture_hurt4` | Vulture - Hurt 4 |
+| `vulture_hurt3` or `VultureHurt3` | `vulture_hurt3` | Vulture - Hurt 3 |
+| `vulture_hurt2` or `VultureHurt2` | `vulture_hurt2` | Vulture - Hurt 2 |
+| `vulture_hurt1` or `VultureHurt1` | `vulture_hurt1` | Vulture - Hurt 1 |
+| `vulture_celebrate3` or `VultureCelebrate3` | `vulture_celebrate3` | Vulture - Celebrate 3 |
+| `vulture_celebrate2` or `VultureCelebrate2` | `vulture_celebrate2` | Vulture - Celebrate 2 |
+| `vulture_celebrate1` or `VultureCelebrate1` | `vulture_celebrate1` | Vulture - Celebrate 1 |
+| `vulture_welcome3` or `VultureAlert3` | `vulture_welcome3` | Vulture - Alert 3 |
+| `vulture_welcome2` or `VultureAlert2` | `vulture_welcome2` | Vulture - Alert 2 |
+| `vulture_welcome1` or `VultureAlert1` | `vulture_welcome1` | Vulture - Alert 1 |
+| `civilian_male_hurt4` or `CivilianHurt4` | `civilian_male_hurt4` | Civilian - Hurt 4 |
+| `civilian_male_hurt3` or `CivilianHurt3` | `civilian_male_hurt3` | Civilian - Hurt 3 |
+| `civilian_male_hurt2` or `CivilianHurt2` | `civilian_male_hurt2` | Civilian - Hurt 2 |
+| `civilian_male_hurt1` or `CivilianHurt1` | `civilian_male_hurt1` | Civilian - Hurt 1 |
+| `civilian_male_dying2` or `CivilianDying2` | `civilian_male_dying2` | Civilian - Dying 2 |
+| `civilian_male_dying1` or `CivilianDying1` | `civilian_male_dying1` | Civilian - Dying 1 |
+| `civilian_male_welcome3` or `CivilianAlert3` | `civilian_male_welcome3` | Civilian - Alert 3 |
+| `civilian_male_welcome2` or `CivilianAlert2` | `civilian_male_welcome2` | Civilian - Alert 2 |
+| `civilian_male_welcome1` or `CivilianAlert1` | `civilian_male_welcome1` | Civilian - Alert 1 |
+| `civilian_male_celebrate2` or `CivilianCelebrate2` | `civilian_male_celebrate2` | Civilian - Celebrate 2 |
+| `civilian_male_celebrate1` or `CivilianCelebrate1` | `civilian_male_celebrate1` | Civilian - Celebrate 1 |
+| `civilian_male_death2` or `CivilianDeath2` | `civilian_male_death2` | Civilian - Death 2 |
+| `civilian_male_death1` or `CivilianDeath1` | `civilian_male_death1` | Civilian - Death 1 |
+| `reakhohsha_welcome1` or `ReakhohshaOperativeAlert1` | `reakhohsha_welcome1` | Reakhohsha Operative - Alert 1 |
+| `reakhohsha_welcome2` or `ReakhohshaOperativeAlert2` | `reakhohsha_welcome2` | Reakhohsha Operative - Alert 2 |
+| `reakhohsha_death3` or `ReakhohshaOperativeDeath` | `reakhohsha_death3` | Reakhohsha Operative - Death |
+| `reakhohsha_hurt3` or `ReakhohshaOperativeHurt3` | `reakhohsha_hurt3` | Reakhohsha Operative - Hurt 3 |
+| `reakhohsha_hurt2` or `ReakhohshaOperativeHurt2` | `reakhohsha_hurt2` | Reakhohsha Operative - Hurt 2 |
+| `reakhohsha_hurt1` or `ReakhohshaOperativeHurt1` | `reakhohsha_hurt1` | Reakhohsha Operative - Hurt 1 |
+| `android_miner_hurt` or `MiningAndroidHurt` | `android_miner_hurt` | Mining Android - Hurt |
+| `android_miner_welcome2` or `MiningAndroidAlert` | `android_miner_welcome2` | Mining Android - Alert |
+| `android_miner_enemy_down` or `MiningAndroidCelebrate` | `android_miner_enemy_down` | Mining Android - Celebrate |
+| `android_miner_die` or `MiningAndroidDeath` | `android_miner_die` | Mining Android - Death |
 
 ### Sky (`sky_model`, 18)
 
@@ -1231,23 +1232,23 @@ refuses a value from another group where a parameter has its own list. The raw v
 
 | Name | Value | Editor label |
 |---|---|---|
-| `Mute` | `mute` | - Mute - |
-| `Marine` | `marine` | Marine |
-| `Hexagon` | `hexagon` | Hexagon |
-| `CivilSecurity` | `cs` | Civil Security |
-| `CivilSecurityGhost` | `ghost` | Civil Security Ghost |
-| `UsurpationSoldier` | `usurpation` | Usurpation Soldier |
-| `UsurpationDestroyer` | `usurpation_destroyer` | Usurpation Destroyer |
-| `Android` | `android` | Android |
-| `AndroidDeepSounds` | `hum_droid` | Android (deep sounds) |
-| `AndroidMiner` | `mine_droid` | Android (miner) |
-| `Proxy` | `proxy` | Proxy |
-| `NoirLime` | `noir_lime` | Noir Lime |
-| `Grub` | `grub` | Grub |
-| `Falkok` | `falkok` | Falkok |
-| `PhoenixFalkok` | `falkok_phoenix` | Phoenix Falkok |
-| `ReakhohshaOperative` | `reakhohsha` | Reakhohsha Operative |
-| `StarDefender` | `star_defender` | Star Defender |
+| `mute` or `Mute` | `mute` | - Mute - |
+| `marine` or `Marine` | `marine` | Marine |
+| `hexagon` or `Hexagon` | `hexagon` | Hexagon |
+| `cs` or `CivilSecurity` | `cs` | Civil Security |
+| `ghost` or `CivilSecurityGhost` | `ghost` | Civil Security Ghost |
+| `usurpation` or `UsurpationSoldier` | `usurpation` | Usurpation Soldier |
+| `usurpation_destroyer` or `UsurpationDestroyer` | `usurpation_destroyer` | Usurpation Destroyer |
+| `android` or `Android` | `android` | Android |
+| `hum_droid` or `AndroidDeepSounds` | `hum_droid` | Android (deep sounds) |
+| `mine_droid` or `AndroidMiner` | `mine_droid` | Android (miner) |
+| `proxy` or `Proxy` | `proxy` | Proxy |
+| `noir_lime` or `NoirLime` | `noir_lime` | Noir Lime |
+| `grub` or `Grub` | `grub` | Grub |
+| `falkok` or `Falkok` | `falkok` | Falkok |
+| `falkok_phoenix` or `PhoenixFalkok` | `falkok_phoenix` | Phoenix Falkok |
+| `reakhohsha` or `ReakhohshaOperative` | `reakhohsha` | Reakhohsha Operative |
+| `star_defender` or `StarDefender` | `star_defender` | Star Defender |
 
 ### CharacterModel (`char`, 89)
 
@@ -1347,91 +1348,91 @@ refuses a value from another group where a parameter has its own list. The raw v
 
 | Name | Value | Editor label |
 |---|---|---|
-| `Stone` | `stone` | Stone |
-| `SmallStone` | `stone2` | Small stone |
-| `BrokenShip` | `ship` | Broken ship |
-| `FloorGravitator` | `antigravity` | Floor gravitator |
-| `OnWallGravitatorRight` | `antigravity_right` | On-wall gravitator right |
-| `OnWallGravitatorLeft` | `antigravity_left` | On-wall gravitator left |
-| `FloorTeleport` | `teleport` | Floor teleport |
-| `CeilTeleport` | `teleport2` | Ceil teleport |
-| `DisabledFloorTeleport` | `teleport_x` | Disabled floor teleport |
-| `DisabledCeilTeleport` | `teleport2_x` | Disabled ceil teleport |
-| `LeftKillingRay` | `ray_left` | Left killing ray |
-| `RightKillingRay` | `ray_right` | Right killing ray |
-| `CeilKillingRay` | `ray_ceil` | Ceil killing ray |
-| `FloorKillingRay` | `ray_floor` | Floor killing ray |
-| `Nothing` | `null` | Nothing |
-| `DisabledFloorGravitator` | `antigravity0` | Disabled floor gravitator |
-| `IncomingOnceAnimatedShip` | `ship_noir` | Incoming once animated ship |
-| `WideTeleportDisabled` | `final_place` | Wide teleport disabled |
-| `WideTeleportEnabled` | `final_place2` | Wide teleport enabled |
-| `PixelDoor` | `pixel_door` | Pixel door |
-| `PixelDoorClosed` | `pixel_door2` | Pixel door (closed) |
-| `PixelTeleport` | `pixel_teleport` | Pixel teleport |
-| `WallLampRightOffByDarkstar1` | `wall_lamp_right` | Wall lamp right (off) by darkstar 1 |
-| `WallLampRightOnByDarkstar1` | `wall_lamp_right_on` | Wall lamp right (on) by darkstar 1 |
-| `WallLampLeftOffByDarkstar1` | `wall_lamp_left` | Wall lamp left (off) by darkstar 1 |
-| `WallLampLeftOnByDarkstar1` | `wall_lamp_left_on` | Wall lamp left (on) by darkstar 1 |
-| `WallLampUpOffByDarkstar1` | `wall_lamp_up` | Wall lamp up (off) by darkstar 1 |
-| `WallLampUpOnByDarkstar1` | `wall_lamp_up_on` | Wall lamp up (on) by darkstar 1 |
-| `WallLampDownOffByDarkstar1` | `wall_lamp_down` | Wall lamp down (off) by darkstar 1 |
-| `WallLampDownOnByDarkstar1` | `wall_lamp_down_on` | Wall lamp down (on) by darkstar 1 |
-| `BackLampVerticalOffByDarkstar1` | `back_lamp_vertical` | Back lamp vertical (off) by darkstar 1 |
-| `BackLampVerticalOnByDarkstar1` | `back_lamp_vertical_on` | Back lamp vertical (on) by darkstar 1 |
-| `BackLampHorizontalOffByDarkstar1` | `back_lamp_horizontal` | Back lamp horizontal (off) by darkstar 1 |
-| `BackLampHorizontalOnByDarkstar1` | `back_lamp_horizontal_on` | Back lamp horizontal (on) by darkstar 1 |
-| `RedColumnByDoomzerker` | `column_red` | Red column by Doomzerker |
-| `GreenColumnByDoomzerker` | `column_green` | Green column by Doomzerker |
-| `BlueColumnByDoomzerker` | `column_blue` | Blue column by Doomzerker |
-| `MinedBarrelByDoomzerker` | `mined_barrel` | Mined barrel by Doomzerker |
-| `MachineByDarkstar1` | `darkstar_device` | Machine by darkstar 1 |
-| `MachineDestroyedByDarkstar1` | `darkstar_device_destroyed` | Machine (destroyed) by darkstar 1 |
-| `TextPlaceholderOverhead` | `text` | Text placeholder (overhead) |
-| `TextPlaceholderScore` | `text2` | Text placeholder (score) |
-| `TextPlaceholderChat` | `text3` | Text placeholder (chat) |
-| `WallCameraLeftByDarkstar1` | `darkstar_camera_left` | Wall camera (left) by darkstar 1 |
-| `WallCameraRightByDarkstar1` | `darkstar_camera_right` | Wall camera (right) by darkstar 1 |
-| `FlagBlueByDitzy` | `ditzy_flag_blue` | Flag (blue) by Ditzy |
-| `FlagRedByDitzy` | `ditzy_flag_red` | Flag (red) by Ditzy |
-| `FlagDarkByDitzy` | `ditzy_flag_dark` | Flag (dark) by Ditzy |
-| `FlagEmptyByDitzy` | `ditzy_flag_empty` | Flag (empty) by Ditzy |
-| `HealingKitByDarkstar1` | `darkstar_healing_kit` | Healing kit by darkstar 1 |
-| `HologramStandEnabledBlueByDarkstar1` | `darkstar_holo_on` | Hologram stand (enabled, blue) by darkstar 1 |
-| `HologramStandEnabledRedByDarkstar1` | `darkstar_holo_on_red` | Hologram stand (enabled, red) by darkstar 1 |
-| `HologramStandDisabledByDarkstar1` | `darkstar_holo_off` | Hologram stand (disabled) by darkstar 1 |
-| `HologramOfEarthByDarkstar1` | `darkstar_holo_earth` | Hologram of Earth by darkstar 1 |
-| `HologramOfCorrection9LogoByDarkstar1` | `darkstar_holo_c9` | Hologram of Correction-9 logo by darkstar 1 |
-| `OrangeBarrelAsDecoration` | `static_barrel1` | Orange barrel as decoration |
-| `BlueBarrelAsDecoration` | `static_barrel2` | Blue barrel as decoration |
-| `RedBarrelAsDecoration` | `static_barrel3` | Red barrel as decoration |
-| `PBFTTPVehicleRightAsDecoration` | `fttp_vehicle` | PB:FTTP Vehicle (right) as decoration |
-| `PBFTTPVehicleLeftAsDecoration` | `fttp_vehicle2` | PB:FTTP Vehicle (left) as decoration |
-| `PBFTTPVehicleWheelAsDecoration` | `fttp_wheel` | PB:FTTP Vehicle wheel as decoration |
-| `PBFTTPDroneAsDecoration` | `fttp_drone` | PB:FTTP Drone as decoration |
-| `XXFRapierIdleRightByDoomzerker` | `doomwrath_rapier_idle` | XXF Rapier (idle, right) by Doomzerker |
-| `XXFRapierActiveRightByDoomzerker` | `doomwrath_rapier_active` | XXF Rapier (active, right) by Doomzerker |
-| `XXFRapierIdleLeftByDoomzerker` | `doomwrath_rapier_idle2` | XXF Rapier (idle, left) by Doomzerker |
-| `XXFRapierActiveLeftByDoomzerker` | `doomwrath_rapier_active2` | XXF Rapier (active, left) by Doomzerker |
-| `FalkokShipIdlePilotlessRight` | `falkok_ship1` | Falkok ship (idle, pilotless, right) |
-| `FalkokShipIdlePilotedRight` | `falkok_ship2` | Falkok ship (idle, piloted, right) |
-| `FalkokShipActivePilotedRight` | `falkok_ship3` | Falkok ship (active, piloted, right) |
-| `FalkokShipIdlePilotlessLeft` | `falkok_ship4` | Falkok ship (idle, pilotless, left) |
-| `FalkokShipIdlePilotedLeft` | `falkok_ship5` | Falkok ship (idle, piloted, left) |
-| `FalkokShipActivePilotedLeft` | `falkok_ship6` | Falkok ship (active, piloted, left) |
-| `CrateByDarkstar1` | `darkstar_crate` | Crate by darkstar 1 |
-| `WeaponCrateByDarkstar1` | `darkstar_weapon_crate` | Weapon Crate by darkstar 1 |
-| `PortableFissionChamberByDarkstar1` | `darkstar_portable_fission` | Portable Fission Chamber by darkstar 1 |
-| `PortableFissionChamberDebrisByDarkstar1` | `darkstar_portable_fission_brk` | Portable Fission Chamber debris by darkstar 1 |
-| `CeilingCameraByDarkstar1` | `darkstar_ceiling_camera` | Ceiling camera by darkstar 1 |
-| `StorageLockerByDoomzerker` | `doomzerker_locker` | Storage locker by Doomzerker |
-| `StorageLockerDamagedByDoomzerker` | `doomzerker_locker2` | Storage locker (damaged) by Doomzerker |
-| `StorageLockerOpenByDoomzerker` | `doomzerker_locker3` | Storage locker (open) by Doomzerker |
-| `TreeSmallByDarkstar1` | `darkstar_tree1` | Tree (small) by darkstar 1 |
-| `TreeMediumByDarkstar1` | `darkstar_tree2` | Tree (medium) by darkstar 1 |
-| `PotByDarkstar1` | `darkstar_pot` | Pot by darkstar 1 |
-| `TreeInPotSmallByDarkstar1` | `darkstar_pot_tree1` | Tree in pot (small) by darkstar 1 |
-| `TreeInPotMediumByDarkstar1` | `darkstar_pot_tree2` | Tree in pot (medium) by darkstar 1 |
+| `stone` or `Stone` | `stone` | Stone |
+| `stone2` or `SmallStone` | `stone2` | Small stone |
+| `ship` or `BrokenShip` | `ship` | Broken ship |
+| `antigravity` or `FloorGravitator` | `antigravity` | Floor gravitator |
+| `antigravity_right` or `OnWallGravitatorRight` | `antigravity_right` | On-wall gravitator right |
+| `antigravity_left` or `OnWallGravitatorLeft` | `antigravity_left` | On-wall gravitator left |
+| `teleport` or `FloorTeleport` | `teleport` | Floor teleport |
+| `teleport2` or `CeilTeleport` | `teleport2` | Ceil teleport |
+| `teleport_x` or `DisabledFloorTeleport` | `teleport_x` | Disabled floor teleport |
+| `teleport2_x` or `DisabledCeilTeleport` | `teleport2_x` | Disabled ceil teleport |
+| `ray_left` or `LeftKillingRay` | `ray_left` | Left killing ray |
+| `ray_right` or `RightKillingRay` | `ray_right` | Right killing ray |
+| `ray_ceil` or `CeilKillingRay` | `ray_ceil` | Ceil killing ray |
+| `ray_floor` or `FloorKillingRay` | `ray_floor` | Floor killing ray |
+| `null` or `Nothing` | `null` | Nothing |
+| `antigravity0` or `DisabledFloorGravitator` | `antigravity0` | Disabled floor gravitator |
+| `ship_noir` or `IncomingOnceAnimatedShip` | `ship_noir` | Incoming once animated ship |
+| `final_place` or `WideTeleportDisabled` | `final_place` | Wide teleport disabled |
+| `final_place2` or `WideTeleportEnabled` | `final_place2` | Wide teleport enabled |
+| `pixel_door` or `PixelDoor` | `pixel_door` | Pixel door |
+| `pixel_door2` or `PixelDoorClosed` | `pixel_door2` | Pixel door (closed) |
+| `pixel_teleport` or `PixelTeleport` | `pixel_teleport` | Pixel teleport |
+| `wall_lamp_right` or `WallLampRightOffByDarkstar1` | `wall_lamp_right` | Wall lamp right (off) by darkstar 1 |
+| `wall_lamp_right_on` or `WallLampRightOnByDarkstar1` | `wall_lamp_right_on` | Wall lamp right (on) by darkstar 1 |
+| `wall_lamp_left` or `WallLampLeftOffByDarkstar1` | `wall_lamp_left` | Wall lamp left (off) by darkstar 1 |
+| `wall_lamp_left_on` or `WallLampLeftOnByDarkstar1` | `wall_lamp_left_on` | Wall lamp left (on) by darkstar 1 |
+| `wall_lamp_up` or `WallLampUpOffByDarkstar1` | `wall_lamp_up` | Wall lamp up (off) by darkstar 1 |
+| `wall_lamp_up_on` or `WallLampUpOnByDarkstar1` | `wall_lamp_up_on` | Wall lamp up (on) by darkstar 1 |
+| `wall_lamp_down` or `WallLampDownOffByDarkstar1` | `wall_lamp_down` | Wall lamp down (off) by darkstar 1 |
+| `wall_lamp_down_on` or `WallLampDownOnByDarkstar1` | `wall_lamp_down_on` | Wall lamp down (on) by darkstar 1 |
+| `back_lamp_vertical` or `BackLampVerticalOffByDarkstar1` | `back_lamp_vertical` | Back lamp vertical (off) by darkstar 1 |
+| `back_lamp_vertical_on` or `BackLampVerticalOnByDarkstar1` | `back_lamp_vertical_on` | Back lamp vertical (on) by darkstar 1 |
+| `back_lamp_horizontal` or `BackLampHorizontalOffByDarkstar1` | `back_lamp_horizontal` | Back lamp horizontal (off) by darkstar 1 |
+| `back_lamp_horizontal_on` or `BackLampHorizontalOnByDarkstar1` | `back_lamp_horizontal_on` | Back lamp horizontal (on) by darkstar 1 |
+| `column_red` or `RedColumnByDoomzerker` | `column_red` | Red column by Doomzerker |
+| `column_green` or `GreenColumnByDoomzerker` | `column_green` | Green column by Doomzerker |
+| `column_blue` or `BlueColumnByDoomzerker` | `column_blue` | Blue column by Doomzerker |
+| `mined_barrel` or `MinedBarrelByDoomzerker` | `mined_barrel` | Mined barrel by Doomzerker |
+| `darkstar_device` or `MachineByDarkstar1` | `darkstar_device` | Machine by darkstar 1 |
+| `darkstar_device_destroyed` or `MachineDestroyedByDarkstar1` | `darkstar_device_destroyed` | Machine (destroyed) by darkstar 1 |
+| `text` or `TextPlaceholderOverhead` | `text` | Text placeholder (overhead) |
+| `text2` or `TextPlaceholderScore` | `text2` | Text placeholder (score) |
+| `text3` or `TextPlaceholderChat` | `text3` | Text placeholder (chat) |
+| `darkstar_camera_left` or `WallCameraLeftByDarkstar1` | `darkstar_camera_left` | Wall camera (left) by darkstar 1 |
+| `darkstar_camera_right` or `WallCameraRightByDarkstar1` | `darkstar_camera_right` | Wall camera (right) by darkstar 1 |
+| `ditzy_flag_blue` or `FlagBlueByDitzy` | `ditzy_flag_blue` | Flag (blue) by Ditzy |
+| `ditzy_flag_red` or `FlagRedByDitzy` | `ditzy_flag_red` | Flag (red) by Ditzy |
+| `ditzy_flag_dark` or `FlagDarkByDitzy` | `ditzy_flag_dark` | Flag (dark) by Ditzy |
+| `ditzy_flag_empty` or `FlagEmptyByDitzy` | `ditzy_flag_empty` | Flag (empty) by Ditzy |
+| `darkstar_healing_kit` or `HealingKitByDarkstar1` | `darkstar_healing_kit` | Healing kit by darkstar 1 |
+| `darkstar_holo_on` or `HologramStandEnabledBlueByDarkstar1` | `darkstar_holo_on` | Hologram stand (enabled, blue) by darkstar 1 |
+| `darkstar_holo_on_red` or `HologramStandEnabledRedByDarkstar1` | `darkstar_holo_on_red` | Hologram stand (enabled, red) by darkstar 1 |
+| `darkstar_holo_off` or `HologramStandDisabledByDarkstar1` | `darkstar_holo_off` | Hologram stand (disabled) by darkstar 1 |
+| `darkstar_holo_earth` or `HologramOfEarthByDarkstar1` | `darkstar_holo_earth` | Hologram of Earth by darkstar 1 |
+| `darkstar_holo_c9` or `HologramOfCorrection9LogoByDarkstar1` | `darkstar_holo_c9` | Hologram of Correction-9 logo by darkstar 1 |
+| `static_barrel1` or `OrangeBarrelAsDecoration` | `static_barrel1` | Orange barrel as decoration |
+| `static_barrel2` or `BlueBarrelAsDecoration` | `static_barrel2` | Blue barrel as decoration |
+| `static_barrel3` or `RedBarrelAsDecoration` | `static_barrel3` | Red barrel as decoration |
+| `fttp_vehicle` or `PBFTTPVehicleRightAsDecoration` | `fttp_vehicle` | PB:FTTP Vehicle (right) as decoration |
+| `fttp_vehicle2` or `PBFTTPVehicleLeftAsDecoration` | `fttp_vehicle2` | PB:FTTP Vehicle (left) as decoration |
+| `fttp_wheel` or `PBFTTPVehicleWheelAsDecoration` | `fttp_wheel` | PB:FTTP Vehicle wheel as decoration |
+| `fttp_drone` or `PBFTTPDroneAsDecoration` | `fttp_drone` | PB:FTTP Drone as decoration |
+| `doomwrath_rapier_idle` or `XXFRapierIdleRightByDoomzerker` | `doomwrath_rapier_idle` | XXF Rapier (idle, right) by Doomzerker |
+| `doomwrath_rapier_active` or `XXFRapierActiveRightByDoomzerker` | `doomwrath_rapier_active` | XXF Rapier (active, right) by Doomzerker |
+| `doomwrath_rapier_idle2` or `XXFRapierIdleLeftByDoomzerker` | `doomwrath_rapier_idle2` | XXF Rapier (idle, left) by Doomzerker |
+| `doomwrath_rapier_active2` or `XXFRapierActiveLeftByDoomzerker` | `doomwrath_rapier_active2` | XXF Rapier (active, left) by Doomzerker |
+| `falkok_ship1` or `FalkokShipIdlePilotlessRight` | `falkok_ship1` | Falkok ship (idle, pilotless, right) |
+| `falkok_ship2` or `FalkokShipIdlePilotedRight` | `falkok_ship2` | Falkok ship (idle, piloted, right) |
+| `falkok_ship3` or `FalkokShipActivePilotedRight` | `falkok_ship3` | Falkok ship (active, piloted, right) |
+| `falkok_ship4` or `FalkokShipIdlePilotlessLeft` | `falkok_ship4` | Falkok ship (idle, pilotless, left) |
+| `falkok_ship5` or `FalkokShipIdlePilotedLeft` | `falkok_ship5` | Falkok ship (idle, piloted, left) |
+| `falkok_ship6` or `FalkokShipActivePilotedLeft` | `falkok_ship6` | Falkok ship (active, piloted, left) |
+| `darkstar_crate` or `CrateByDarkstar1` | `darkstar_crate` | Crate by darkstar 1 |
+| `darkstar_weapon_crate` or `WeaponCrateByDarkstar1` | `darkstar_weapon_crate` | Weapon Crate by darkstar 1 |
+| `darkstar_portable_fission` or `PortableFissionChamberByDarkstar1` | `darkstar_portable_fission` | Portable Fission Chamber by darkstar 1 |
+| `darkstar_portable_fission_brk` or `PortableFissionChamberDebrisByDarkstar1` | `darkstar_portable_fission_brk` | Portable Fission Chamber debris by darkstar 1 |
+| `darkstar_ceiling_camera` or `CeilingCameraByDarkstar1` | `darkstar_ceiling_camera` | Ceiling camera by darkstar 1 |
+| `doomzerker_locker` or `StorageLockerByDoomzerker` | `doomzerker_locker` | Storage locker by Doomzerker |
+| `doomzerker_locker2` or `StorageLockerDamagedByDoomzerker` | `doomzerker_locker2` | Storage locker (damaged) by Doomzerker |
+| `doomzerker_locker3` or `StorageLockerOpenByDoomzerker` | `doomzerker_locker3` | Storage locker (open) by Doomzerker |
+| `darkstar_tree1` or `TreeSmallByDarkstar1` | `darkstar_tree1` | Tree (small) by darkstar 1 |
+| `darkstar_tree2` or `TreeMediumByDarkstar1` | `darkstar_tree2` | Tree (medium) by darkstar 1 |
+| `darkstar_pot` or `PotByDarkstar1` | `darkstar_pot` | Pot by darkstar 1 |
+| `darkstar_pot_tree1` or `TreeInPotSmallByDarkstar1` | `darkstar_pot_tree1` | Tree in pot (small) by darkstar 1 |
+| `darkstar_pot_tree2` or `TreeInPotMediumByDarkstar1` | `darkstar_pot_tree2` | Tree in pot (medium) by darkstar 1 |
 
 ### Song (`song+none`, 1)
 
