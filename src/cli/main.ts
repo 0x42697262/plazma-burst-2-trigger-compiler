@@ -3,6 +3,7 @@ import path from 'node:path';
 import { emitXml } from '../emit/xml-emitter.ts';
 import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
+import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap } from '../emit/merge.ts';
 import { checkHostNames } from '../compiler/host.ts';
@@ -37,12 +38,13 @@ const layoutOf = (value: string | null): Layout => {
   return { ...DEFAULT_LAYOUT, originX: originX ?? 0, originY: originY ?? 0 };
 };
 
-const optionsOf = (parsed: ReturnType<typeof parseArguments>): Partial<CompileOptions> => {
+const optionsOf = (parsed: ReturnType<typeof parseArguments>, hostMap: string | null): Partial<CompileOptions> => {
   const guard = lastValue(parsed, FLAG.guard);
   return {
     loopGuard: parsed.flags.has(FLAG.noGuard) ? null : guard === null ? DEFAULT_OPTIONS.loopGuard : positiveInteger(guard, TEXT.badGuard),
     startTimer: !parsed.flags.has(FLAG.noStart),
     externalUids: parsed.values.get(FLAG.extern) ?? [],
+    varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : parsed.flags.has(FLAG.noSyncMark) ? 'off' : 'add',
   };
 };
 
@@ -76,9 +78,9 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const layout = layoutOf(lastValue(parsed, FLAG.at));
     const framesText = lastValue(parsed, FLAG.frames);
     const frames = framesText === null ? DEFAULT_RUN_FRAMES : positiveInteger(framesText, TEXT.badFrames);
-    const options = optionsOf(parsed);
     const into = lastValue(parsed, FLAG.into);
     const hostMap = into === null ? null : fs.readFileSync(into, FILE_ENCODING);
+    const options = optionsOf(parsed, hostMap);
     const source = fs.readFileSync(file, FILE_ENCODING);
     const frontEnd = frontEndFor(file);
     const prefix = lastValue(parsed, FLAG.prefix) ?? frontEnd.prefixOf(source) ?? prefixFromFile(file);
@@ -91,6 +93,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     writeFile(base + OUTPUT.xml, xml, output);
     try {
       writeFile(base + OUTPUT.text, joinTextBlocks(emitText(result.program)), output);
+      if (result.program.varSyncMark) output.err(TEXT.warning(TEXT.textNeedsVarSync));
       if (result.program.timers.length > 0) output.err(TEXT.warning(TEXT.textHasNoTimers(result.program.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)))));
     } catch (error) {
       fs.rmSync(base + OUTPUT.text, { force: true });

@@ -8,10 +8,10 @@ import type { Declaration, Expression, Location, SourceFile, Statement, Template
 import { SourceError } from './lexer.ts';
 import {
   ADDRESS_NAME, ARITHMETIC, ELEMENT_OPEN, BUILTIN, COMPARISONS, EMPTY_TEXT, EVENT, FALSE_TEXT, HIDDEN, LABEL, SPLIT_EVERY_CHARACTER, STACK_POINTER, TRUE_TEXT,
-  WHOLE_NUMBER,
+  WHOLE_NUMBER, DEFAULT_SYNC_MODE,
 } from './keys.ts';
 import type { BinaryOperator } from './keys.ts';
-import { ACTION_ARGUMENTS, DEFAULT_SAY_COLOR, SAY_ARGUMENTS, UNLIMITED_TIMER_CALLS } from './constants.ts';
+import { ACTION_ARGUMENTS, DEFAULT_SAY_COLOR, SAY_ARGUMENTS, SYNC_ARGUMENTS, UNLIMITED_TIMER_CALLS } from './constants.ts';
 import {
   Frame, arrayLengthName, elementName, functionReturnName, parameterName, stackElementName,
 } from './symbols.ts';
@@ -25,7 +25,10 @@ const VALUE_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.name, BUILTIN.time,
   BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop,
 ]);
-const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action]);
+const SYNC_MODES: Readonly<Record<string, number>> = {
+  replace: OPCODE.syncReplace, default: OPCODE.syncDefault, max: OPCODE.syncMax, min: OPCODE.syncMin, longest: OPCODE.syncLongest,
+};
+const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action, BUILTIN.sync]);
 const BUILTIN_ARITY: Readonly<Record<string, number>> = {
   len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2,
 };
@@ -1081,9 +1084,34 @@ export class Generator {
       case BUILTIN.action:
         this.rawAction(expression);
         return;
+      case BUILTIN.sync:
+        this.sync(expression);
+        return;
       default:
         return;
     }
+  }
+
+  private sync(expression: Extract<Expression, { kind: 'call' }>): void {
+    const count = expression.args.length;
+    if (count < SYNC_ARGUMENTS.min || count > SYNC_ARGUMENTS.max) {
+      fail(expression.location, TEXT.argumentRange(expression.callee, SYNC_ARGUMENTS.min, SYNC_ARGUMENTS.max, count));
+    }
+    const target = this.argument(expression, 0);
+    const modeExpression = expression.args[1];
+    const mode = modeExpression ? this.compileTimeText(modeExpression) : DEFAULT_SYNC_MODE;
+    const opcode = mode !== null && Object.hasOwn(SYNC_MODES, mode) ? SYNC_MODES[mode] : undefined;
+    if (opcode === undefined) return fail(modeExpression?.location ?? expression.location, TEXT.syncMode(Object.keys(SYNC_MODES)));
+    let name: string | null = null;
+    if (target.kind === 'name') {
+      const entry = this.lookup(target.name, target.location);
+      name = entry.kind === 'variable' ? entry.name : null;
+    } else if (target.kind === 'index') {
+      const fixedIndex = this.staticIndex(target.index);
+      name = fixedIndex === null ? null : elementName(this.names, this.arrayOf(target.array, target.location).base, fixedIndex);
+    }
+    if (name === null) return fail(target.location, TEXT.syncTarget);
+    this.act(opcode, name);
   }
 
   private say(expression: Extract<Expression, { kind: 'call' }>): void {

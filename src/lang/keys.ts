@@ -58,8 +58,9 @@ export const LABEL = Object.freeze({
 });
 export const BUILTIN = Object.freeze({
   say: 'say', push: 'push', action: 'action', len: 'len', contains: 'contains', random: 'random', floor: 'floor', round: 'round',
-  slot: 'slot', initiator: 'initiator', name: 'name', time: 'time', number: 'number', text: 'text', charAt: 'charAt', drop: 'drop',
+  slot: 'slot', initiator: 'initiator', name: 'name', time: 'time', number: 'number', text: 'text', charAt: 'charAt', drop: 'drop', sync: 'sync',
 } as const);
 export const SPLIT_EVERY_CHARACTER = '';
 export const HIDDEN = Object.freeze({ players: 'players', count: 'count', index: 'index' });
 export const WHOLE_NUMBER = /^-?[0-9]+$/;
+export const DEFAULT_SYNC_MODE = 'replace';

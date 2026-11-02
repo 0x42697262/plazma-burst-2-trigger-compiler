@@ -67,6 +67,24 @@ describe('compile CLI', () => {
     assert.deepEqual(fs.readdirSync(empty), []);
   });
 
+  it('adds the Var Sync mark unless the host map has one or --no-sync-mark is given', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 's.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(source, 'var x = 1;\non start { sync(x); }\n');
+    fs.writeFileSync(host, '<player x="0" y="0" />\n<inf x="0" y="0" mark="var_sync" forteam="0" />\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--out', folder], output), 0);
+    assert.match(fs.readFileSync(path.join(folder, 's.xml'), 'utf8'), /mark="var_sync"/);
+    assert.ok(lines.err.some((line) => line.includes('add a Var Sync engine mark')));
+    assert.equal(main([source, '--out', folder, '--into', host], output), 0);
+    assert.doesNotMatch(fs.readFileSync(path.join(folder, 's.xml'), 'utf8'), /var_sync/);
+    assert.equal(fs.readFileSync(path.join(folder, 's-map.xml'), 'utf8').match(/var_sync/g)?.length, 1);
+    assert.equal(main([source, '--out', folder, '--no-sync-mark'], output), 0);
+    assert.doesNotMatch(fs.readFileSync(path.join(folder, 's.xml'), 'utf8'), /var_sync/);
+    assert.ok(lines.err.some((line) => line.includes('no Var Sync engine mark is added')));
+  });
+
   it('removes an old text file when the new program cannot be written as text', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'c.pasm');

@@ -1,0 +1,10 @@
+// Sync actions with the Var Sync engine mark: in single player they send nothing, and the trigger goes on.
+var score = 5;
+var best = 2;
+var after = 0;
+on start {
+  sync(score);
+  sync(best, "max");
+  sync(score, "longest");
+  after = 1;
+}
