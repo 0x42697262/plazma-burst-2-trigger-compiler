@@ -8,6 +8,8 @@ export const TEXT_LINE_END = '\n';
 export const TEXT_BLOCK_SEPARATOR = '\n';
 export const OP_PREFIX = 'op';
 export const UID_ATTRIBUTE = /\buid="([^"]*)"/g;
+export const UID_ATTRIBUTE_ONE = /\buid="([^"]*)"/;
+export const MAP_ELEMENT = /<[A-Za-z][\w-]*\b[^>]*\/>\n?/g;
 export const TRAILING_LINE_END = /\s*$/;
 export const ATTRIBUTE_SEPARATOR = ' ';
 export const BASE_MAP = [

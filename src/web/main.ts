@@ -34,6 +34,7 @@ const vimInput = element<HTMLInputElement>(ELEMENT.vim);
 const numberTextInput = element<HTMLInputElement>(ELEMENT.numberText);
 const directIndexInput = element<HTMLInputElement>(ELEMENT.directIndex);
 const targetSelect = element<HTMLSelectElement>(ELEMENT.target);
+const replaceInput = element<HTMLInputElement>(ELEMENT.replace);
 const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
 const environmentButton = element<HTMLButtonElement>(ELEMENT.environmentButton);
 const environmentPanel = element<HTMLDivElement>(ELEMENT.environmentPanel);
@@ -49,6 +50,7 @@ framesInput.value = String(savedOptions.frames ?? DEFAULT_FRAMES);
 numberTextInput.checked = savedOptions.numberText ?? true;
 directIndexInput.checked = savedOptions.directIndex ?? false;
 targetSelect.value = savedOptions.target ?? DEFAULT_TARGET;
+replaceInput.checked = savedOptions.replace ?? false;
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 
 let hostMap: string | null = null;
@@ -59,7 +61,7 @@ let shown: OutputName = OUTPUT.problems;
 let statusTimer = 0;
 
 const options = (): Options => {
-  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET };
+  const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   return value;
 };
@@ -229,7 +231,7 @@ environmentInput.addEventListener(EVENT.input, () => {
   environmentButton.textContent = TEXT.environmentButton(Object.keys(environment()).length);
   editor.relint();
 });
-for (const input of [numberTextInput, directIndexInput, targetSelect]) {
+for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput]) {
   input.addEventListener(EVENT.change, () => {
     options();
     editor.relint();

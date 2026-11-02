@@ -7,7 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -28,6 +28,19 @@ describe('web page logic', () => {
     assert.match(result.map, /^<player x="0" y="0" \/>\n<trigger/);
     assert.equal(simulate(result.result!, 1)[0], 'chat: 3 4 2 * + = 11');
     assert.equal(prefixFor('/work/11-infix.ptc'), 'infix');
+  });
+
+  it('replaces an older build of the program in the host map when asked', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'var n = 0;\non start { n += 1; say("later"); }\n');
+    workspace.activate('/work/main.ptc');
+    const host = '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n<trigger uid="#main:start" x="0" y="0" enabled="true" maxcalls="-1" actions_1_type="100" actions_1_targetA="~main_n~" actions_1_targetB="9" />\n';
+    const clash = build(workspace, '/work/main.ptc', OPTIONS, host);
+    assert.match(clash.notes.join('\n'), /already has an object with uid #main:start/);
+    const replaced = build(workspace, '/work/main.ptc', { ...OPTIONS, replace: true }, host);
+    assert.ok(replaced.map.includes('#gate1'));
+    assert.ok(replaced.map.includes('"later"') && !replaced.map.includes('actions_1_targetB="9"'));
+    assert.equal((replaced.map.match(/uid="#main:start"/g) ?? []).length, 1);
   });
 
   it('writes number-like text as it is when the site editor option is off', () => {

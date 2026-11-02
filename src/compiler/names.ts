@@ -11,6 +11,7 @@ export type Names = {
   freshLabel: (hint: string) => string;
   continuationLabel: (label: string, part: number) => string;
   ownsVariable: (name: string) => boolean;
+  ownsUid: (uid: string) => boolean;
 };
 
 const isInternal = (name: string): boolean => name.startsWith(INTERNAL_MARK);
@@ -30,5 +31,6 @@ export function createNames(prefix: string): Names {
     },
     continuationLabel: (label, part) => `${label}${CONTINUATION_SEPARATOR}${part}`,
     ownsVariable: (name) => [USER_SEPARATOR, INTERNAL_MARK].some((mark) => name.startsWith(`${VARIABLE_MARK}${prefix}${mark}`)),
+    ownsUid: (uid) => [USER_SEPARATOR, INTERNAL_MARK].some((mark) => uid.startsWith(`${TRIGGER_MARK}${prefix}${mark}`)),
   };
 }

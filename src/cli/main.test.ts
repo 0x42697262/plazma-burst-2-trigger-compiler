@@ -97,6 +97,26 @@ describe('compile CLI', () => {
     assert.ok(lines.err.some((line) => line.includes('website editor turns the value "007"')));
   });
 
+  it('updates a program already in a map with --replace, keeping other elements', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'p.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(host, '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n<trigger uid="#mine" x="0" y="0" enabled="true" maxcalls="1" />\n');
+    fs.writeFileSync(source, 'var n = 0;\non start { for (let i = 0; i < 3; i += 1) { n += 1; } say("v1"); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--prefix', 'p', '--out', folder, '--into', host], output), 0);
+    fs.copyFileSync(path.join(folder, 'p-map.xml'), host);
+    assert.equal(main([source, '--prefix', 'p', '--out', folder, '--into', host], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /already has an object with uid #p:start/);
+    fs.writeFileSync(source, 'var n = 0;\nvar tag = "v2";\non start { for (let i = 0; i < 7; i += 1) { n += 1; } say("v2"); }\n');
+    assert.equal(main([source, '--prefix', 'p', '--out', folder, '--into', host, '--replace'], output), 0);
+    const merged = fs.readFileSync(path.join(folder, 'p-map.xml'), 'utf8');
+    assert.ok(merged.includes('#gate1') && merged.includes('#mine'));
+    assert.ok(merged.includes('"v2"') && !merged.includes('"v1"'));
+    assert.equal(main([source, '--out', folder, '--replace'], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /--replace needs --into/);
+  });
+
   it('builds element names without scanning variables with --direct-index', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'd.ptc');

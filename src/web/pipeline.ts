@@ -3,7 +3,7 @@ import { compileAssembly } from '../compiler/assemble.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { emitXml, escapeXml, stagingPosition } from '../emit/xml-emitter.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
-import { appendToMap } from '../emit/merge.ts';
+import { appendToMap, removeOwned } from '../emit/merge.ts';
 import { XML_LINE_END } from '../emit/keys.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { checkObjects, objectElement } from '../objects/objects.ts';
@@ -19,7 +19,7 @@ import { TEXT } from './text.ts';
 import type { Workspace } from './workspace.ts';
 import type { Target } from '../pcode/keys.ts';
 
-export type Options = { prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target };
+export type Options = { prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean };
 export type Problem = ServiceDiagnostic & { file: string };
 export type Build = {
   result: CompileResult | null;
@@ -97,9 +97,11 @@ export function build(workspace: Workspace, file: string, options: Options, host
   }
   let map = '';
   if (hostMap !== null) {
-    notes.push(...checkHostNames(result.program, hostMap), ...checkHostUses(hostMap, createNames(prefix).ownsVariable, result.exports));
+    const names = createNames(prefix);
+    const host = options.replace ? removeOwned(hostMap, names.ownsUid) : hostMap;
+    notes.push(...checkHostNames(result.program, host), ...checkHostUses(host, names.ownsVariable, result.exports));
     try {
-      map = appendToMap(hostMap, xml);
+      map = appendToMap(host, xml);
     } catch (error) {
       notes.push(error instanceof Error ? error.message : String(error));
     }

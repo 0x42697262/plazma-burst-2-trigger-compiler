@@ -18,6 +18,7 @@ export const ELEMENT = Object.freeze({
   hostMap: 'host-map',
   hostMapName: 'host-map-name',
   hostMapButton: 'host-map-button',
+  replace: 'replace',
   outputTabs: 'output-tabs',
   output: 'output',
   copy: 'copy',

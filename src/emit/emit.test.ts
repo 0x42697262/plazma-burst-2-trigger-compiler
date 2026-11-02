@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { emitXml, escapeXml } from './xml-emitter.ts';
 import { emitText, emitTriggerText, isWritableAsText, joinTextBlocks } from './trigger-text-emitter.ts';
-import { appendToMap } from './merge.ts';
+import { appendToMap, removeOwned, replaceInMap } from './merge.ts';
 import { EmitError } from './check.ts';
 import { action, trigger } from '../program/build.ts';
 import { HELLO } from '../samples/hello.fixture.ts';
@@ -112,5 +112,37 @@ describe('append to map', () => {
   it('refuses a uid the map already uses', () => {
     const clashing = emitXml({ triggers: [trigger('#trigger*1', [action(100, 'a', 'b')])], timers: [] });
     assert.throws(() => appendToMap(MAP, clashing), /already has an object with uid #trigger\*1/);
+  });
+});
+
+describe('replace in map', () => {
+  const owns = (uid: string): boolean => uid.startsWith('#p:') || uid.startsWith('#p_');
+  const HOST = [
+    '<player x="0" y="0" />',
+    '<door uid="#gate1" x="0" y="0" />',
+    '<trigger uid="#mine" x="0" y="0" enabled="true" maxcalls="1" />',
+    '<trigger uid="#p:start" x="0" y="0" enabled="true" maxcalls="-1" />',
+    '<trigger uid="#p:loop2" x="60" y="0" enabled="true" maxcalls="-1" />',
+    '<timer uid="#p:start-timer" x="0" y="0" enabled="true" maxcalls="1" delay="0" target="#p:start" />',
+    '',
+  ].join('\n');
+
+  it('removes only the elements the program owns', () => {
+    const stripped = removeOwned(HOST, owns);
+    assert.ok(stripped.includes('#gate1') && stripped.includes('#mine'));
+    assert.ok(!stripped.includes('#p:start') && !stripped.includes('#p:loop2') && !stripped.includes('#p:start-timer'));
+  });
+
+  it('replaces an old program in place without a uid clash', () => {
+    const rebuilt = emitXml({ triggers: [trigger('#p:start', [action(100, '~p_n~', '1')]), trigger('#p:loop9', [action(100, '~p_n~', '2')])], timers: [] });
+    const merged = replaceInMap(HOST, rebuilt, owns);
+    assert.equal((merged.match(/uid="#p:/g) ?? []).length, 2);
+    assert.ok(merged.includes('#gate1') && merged.includes('#mine') && merged.includes('#p:loop9'));
+    assert.ok(!merged.includes('#p:loop2'));
+  });
+
+  it('leaves a map without the program untouched', () => {
+    const clean = '<player x="0" y="0" />\n<door uid="#gate1" x="0" y="0" />\n';
+    assert.equal(removeOwned(clean, owns), clean);
   });
 });

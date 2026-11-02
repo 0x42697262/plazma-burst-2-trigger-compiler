@@ -7,7 +7,7 @@ import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
-import { appendToMap } from '../emit/merge.ts';
+import { appendToMap, removeOwned } from '../emit/merge.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames } from '../compiler/names.ts';
 import { DEFAULT_OPTIONS } from '../compiler/compile.ts';
@@ -89,6 +89,8 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const framesText = lastValue(parsed, FLAG.frames);
     const frames = framesText === null ? DEFAULT_RUN_FRAMES : positiveInteger(framesText, TEXT.badFrames);
     const into = lastValue(parsed, FLAG.into);
+    const replacing = parsed.flags.has(FLAG.replace);
+    if (replacing && into === null) throw new UsageError(TEXT.replaceNeedsInto);
     const hostMap = into === null ? null : fs.readFileSync(into, FILE_ENCODING);
     const options = optionsOf(parsed, hostMap);
     const source = fs.readFileSync(file, FILE_ENCODING);
@@ -123,9 +125,11 @@ export function main(argumentsList: readonly string[], output: Output): number {
     }
     writeFile(base + OUTPUT.sourceMap, JSON.stringify(result.sourceMap, null, JSON_INDENT), output);
     if (hostMap !== null) {
-      for (const warning of checkHostNames(result.program, hostMap)) output.err(TEXT.warning(warning));
-      for (const warning of checkHostUses(hostMap, createNames(prefix).ownsVariable, result.exports)) output.err(TEXT.warning(warning));
-      writeFile(base + OUTPUT.map, appendToMap(hostMap, xml), output);
+      const names = createNames(prefix);
+      const host = replacing ? removeOwned(hostMap, names.ownsUid) : hostMap;
+      for (const warning of checkHostNames(result.program, host)) output.err(TEXT.warning(warning));
+      for (const warning of checkHostUses(host, names.ownsVariable, result.exports)) output.err(TEXT.warning(warning));
+      writeFile(base + OUTPUT.map, appendToMap(host, xml), output);
     }
     if (parsed.flags.has(FLAG.run)) simulate(result, frames, output);
     return 0;
