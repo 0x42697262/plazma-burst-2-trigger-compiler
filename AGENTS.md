@@ -21,4 +21,6 @@ TypeScript on Node ≥ 22.18 (runs `.ts` directly), tests with `node:test`.
 - `npm run snapshot-opcodes`: rebuilds `src/opcodes/snapshot.json` from `plazma-burst-2/data/opcodes.js`.
 - `npm run compile -- <file.ptc|file.pasm> [--run]`: compiles to `out/`; `--run` simulates.
 - `npm run live-check`: runs `examples/live/*`, `examples/tutorial/*` and `examples/syntax/*` in the game (own app build in `/tmp/ptc-pb2-live`) and compares with the simulator. Opens a game window for about a minute.
+- `npm run web`: builds the web page into `site/` (deployed by `.github/workflows/pages.yml`).
+- `npm run lsp` / `bin/ptc-lsp.js`: the language server; Neovim files are in `editors/nvim/`.
 - `npm run emit-sample`: writes the hand-built M1 sample to `out/` (`--game-map` also writes it into `plazma-burst-2/data/maps/`).

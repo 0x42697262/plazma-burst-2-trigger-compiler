@@ -2,10 +2,17 @@
 
 Compiles readable code into Plazma Burst 2 map triggers.
 
+**In the browser:** https://0x42697262.github.io/plazma-burst-2-trigger-compiler/ (editor with
+errors, completion and Vim mode; compile and run without installing anything).
+
+**Locally:**
+
 ```
 npm install
 npm run compile -- examples/hello.ptc --run
 ```
+
+**Editors:** a language server for Neovim and any LSP editor; see [docs/editors.md](docs/editors.md).
 
 That writes, in `out/`:
 
@@ -80,6 +87,8 @@ simulator runs.
 |---|---|
 | `npm run verify` | lint, type check, tests |
 | `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator |
+| `npm run web` | builds the web page into `site/` |
+| `npm run lsp` | starts the language server on stdio |
 | `npm run actions-doc` | rebuilds `docs/actions.md` from the action table |
 | `npm run snapshot-opcodes` | rebuilds the action table from `plazma-burst-2/data/opcodes.js` |
 

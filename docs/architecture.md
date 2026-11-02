@@ -18,6 +18,9 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Emitters | `src/emit/` | XML elements (grid placement, `maxcalls -1`), editor text (F12, F14), appending to a map |
 | Simulator | `src/sim/` | The game's trigger runner for the actions the compiler uses, with load-time conversion (F18) and XML escaping (F26) |
 | CLI | `src/cli/` | `npm run compile` |
+| Language service | `src/service/` | Diagnostics, completion, hover, definitions, symbols; shared by the language server and the web page |
+| Language server | `src/lsp/`, `bin/ptc-lsp.js` | LSP over stdio for any editor; Neovim files in `editors/nvim/` |
+| Web page | `src/web/`, `src/tools/build-web/` | CodeMirror editor (Vim mode), compiler and simulator in the browser; built into `site/` |
 | Tools | `src/tools/` | `live-check`, `snapshot-opcodes`, `actions-doc` (writes `docs/actions.md`), `emit-sample` (the hand-built M1 sample), the repository's lint rules |
 
 ## Testing
