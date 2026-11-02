@@ -2,6 +2,9 @@ import type { Program } from '../program/types.ts';
 import { opcodeByNumber } from '../opcodes/table.ts';
 import { AVOIDED, SKIPS_NEXT } from '../opcodes/constants.ts';
 import { isWritableAsText } from '../emit/trigger-text-emitter.ts';
+import { escapeXml } from '../emit/xml-emitter.ts';
+import { OPCODE } from '../opcodes/constants.ts';
+import { SHOWN_DECODED } from './keys.ts';
 import { OBJECT_PARAM_KINDS, TRIGGER_MARK } from './keys.ts';
 import { TEXT } from './text.ts';
 
@@ -12,7 +15,14 @@ export function checkTriggers(program: Program, externalUids: readonly string[])
   const known = new Set([...program.triggers.map((trigger) => trigger.uid), ...program.timers.map((timer) => timer.uid), ...externalUids]);
   for (const trigger of program.triggers) {
     let textWarned = false;
+    let entityWarned = false;
     trigger.actions.forEach((action, index) => {
+      const shownDecoded = (value: string): string => (action.opcode === OPCODE.showText && value === action.targetA ? SHOWN_DECODED.reduce((text, character) => text.split(character).join(''), value) : value);
+      const encoded = [action.targetA, action.targetB].find((value) => escapeXml(shownDecoded(value)) !== shownDecoded(value));
+      if (encoded !== undefined && !entityWarned) {
+        warnings.push(TEXT.entityValue(trigger.uid, encoded));
+        entityWarned = true;
+      }
       const opcode = opcodeByNumber(action.opcode);
       if (AVOIDED.has(action.opcode)) warnings.push(TEXT.switchByIndex(trigger.uid));
       const isLast = index === trigger.actions.length - 1;

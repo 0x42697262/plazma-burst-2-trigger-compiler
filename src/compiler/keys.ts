@@ -19,3 +19,4 @@ export const OBJECT_PARAM_KINDS: ReadonlySet<string> = new Set([
   'trigger', 'timer', 'region', 'door', 'vehicle', 'character', 'gun', 'barrel', 'decor', 'pushf', 'lamp', 'water',
 ]);
 export const LABEL_HINT = Object.freeze({ then: 'then', body: 'body' });
+export const SHOWN_DECODED: readonly string[] = Object.freeze(['<', '>', '"']);

@@ -49,6 +49,7 @@ const simulate = (result: CompileResult, frames: number, output: Output): void =
   for (const [name, value] of Object.entries(simulation.variables)) output.out(TEXT.variable(name, showValue(value)));
   for (const line of simulation.chat) output.out(TEXT.chat(line));
   for (const line of simulation.errors) output.out(TEXT.simError(line));
+  for (const opcode of simulation.unsimulated) output.out(TEXT.unsimulated(opcode));
 };
 
 export function main(argumentsList: readonly string[], output: Output): number {

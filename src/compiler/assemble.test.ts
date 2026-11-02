@@ -209,6 +209,15 @@ end:
     assert.ok(warnings.some((warning) => warning.includes('#somewhere')));
   });
 
+  it('warns when the game would see XML entities', () => {
+    const shown = compileAssembly('start:\n    say "a < b"\n', 't').warnings;
+    assert.deepEqual(shown, []);
+    const stored = compileAssembly('start:\n    set $x, "a < b"\n', 't').warnings;
+    assert.ok(stored.some((warning) => warning.includes('XML entities')));
+    const ampersand = compileAssembly('start:\n    say "a & b"\n', 't').warnings;
+    assert.ok(ampersand.some((warning) => warning.includes('XML entities')));
+  });
+
   it('accepts declared external uids', () => {
     const { warnings } = compileAssembly('.extern #trigger*5\nstart:\n    ExecTrigger #trigger*5\n', 't');
     assert.deepEqual(warnings, []);

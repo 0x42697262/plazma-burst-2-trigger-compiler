@@ -23,5 +23,6 @@ export const TEXT = Object.freeze({
   variable: (name: string, value: string): string => `  ${name} = ${value}`,
   chat: (line: string): string => `  chat: ${line}`,
   simError: (line: string): string => `  error: ${line}`,
+  unsimulated: (opcode: number): string => `  not simulated: action ${opcode}`,
   lineEnd: '\n',
 });

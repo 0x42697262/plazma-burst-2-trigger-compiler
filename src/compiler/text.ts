@@ -10,5 +10,6 @@ export const TEXT = Object.freeze({
   unknownTarget: (uid: string, target: string): string => `Trigger ${uid} targets ${target}, which is not in the program. Declare it as external if the map has it.`,
   switchByIndex: (uid: string): string => `Trigger ${uid} uses action 362 (switch by trigger index); indexes depend on the host map.`,
   notText: (uid: string): string => `Trigger ${uid} has a value that cannot be written as trigger text; use the XML output.`,
+  entityValue: (uid: string, value: string): string => `Trigger ${uid}: the game reads ${JSON.stringify(value)} with & < > " and line breaks as XML entities (&amp; &lt; &gt; &quot; &#10;).`,
   hashValue: (uid: string, value: string): string => `Trigger ${uid}: the value "${value}" starts with "#"; the game replaces it with an object index if a uid matches.`,
 });
