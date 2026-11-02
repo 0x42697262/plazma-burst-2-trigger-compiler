@@ -283,8 +283,8 @@ on start {
 3 exits
 ```
 
-- Declare each map object with its kind and uid: `region`, `door`, `character`, `gun`, `barrel`,
-  `vehicle`, `decor`, `pusher`, `light`, `water`, `timer`, `trigger`. `at x, y` is where the
+- Declare each map object with its kind and uid: `region`, `door`, `player` (a player slot),
+  `character` (any other character), `gun`, `barrel`, `vehicle`, `decor`, `pusher`, `light`, `water`, `timer`, `trigger`. `at x, y` is where the
   compiler puts it if the map lacks it (with `--into`).
 - `exits[]` is an object array; `exits[which]` picks one, even with a changing index.
 - `action(name or number, a, b)` runs any game action; [actions.md](actions.md) lists all 531 and

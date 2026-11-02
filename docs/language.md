@@ -31,7 +31,8 @@ Declare each map object the program uses with its kind and uid:
 |---|---|---|
 | `region` | region | region |
 | `door` | movable (door) | door |
-| `character` | player or enemy | character |
+| `player` | player slot (`<player>`, `#player*1`) | character |
+| `character` | any other character (`<enemy>`) | character |
 | `gun` | gun | gun |
 | `barrel` | barrel | barrel |
 | `vehicle` | vehicle | vehicle |
@@ -58,7 +59,11 @@ Declare each map object the program uses with its kind and uid:
 - `--name-seed <s>` derives the name prefix from a seed instead of the file name, so the triggers
   and variables get reproducible, source-independent names (`#z…`); the same seed always gives the
   same names, a different seed different ones. It cannot be combined with `--prefix`.
-- The kind words are not reserved: `var water = 1;` still works.
+- The kind words are not reserved: `var water = 1;` still works. `player` is the exception: it is
+  also the keyword of `for player p`, so it cannot name a variable.
+- `player` and `character` take the same actions but are different map elements: a missing
+  `player` is added as a player slot, a missing `character` as an enemy, and declaring one where the
+  map has the other is an error that names the right kind.
 
 ### Object arrays
 
@@ -357,7 +362,7 @@ declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) 
                | "on" ( "start" | "join" | "chat" ) block
                | "every" number block ;
 
-object-kind    = "region" | "door" | "character" | "gun" | "barrel" | "vehicle" | "decor"
+object-kind    = "region" | "door" | "player" | "character" | "gun" | "barrel" | "vehicle" | "decor"
                | "pusher" | "light" | "water" | "timer" | "trigger" ;
 signed         = [ "-" ] number ;
 uid-list       = "[" [ ( string | uid-list ) { "," ( string | uid-list ) } ] "]" ;
