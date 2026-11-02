@@ -78,8 +78,10 @@ action(299, board[row][column], 1);
 ## Named values
 
 The editor's value lists are named values, written `Group.Name`: `Color.NoirLime` is `2`,
-`Team.RedTeam` is `12`, `Behavior.FollowThePlayer` is `1`, `GunModel.AssaultRifleC01r` is
-`gun_rifle`. Groups: `Color`, `Team`, `Behavior`, `Bool`, `Toggle`, `Calls`, `PusherDamage`,
+`Team.RedTeam` is `12`, `Behavior.FollowThePlayer` is `1`. Where the editor's value is already a
+name, that is the name: `GunModel.gun_rifle`, `Sound.hp_warn`, `Voice.marine`, `DecorModel.stone`,
+`Bool.true`; the label form (`GunModel.AssaultRifleC01r`) works too. Plain numbers such as a call
+count of 1 have no name: write `1`. Groups: `Color`, `Team`, `Behavior`, `Bool`, `Toggle`, `Calls`, `PusherDamage`,
 `GunModel`, `Sound`, `Sky`, `Voice`, `CharacterModel`, `DecorModel`, `Song`; all names and values
 are in [actions.md](actions.md#named-values).
 
