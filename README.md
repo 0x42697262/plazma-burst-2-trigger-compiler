@@ -41,8 +41,12 @@ sync; the simulator runs 63 actions (all the compiler emits) and skips the other
 
 ## Learn it
 
-[docs/tutorial.md](docs/tutorial.md): 20 programs, from a first loop to chat commands, player
-selection, a calculator, three parsers and data structures. Each is in `examples/tutorial/`.
+[docs/tutorial.md](docs/tutorial.md): 23 programs, from a first loop to chat commands, player
+selection, a calculator, three parsers and data structures (linked list, binary tree, sorts).
+Each is in `examples/tutorial/`.
+
+[docs/actions.md](docs/actions.md): all 531 actions, how to call each one, and which the
+simulator runs.
 
 ## Two source languages
 
@@ -69,6 +73,7 @@ selection, a calculator, three parsers and data structures. Each is in `examples
 |---|---|
 | `npm run verify` | lint, type check, tests |
 | `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator |
+| `npm run actions-doc` | rebuilds `docs/actions.md` from the action table |
 | `npm run snapshot-opcodes` | rebuilds the action table from `plazma-burst-2/data/opcodes.js` |
 
 More: [docs/game-facts.md](docs/game-facts.md) (every game fact this relies on, with its source,

@@ -18,7 +18,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Emitters | `src/emit/` | XML elements (grid placement, `maxcalls -1`), editor text (F12, F14), appending to a map |
 | Simulator | `src/sim/` | The game's trigger runner for the actions the compiler uses, with load-time conversion (F18) and XML escaping (F26) |
 | CLI | `src/cli/` | `npm run compile` |
-| Tools | `src/tools/` | `live-check`, `snapshot-opcodes`, `emit-sample` (the hand-built M1 sample), the repository's lint rules |
+| Tools | `src/tools/` | `live-check`, `snapshot-opcodes`, `actions-doc` (writes `docs/actions.md`), `emit-sample` (the hand-built M1 sample), the repository's lint rules |
 
 ## Testing
 
@@ -27,7 +27,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 3. The tutorial test runs every program in `examples/tutorial/` and checks its chat output, and
    checks that `docs/tutorial.md` quotes the files exactly.
 4. `npm run live-check` runs `examples/live/*` and `examples/tutorial/*` in the real game and compares every variable with
-   the simulator (type and value); it must stay at all programs matching. Last run: 37 of 37
+   the simulator (type and value); it must stay at all programs matching. Last run: 40 of 40
    (2026-11-02). Steps: [game-facts.md](game-facts.md#the-live-check).
 
 ## History

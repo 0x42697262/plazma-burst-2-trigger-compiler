@@ -21,6 +21,35 @@ on start {
 }
 ```
 
+## Values and types
+
+The language has no type declarations, and a variable needs none. Every value is a game variable,
+and the game stores whatever JavaScript value an action puts there. Each operator decides how it
+reads its operands:
+
+| Kind of value | How it appears | Read as |
+|---|---|---|
+| number | `5`, `-3`, `2.5`, results of `+ - * / %`, `len`, `random` | `+ - * / % < >` read numbers (text like `parseFloat`) |
+| text | `"abc"`, results of `..`, `chatText()`, `name(slot)` | `..` and `== !=` read text (`5 == "5"` is true) |
+| boolean | none of its own: `true` is 1, `false` is 0; comparisons give 1 or 0 | false is `0` or empty text |
+| no value | a variable never set, an array element never written | `undefined`: NaN in arithmetic, `"undefined"` in `..` |
+
+Types are not needed because nothing needs to know them ahead of time: the game keeps one table of
+variables with no types, every action reads the variable it names in its own way, and the
+compiler picks the action from the operator (`+` makes "add", `..` makes "append text"). The cost:
+mistakes show up when the program runs (`"abc" + 1` is NaN), not when it compiles.
+
+Collections:
+
+- **Arrays (lists, vectors)**: `var list[];` with `list[i]`, `push`, `pop`, `len`, `clear`. They
+  grow as needed. Each element is a game variable of its own.
+- **Dictionaries**: the same arrays with text indexes, `counts["cat"]` (tutorial 17). There is no
+  list of keys; keep one in another array if you need to walk them.
+- **Records and objects**: none. Use one array per field and an index per record (`value[node]`,
+  `next[node]`; tutorials 21 and 22).
+- Arrays are global and cannot be passed to functions or returned; a function works on the arrays
+  it names.
+
 ## Declarations
 
 | Form | Meaning |
