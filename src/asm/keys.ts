@@ -5,6 +5,7 @@ export const QUOTE = '"';
 export const ESCAPE = '\\';
 export const VARIABLE_SIGIL = '$';
 export const LABEL_SIGIL = '@';
+export const HOST_SIGIL = '%';
 export const DIRECTIVE_MARK = '.';
 export const INTERPOLATION_START = '{';
 export const INTERPOLATION_END = '}';

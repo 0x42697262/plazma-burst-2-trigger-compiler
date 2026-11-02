@@ -31,8 +31,9 @@ const buildBlocks = (items: readonly MachineItem[], warnings: string[]): Block[]
   let current: Block | null = null;
   let reachable = true;
   let dropped = 0;
+  let droppedLine = 0;
   const closeDropped = (): void => {
-    if (current && dropped > 0) warnings.push(TEXT.unreachable(current.label, dropped));
+    if (current && dropped > 0) warnings.push(TEXT.unreachable(droppedLine, dropped));
     dropped = 0;
   };
   for (const item of items) {
@@ -52,6 +53,7 @@ const buildBlocks = (items: readonly MachineItem[], warnings: string[]): Block[]
       continue;
     }
     if (!reachable) {
+      if (dropped === 0) droppedLine = item.location?.line ?? 0;
       dropped += 1;
       continue;
     }

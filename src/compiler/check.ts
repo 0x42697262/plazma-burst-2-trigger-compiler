@@ -5,7 +5,7 @@ import { isWritableAsText } from '../emit/trigger-text-emitter.ts';
 import { escapeXml } from '../emit/xml-emitter.ts';
 import { OPCODE } from '../opcodes/constants.ts';
 import { SHOWN_DECODED } from './keys.ts';
-import { OBJECT_PARAM_KINDS, TRIGGER_MARK } from './keys.ts';
+import { COLOR_PARAM_KIND, OBJECT_PARAM_KINDS, TRIGGER_MARK } from './keys.ts';
 import { TEXT } from './text.ts';
 
 const isObjectParam = (kind: string | undefined): boolean => kind !== undefined && OBJECT_PARAM_KINDS.has(kind);
@@ -29,7 +29,7 @@ export function checkTriggers(program: Program, externalUids: readonly string[])
       if (isLast && SKIPS_NEXT.has(action.opcode)) warnings.push(TEXT.skipAtEnd(trigger.uid));
       const params = [[opcode?.paramA, action.targetA], [opcode?.paramB, action.targetB]] as const;
       for (const [kind, value] of params) {
-        if (!value.startsWith(TRIGGER_MARK)) continue;
+        if (!value.startsWith(TRIGGER_MARK) || kind === COLOR_PARAM_KIND) continue;
         if (isObjectParam(kind)) {
           if (!known.has(value)) warnings.push(TEXT.unknownTarget(trigger.uid, value));
         } else {

@@ -218,6 +218,41 @@ end:
     assert.equal(program.triggers.length, 2);
   });
 
+  it('counts raw switches and calls to entries in the loop guard', () => {
+    for (const source of [
+      '.entry f\nstart:\n    set $i, 0\nloop:\n    add $i, 1\n    op99 @f, 0\n    jmp @loop\nf:\n    ret\n',
+      'start:\n    set $i, 0\nloop:\n    add $i, 1\n    op363 @loop, 0\n',
+    ]) {
+      const { vars, simulation } = run(source, { loopGuard: 300 });
+      assert.ok((vars['~t_i~'] as number) <= 301, String(vars['~t_i~']));
+      assert.deepEqual(simulation.errors, []);
+    }
+  });
+
+  it('reads host variables written as %name', () => {
+    const { vars } = run('.extern\nstart:\n    set %score, 5\n    set $copy, %score\n    add $copy, %score\n    jeq %score, 5, @yes\n    ret\nyes:\n    set $hit, 1\n');
+    assert.equal(vars.score, 5);
+    assert.equal(vars['~t_copy~'], 10);
+    assert.equal(vars['~t_hit~'], 1);
+  });
+
+  it('checks timer values', () => {
+    assert.throws(() => compileAssembly('.timer t @go -5\ngo:\n    ret\n', 't'), /delay must be a whole number/);
+    assert.throws(() => compileAssembly('.timer t @go 5 2.5\ngo:\n    ret\n', 't'), /calls must be a whole number/);
+    assert.throws(() => compileAssembly('.timer t @go 5 0\ngo:\n    ret\n', 't'), /calls must be a whole number/);
+    assert.throws(() => compileAssembly('.timer t go 5\ngo:\n    ret\n', 't'), /expected @label/);
+  });
+
+  it('names the line of unreachable code and warns when nothing starts the program', () => {
+    const { warnings } = compileAssembly('start:\n    ret\n    set $x, 1\n', 't', { startTimer: false });
+    assert.ok(warnings.some((warning) => warning.startsWith('line 3: 1 unreachable')), warnings.join('|'));
+    assert.ok(warnings.some((warning) => warning.includes('No start timer')));
+  });
+
+  it('accepts a #hex chat color without a uid warning', () => {
+    assert.deepEqual(compileAssembly('start:\n    say "hi", #ff0000\n', 't').warnings, []);
+  });
+
   it('never writes a trigger without actions', () => {
     const { program } = compileAssembly('start:\n    call @f\n    ret\nf:\n    ret\n', 't');
     for (const trigger of program.triggers) assert.ok(trigger.actions.length > 0, trigger.uid);

@@ -5,10 +5,11 @@ import type { Instruction, Module, Operand, SourceLocation, TimerSpec, Value } f
 import type { Names } from '../compiler/names.ts';
 import { CompileError } from '../compiler/names.ts';
 import { UNUSED_TARGET } from '../program/keys.ts';
+import { UNLIMITED_CALLS } from '../program/constants.ts';
 import { ZERO_VALUE } from '../compiler/keys.ts';
 import {
   BRANCHES, COMMENT_MARKS, DIRECTIVE, DIRECTIVE_MARK, ESCAPE, ESCAPED, IDENTIFIER, INTERPOLATION_END, INTERPOLATION_START, LABEL_DEFINITION,
-  LABEL_SIGIL, LINE_SPLIT, MNEMONIC, OPERAND_SEPARATOR, QUOTE, TIMER_DISABLED, VARIABLE_SIGIL, WHITESPACE,
+  HOST_SIGIL, LABEL_SIGIL, LINE_SPLIT, MNEMONIC, OPERAND_SEPARATOR, QUOTE, TIMER_DISABLED, VARIABLE_SIGIL, WHITESPACE,
 } from './keys.ts';
 import {
   BRANCH_OPERANDS, DEFAULT_COLOR, DEFAULT_TIMER_CALLS, NO_OPERANDS, ONE_OPERAND, TIMER_CALLS_POSITION, TIMER_MIN_OPERANDS, TWO_OPERANDS,
@@ -18,6 +19,7 @@ import { TEXT } from './text.ts';
 type Token =
   | { kind: 'variable'; name: string }
   | { kind: 'label'; name: string }
+  | { kind: 'host'; name: string }
   | { kind: 'string'; text: string }
   | { kind: 'bare'; text: string };
 
@@ -102,8 +104,11 @@ const readToken = (raw: string, names: Names): Token => {
   if (raw.startsWith(QUOTE)) return { kind: 'string', text: readString(raw, names) };
   if (raw.startsWith(VARIABLE_SIGIL)) return { kind: 'variable', name: identifier(raw.slice(VARIABLE_SIGIL.length)) };
   if (raw.startsWith(LABEL_SIGIL)) return { kind: 'label', name: identifier(raw.slice(LABEL_SIGIL.length)) };
+  if (raw.startsWith(HOST_SIGIL)) return raw.length > HOST_SIGIL.length ? { kind: 'host', name: raw.slice(HOST_SIGIL.length) } : fail(TEXT.emptyOperand);
   return { kind: 'bare', text: raw };
 };
+
+const isVariableToken = (token: Token | undefined): boolean => token?.kind === 'variable' || token?.kind === 'host';
 
 const operandOf = (token: Token, names: Names): Operand => {
   switch (token.kind) {
@@ -111,6 +116,8 @@ const operandOf = (token: Token, names: Names): Operand => {
       return textOperand(names.variable(token.name));
     case 'label':
       return labelOperand(token.name);
+    case 'host':
+      return textOperand(token.name);
     case 'string':
     case 'bare':
       return textOperand(token.text);
@@ -123,6 +130,8 @@ const valueOf = (token: Token, names: Names): Value => {
       return variable(names.variable(token.name));
     case 'label':
       return fail(TEXT.labelInValue);
+    case 'host':
+      return variable(token.name);
     case 'string':
     case 'bare':
       return literal(token.text);
@@ -158,10 +167,10 @@ function instructionsOf(mnemonic: string, tokens: Token[], names: Names, locatio
       return [{ kind: 'return', location }];
     case MNEMONIC.set:
       expectCount(mnemonic, tokens, TWO_OPERANDS);
-      return [action(tokens[1]?.kind === 'variable' ? OPCODE.copyVariable : OPCODE.setVariable, operand(0), operand(1), location)];
+      return [action(isVariableToken(tokens[1]) ? OPCODE.copyVariable : OPCODE.setVariable, operand(0), operand(1), location)];
     case MNEMONIC.add:
       expectCount(mnemonic, tokens, TWO_OPERANDS);
-      if (tokens[1]?.kind !== 'variable') return [action(OPCODE.addValue, operand(0), operand(1), location)];
+      if (!isVariableToken(tokens[1])) return [action(OPCODE.addValue, operand(0), operand(1), location)];
       return [action(OPCODE.addValue, operand(0), textOperand(ZERO_VALUE), location), action(OPCODE.addVariable, operand(0), operand(1), location)];
     case MNEMONIC.say:
       if (tokens.length < ONE_OPERAND || tokens.length > TWO_OPERANDS) fail(TEXT.operandCount(mnemonic, TEXT.zeroToTwo, tokens.length));
@@ -189,7 +198,10 @@ const parseNumber = (text: string | undefined): number => {
 const timerCalls = (options: readonly string[]): number => {
   const counts = options.filter((option) => option !== TIMER_DISABLED);
   if (counts.length > 1) fail(TEXT.timerOptions);
-  return counts[0] === undefined ? DEFAULT_TIMER_CALLS : parseNumber(counts[0]);
+  if (counts[0] === undefined) return DEFAULT_TIMER_CALLS;
+  const calls = parseNumber(counts[0]);
+  if (!Number.isInteger(calls) || (calls < 1 && calls !== UNLIMITED_CALLS)) fail(TEXT.timerCalls(counts[0]));
+  return calls;
 };
 
 function directive(line: string, state: State): void {
@@ -210,10 +222,13 @@ function directive(line: string, state: State): void {
     case DIRECTIVE.timer: {
       if (rest.length < TIMER_MIN_OPERANDS) fail(TEXT.operandCount(name, String(TIMER_MIN_OPERANDS), rest.length));
       const target = rest[1] ?? '';
+      if (!target.startsWith(LABEL_SIGIL)) fail(TEXT.expectedLabel(target));
+      const delay = parseNumber(rest[2]);
+      if (!Number.isInteger(delay) || delay < 0) fail(TEXT.timerDelay(rest[2] ?? ''));
       state.timers.push({
         label: identifier(rest[0] ?? ''),
-        target: identifier(target.startsWith(LABEL_SIGIL) ? target.slice(LABEL_SIGIL.length) : target),
-        delay: parseNumber(rest[2]),
+        target: identifier(target.slice(LABEL_SIGIL.length)),
+        delay,
         maxCalls: timerCalls(rest.slice(TIMER_CALLS_POSITION)),
         enabled: !rest.slice(TIMER_CALLS_POSITION).includes(TIMER_DISABLED),
       });

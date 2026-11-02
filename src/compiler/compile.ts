@@ -38,5 +38,11 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
   checkProgram(program);
   const entries = new Map(module.instructions.flatMap((instruction) =>
     (instruction.kind === 'label' && instruction.entry ? [[instruction.label, uidOf(instruction.label)] as const] : [])));
-  return { program, warnings: [...laid.warnings, ...checkTriggers(program, options.externalUids)], sourceMap: laid.sourceMap, entries };
+  const startWarning = !options.startTimer && module.start !== null ? [TEXT.noStart(uidOf(module.start))] : [];
+  return {
+    program,
+    warnings: [...(module.warnings ?? []), ...startWarning, ...laid.warnings, ...checkTriggers(program, options.externalUids)],
+    sourceMap: laid.sourceMap,
+    entries,
+  };
 }

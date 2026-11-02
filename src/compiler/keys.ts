@@ -20,3 +20,4 @@ export const OBJECT_PARAM_KINDS: ReadonlySet<string> = new Set([
 ]);
 export const LABEL_HINT = Object.freeze({ then: 'then', body: 'body' });
 export const SHOWN_DECODED: readonly string[] = Object.freeze(['<', '>', '"']);
+export const COLOR_PARAM_KIND = 'textmsg';

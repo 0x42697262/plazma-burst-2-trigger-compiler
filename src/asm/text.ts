@@ -12,6 +12,8 @@ export const TEXT = Object.freeze({
   emptyOperand: 'empty operand',
   badNumber: (text: string): string => `"${text}" is not a number`,
   noLabel: 'the program has no label to start at',
+  timerDelay: (text: string): string => `the timer delay must be a whole number of frames, 0 or more, got "${text}"`,
+  timerCalls: (text: string): string => `the timer calls must be a whole number above 0, or -1 for unlimited, got "${text}"`,
   timerOptions: '.timer takes at most one call count and "disabled"',
   skipBeforeMultiple: (mnemonic: string): string => `"${mnemonic}" here becomes several actions, but the skip action before it skips only one`,
   undefinedLabel: (label: string): string => `the label "${label}" is used by a directive but never defined`,
