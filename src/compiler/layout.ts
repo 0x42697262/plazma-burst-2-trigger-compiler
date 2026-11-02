@@ -10,11 +10,40 @@ import { BEFORE_LAST, FIRST_CONTINUATION } from './constants.ts';
 import { INTERNAL_VARIABLE, ZERO_VALUE } from './keys.ts';
 import { TEXT } from './text.ts';
 
-type PlacedAction = { opcode: number; targetA: Operand; targetB: Operand; location: SourceLocation | null };
+export type PlacedAction = { opcode: number; targetA: Operand; targetB: Operand; location: SourceLocation | null };
 type Block = { label: string; entry: boolean; actions: PlacedAction[]; fallsThrough: boolean };
 
 export type SourceMapEntry = { uid: string; lines: number[]; files: (string | null)[] };
-export type LayoutResult = { triggers: Trigger[]; warnings: string[]; sourceMap: SourceMapEntry[]; labels: Map<string, string> };
+export type LayoutResult = { triggers: Trigger[]; warnings: string[]; sourceMap: SourceMapEntry[]; labels: Map<string, string>; continuations: Set<string> };
+
+export type LayoutControl = {
+  jump: (label: string, location: SourceLocation | null) => PlacedAction[];
+  bindsNext: (action: PlacedAction, next: PlacedAction | undefined) => boolean;
+};
+
+const PLAIN_CONTROL: LayoutControl = {
+  jump: (label, location) => [{ ...jumpAction(label), location }],
+  bindsNext: (action) => SKIPS_NEXT.has(action.opcode),
+};
+
+const isLabelJump = (action: PlacedAction): action is PlacedAction & { targetA: { kind: 'label'; label: string } } =>
+  action.opcode === OPCODE.switchToTrigger && action.targetA.kind === 'label';
+
+const rewriteJumps = (actions: readonly PlacedAction[], control: LayoutControl): PlacedAction[] => {
+  const rewritten: PlacedAction[] = [];
+  for (const action of actions) {
+    if (!isLabelJump(action)) {
+      rewritten.push(action);
+      continue;
+    }
+    let skips = rewritten.length;
+    while (skips > 0 && SKIPS_NEXT.has(rewritten[skips - 1]?.opcode ?? 0)) skips -= 1;
+    const [first, ...rest] = control.jump(action.targetA.label, action.location);
+    if (first !== undefined) rewritten.splice(skips, 0, first);
+    rewritten.push(...rest);
+  }
+  return rewritten;
+};
 
 const referencedLabels = (items: readonly MachineItem[]): Set<string> => {
   const labels = new Set<string>();
@@ -63,12 +92,12 @@ const buildBlocks = (items: readonly MachineItem[], warnings: string[]): Block[]
   return blocks;
 };
 
-const groupActions = (actions: readonly PlacedAction[]): PlacedAction[][] => {
+const groupActions = (actions: readonly PlacedAction[], control: LayoutControl): PlacedAction[][] => {
   const groups: PlacedAction[][] = [];
   let current: PlacedAction[] = [];
-  for (const action of actions) {
+  for (const [position, action] of actions.entries()) {
     current.push(action);
-    if (!SKIPS_NEXT.has(action.opcode)) {
+    if (!control.bindsNext(action, actions[position + 1])) {
       groups.push(current);
       current = [];
     }
@@ -77,14 +106,17 @@ const groupActions = (actions: readonly PlacedAction[]): PlacedAction[][] => {
   return groups;
 };
 
-const jumpAction = (label: string): PlacedAction => ({
-  opcode: OPCODE.switchToTrigger, targetA: labelOperand(label), targetB: { kind: 'text', text: ZERO_VALUE }, location: null,
-});
+function jumpAction(label: string): PlacedAction {
+  return {
+    opcode: OPCODE.switchToTrigger, targetA: labelOperand(label), targetB: { kind: 'text', text: ZERO_VALUE }, location: null,
+  };
+}
 
-type Chunk = { label: string; actions: PlacedAction[] };
+type Chunk = { label: string; actions: PlacedAction[]; continued: boolean };
 
-const splitBlock = (block: Block, names: Names): Chunk[] => {
-  const groups = groupActions(block.actions);
+const splitBlock = (block: Block, names: Names, control: LayoutControl): Chunk[] => {
+  const groups = groupActions(block.actions, control);
+  const jumpLength = control.jump(block.label, null).length;
   const chunks: Chunk[] = [];
   let label = block.label;
   let current: PlacedAction[] = [];
@@ -96,18 +128,18 @@ const splitBlock = (block: Block, names: Names): Chunk[] => {
       remaining -= group.length;
       continue;
     }
-    if (current.length + group.length > EDITOR_SAVED_ACTIONS - 1) {
+    if (current.length + group.length > EDITOR_SAVED_ACTIONS - jumpLength) {
       const next = names.continuationLabel(block.label, part);
       part += 1;
-      current.push(jumpAction(next));
-      chunks.push({ label, actions: current });
+      current.push(...control.jump(next, null));
+      chunks.push({ label, actions: current, continued: label !== block.label });
       label = next;
       current = [];
     }
     current.push(...group);
     remaining -= group.length;
   }
-  chunks.push({ label, actions: current });
+  chunks.push({ label, actions: current, continued: label !== block.label });
   return chunks;
 };
 
@@ -177,7 +209,7 @@ const removeExitBlocks = (blocks: Block[], names: Names): Block[] => {
   return blocks.filter((block) => !exits.has(block.label) || referenced.has(block.label));
 };
 
-export function layout(items: readonly MachineItem[], names: Names): LayoutResult {
+export function layout(items: readonly MachineItem[], names: Names, control: LayoutControl | null = null): LayoutResult {
   const warnings: string[] = [];
   checkDuplicates(items);
   const { kept, aliases } = removePassThroughs(buildBlocks(items, warnings));
@@ -188,8 +220,9 @@ export function layout(items: readonly MachineItem[], names: Names): LayoutResul
   blocks.forEach((block, index) => {
     const next = blocks[index + 1];
     if (block.fallsThrough && next) block.actions.push(jumpAction(next.label));
+    if (control !== null) block.actions = rewriteJumps(block.actions, control);
   });
-  const chunks = blocks.flatMap((block) => splitBlock(block, names));
+  const chunks = blocks.flatMap((block) => splitBlock(block, names, control ?? PLAIN_CONTROL));
   for (const chunk of chunks) if (chunk.actions.length === 0) chunk.actions.push(stopAction(names));
   const labels = new Map(chunks.map((chunk) => [chunk.label, names.triggerUid(chunk.label)]));
   for (const [label, target] of aliases) {
@@ -211,5 +244,6 @@ export function layout(items: readonly MachineItem[], names: Names): LayoutResul
     lines: chunk.actions.map((action) => action.location?.line ?? 0),
     files: chunk.actions.map((action) => action.location?.file ?? null),
   }));
-  return { triggers, warnings, sourceMap, labels };
+  const continuations = new Set(chunks.filter((chunk) => chunk.continued).map((chunk) => names.triggerUid(chunk.label)));
+  return { triggers, warnings, sourceMap, labels, continuations };
 }
