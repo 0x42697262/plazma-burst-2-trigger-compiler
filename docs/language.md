@@ -23,14 +23,14 @@ on start {
 
 | Form | Meaning |
 |---|---|
-| `var x;` / `var x = expr;` | global variable, set at map start |
+| `var x;` / `var x = expr;` | global variable, set at map start, in file order (`var a = b + 1; var b = 2;` reads `b` before it is set) |
 | `var list[];` | array (see below) |
 | `const NAME = 5;` | constant: a number, text, `true` or `false`; written into the actions |
 | `extern score;` / `extern s = "host name";` | a variable of the host map, used by its own name |
 | `function f(a, b) { ... }` | function; builtin names cannot be used |
 | `export function f() { ... }` | function with a stable uid `#<prefix>_f`, for the map's own triggers and regions |
 | `on start { ... }` | runs at map start (a start timer, before every other timer); several blocks run one after the other, each with its own scope (`return` ends only its block) |
-| `on join { ... }` | runs each time a player joins (action 228) |
+| `on join { ... }` | runs each time a player joins (action 228). One per program; the game keeps one join trigger for the whole map, so the host map's own, or a second compiled program's, replaces it |
 | `every 30 { ... }` | runs every 30 frames (a timer) |
 
 ## Statements
@@ -50,10 +50,13 @@ on start {
 | `&& \|\| !` | logic with short-circuit |
 | `"x = {x + 1}"` | text with values inside `{ }` |
 
-A condition is false when its value is `0` or empty text. Comparisons used as values give 1 or 0.
+A condition is false when its value is `0` or empty text (`"0.0"` is true). Comparisons and `&& || !`
+used as values give 1 or 0 (`0 || "x"` is 1).
 Number literals are written in their shortest form (`5.0` is `5`).
 A variable declared without a value (`var x;`, `let x;`) has no value until set: `x + 1` is NaN,
-`x .. "a"` is `"undefineda"`, and `if (x)` is true.
+`x .. "a"` is `"undefineda"`, `if (x)` is true, and `"{x}"` in shown text shows the variable's game name.
+
+Text escapes: `\" \\ \n \{ \}`.
 
 ## Builtins
 
@@ -67,36 +70,47 @@ A variable declared without a value (`var x;`, `let x;`) has no value until set:
 | `text(x)`, `number(x)` | x as text, x as a number |
 | `floor(x)`, `round(x)`, `random(n)` | `random(n)`: whole number 0 .. n-1 |
 | `slot()`, `initiator()`, `name(slot)`, `time()` | current player slot, player-initiator slot, displayed name, milliseconds since 1970 (a wall clock: compare two readings) |
-| `push(list, value)` | adds to the end of an array |
+| `push(list, value)` | writes `value` at index `len(list)` and adds 1 to the length |
 | `action(op, a, b)` | any action, by number or alias. A name argument gives that variable's game name, `@f` gives function `f`'s uid, text gives itself; `{x}` inside text gives x's game name |
 
 ## Arrays
 
 `var list[];` declares an array. `list[i]` reads and writes element i, `push(list, v)` appends,
-`len(list)` counts. Elements are game variables named `~<prefix>_list[i]~`, so they can be set
-and read with any index. Arrays are global and cannot be passed as values.
+`len(list)` counts the pushes: writing `list[5]` does not change the length, and the next `push`
+writes at index `len(list)` even if that element was set by index. Elements are game variables
+named `~<prefix>_list[i]~`, so they can be set and read with any index; an index must have a value
+(an unset index makes a different element name), and it is used as text: `list[k]` with `k = "1.0"`
+is not `list[1]`. Arrays are global and cannot be passed as values.
 
 ## Functions
 
 Parameters and locals are game variables of their own (`~<prefix>_f.a~`), so a function's
 values stay after it returns. Recursion works: before a call that can come back into the same
 function, its variables are saved on a stack in game variables (cost: 3 actions per variable
-per call, both ways). Calls deeper than 2048 are skipped by the game (F3).
+per call, both ways). Calls deeper than 2048 are skipped by the game (F3), with no error: the
+result is silently wrong. A function that nothing calls (and is not exported) is left out, with a warning.
 
 ## Timing
 
-`wait(frames)` stops the block and continues after that many frames (a timer per `wait`). It
+`wait(frames)` stops the block and continues `frames` or `frames - 1` frames later (a timer per
+`wait`; the game ticks timers in element order, so a wait started by an earlier timer in the same
+frame is counted once at once). A `wait` in one `on start` block also delays the later ones. It
 works only in `on` and `every` blocks, not in functions. If the block runs again while it waits
 (an `every` shorter than the wait, a second join), the wait starts over and the first run does
 not continue. Everything else in a block runs in one
-game frame. Each event may jump back at most `--guard` times (default 100000); then its loops stop.
+game frame. Each event may jump back at most `--guard` times (default 100000); then the trigger that
+jumped stops (the rest of that event's code does not run; a caller of a function continues).
 
 ## Limits
 
 - `for player p` uses action 508, which lists only players with a login: it lists nobody in single
   player (F25), and a slot of 10 or more reads as two slots (F10).
 - A game variable whose name appears inside a text that is shown, or used with `{ }`, is replaced
-  by its value (F9). Avoid short variable names in the host map.
+  by its value (F9): with `extern score;`, `say("your score: {score}")` shows `your 5: 5`. Avoid
+  short variable names in the host map.
+- `name(s)` with a variable `s` stops the event when slot `s` has no character; `name(5)` with a
+  number gives `"Empty"`.
+- `drop(text, n)` with `n` below minus the length wraps around (`drop("hello", -9)` is `"h"`).
 - Whole numbers written as text load as numbers; `"007"` stays text (F18).
 - The game reads `& < > "` and line breaks in literal text as XML entities (`&amp; &lt; &gt; &quot; &#10;`, F26);
   `say` shows `< > "` correctly. The compiler warns about such values.

@@ -6,7 +6,7 @@ Output, the end goal, both from the same compile:
 1. **XML**: `<trigger …/>` elements a player appends to a downloaded map XML, then loads with the editor's "replace map with XML" (F13).
 2. **Trigger text**: one block per trigger, in the map editor's "Edit trigger as text" format, to copy and paste.
 
-Status: M0–M5 done in code (2026-11-02). `npm run live-check`: 16 of 16 test programs give the same variables in the game and in the simulator. Left: the website-editor checks of M1 (§4), which need the user.
+Status: M0–M5 done in code, then three review rounds with fixes (2026-11-02). `npm run live-check`: 16 of 16 test programs give the same variables in the game and in the simulator. Left: the website-editor checks of M1 (§4), which need the user.
 
 **New session? Read this file, then `AGENTS.md`, `README.md` and `docs/`, then continue from Status.** Everything learned so far is in here; nothing else carries over.
 
@@ -26,7 +26,7 @@ Each was checked in the game client (`plazma-burst-2/game/scripts/actions.js`, `
 | F6 | 362 takes a trigger **index** (load order), not a uid | case 362 | Avoid 362: index depends on the host map |
 | F7 | 342 `vars[vars[A]] = vars[B]`, 294 `vars[A] = vars[vars[B]]` | case 342/294 | Indirect store / load: RAM |
 | F8 | 361 skip-next if A == B (as strings), 364 if A > B, 365 if A < B (as numbers), 123 skip-next if A != value (`""+vars[A] === ""+B`, as strings) | cases 123/361/364/365 | Conditional jumps |
-| F9 | 325/326/350/352 replace every variable *name found inside* B with its value, longest first, scanning all variables. 325 replaces inside the value of variable B; 326/350/352 inside the literal B | `frame2.js:43646`, cases 325/326/350/352 | Mangle names with delimiters; cost grows with variable count |
+| F9 | 325/326/350/352 replace every variable *name found inside* B with its value, longest first, scanning all variables. 325 replaces inside the value of variable B; 326/350/352 inside the literal B. Each found name is listed twice, so it is replaced twice: `~a[~a[1]~]~` with `~a[1]~` = 1 becomes `~a[1]~`, then the value of that. Names not set are not replaced; a name set to `undefined` is replaced by `,` | `frame2.js:43646`, cases 325/326/350/352 | Mangle names with delimiters; cost grows with variable count |
 | F10 | 508 "all active slots" builds a string (`[] + 0 + 3` = `"03"`) | case 508 | Slots ≥ 10 ambiguous: do not use for player loops |
 | F11 | In XML, trigger targets are uids (`#trigger*14`, `#Unlock_admin_room`); the loader turns them into indexes | saved maps | Emit uids; custom uids are allowed |
 | F12 | Trigger text: header lines `uid:` `enabled:` `maxcalls:`, then `Name( "A", "B" );`; actions without an alias are `op<N>`; no quote escaping | `plazma-burst-2/src/features/triggers/script.ts` | A value containing `", "` or `" );` cannot be written as text |
@@ -154,8 +154,9 @@ done:
 2. The map goes to `/tmp/ptc-pb2-live/data/maps/ptc-live.xml` (map ID `local-ptc-live`).
 3. `electron . --remote-debugging-port=9333` in the copy; on the launcher page `pb2servers.list().then((list) => pb2servers.play(list.official.id))`.
 4. On the game page, wait for `stage.currentFrameLabel === "menu"` (a message during `startup` is ignored), then `window.postMessage("rt:local-ptc-live:sp", "*")` opens Campaign › Choose difficulty.
-5. Press SPACE (Normal); wait for `stage.currentFrameLabel === "gaming"`, then 8 seconds.
-6. Read `globalThis[PB2_NAMES.mapVars]`.
+5. If the game asks "Enter your name" (frame `name_prompt`, when the app profile has no name), type a guest name and press Enter.
+6. Press SPACE (Normal); wait for `stage.currentFrameLabel === "gaming"`, then 8 seconds.
+7. Read `globalThis[PB2_NAMES.mapVars]`.
 
 By hand with the console edition: `pb2dev.run("vars")`, `pb2dev.run("triggers")`; a single trigger runs with `pb2dev.run("triggers exec <trigger text>")`.
 

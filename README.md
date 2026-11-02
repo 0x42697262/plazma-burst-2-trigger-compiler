@@ -26,7 +26,12 @@ The website editor cannot import XML into an open map; it can only replace the w
 2. `npm run compile -- game.ptc --into downloaded-map.xml`
 3. Replace the map with `out/game-map.xml`.
 
-The compiler refuses uids that the map already uses.
+The compiler refuses uids that the map already uses. The map's own timers come first in the file,
+so a host timer with delay 0 runs before the program's start code in the first frame.
+
+The `.txt` output (for "Edit trigger as text") holds triggers only, not timers: add the listed
+timers in the editor yourself (the CLI prints them). If one value cannot be written as text, no
+`.txt` is written; use the XML.
 
 ## Two source languages
 
@@ -39,9 +44,12 @@ The compiler refuses uids that the map already uses.
 |---|---|
 | `--prefix <name>` | prefix of every variable and trigger uid (default: the file name). Two programs in one map need different prefixes |
 | `--guard <n>` / `--no-guard` | stop a loop after n jumps back per event (default 100000); an endless loop would freeze the game |
-| `--no-start` | no start timer; nothing runs at map start |
+| `--no-start` | no start timer: the start code (variable values, `on join`, `on start`) runs only if the map runs `#<prefix>:start` |
 | `--extern <uid>` | a uid the host map has, so it is not reported as unknown |
 | `--out <dir>` | output folder |
+| `--at <x>,<y>` | where the first trigger goes in the map (default 0,0; then a grid of 10 per row, 60 apart) |
+| `--run`, `--frames <n>` | simulate the program for n frames and print variables, chat and errors |
+| `--help` | all options |
 
 ## Development
 
