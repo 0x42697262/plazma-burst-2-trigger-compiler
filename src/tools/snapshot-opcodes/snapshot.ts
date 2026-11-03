@@ -6,7 +6,11 @@ export type ValueTables = Record<string, Record<string, string>>;
 export type ParamRow = { cls: string; name: string; kind: string; title: string; desc: string };
 export type GameOnlyParam = { kind: string; title: string; desc: string; value: string };
 export type Category = { name: string; color: string };
-export type TagRules = { uid: boolean; place: boolean; rect: boolean; defaults: Record<string, string>; gameOnly: Record<string, GameOnlyParam> };
+export type Box = { x: number; y: number; w: number; h: number };
+export type TagRules = {
+  uid: boolean; place: boolean; rect: boolean; defaults: Record<string, string>; gameOnly: Record<string, GameOnlyParam>;
+  title?: string; color?: string; box?: Box; modelBoxes?: Record<string, Box>;
+};
 export type Snapshot = {
   source: string; fetched: string; actions: Record<string, SnapshotAction>; values: ValueTables;
   params?: ParamRow[]; markPairs?: Record<string, string>; categories?: Category[]; tags?: Record<string, TagRules>;
@@ -17,9 +21,12 @@ type RawTable = {
   source: string; fetched: string; actions: Record<string, RawAction>; values?: ValueTables; params?: ParamRow[]; markPairs?: Record<string, string>; categories?: Category[];
 };
 
+export type EditorLook = { title: string; color: string; box: Box | null };
 export type EditorRules = {
   tags: readonly string[];
   shapeOf: (tag: string) => string | null;
+  lookOf?: (tag: string) => EditorLook | null;
+  modelBoxes?: Readonly<Record<string, Readonly<Record<string, Box>>>>;
   defaults: Readonly<Record<string, Readonly<Record<string, string>>>>;
   gameOnly: Readonly<Record<string, Readonly<Record<string, GameOnlyParam>>>>;
   noUid: ReadonlySet<string>;
@@ -40,13 +47,20 @@ const paramRow = (row: ParamRow): ParamRow => ({ cls: row.cls, name: row.name, k
 
 const gameOnlyParam = (param: GameOnlyParam): GameOnlyParam => ({ kind: param.kind, title: param.title, desc: param.desc, value: param.value });
 
+const copyBox = (box: Box): Box => ({ x: box.x, y: box.y, w: box.w, h: box.h });
+
 export function tagRules(editor: EditorRules): Record<string, TagRules> {
   const tags: Record<string, TagRules> = {};
   for (const tag of editor.tags) {
     const gameOnly = Object.fromEntries(Object.entries(editor.gameOnly[tag] ?? {}).map(([name, param]) => [name, gameOnlyParam(param)]));
+    const look = editor.lookOf?.(tag) ?? null;
+    const models = editor.modelBoxes?.[tag];
     tags[tag] = {
       uid: !editor.noUid.has(tag), place: !editor.noPlace.has(tag), rect: editor.shapeOf(tag) === RECTANGLE_SHAPE,
       defaults: { ...editor.defaults[tag] }, gameOnly,
+      ...(look ? { title: look.title, color: look.color } : {}),
+      ...(look?.box ? { box: copyBox(look.box) } : {}),
+      ...(models ? { modelBoxes: Object.fromEntries(Object.entries(models).map(([model, box]) => [model, copyBox(box)])) } : {}),
     };
   }
   return tags;

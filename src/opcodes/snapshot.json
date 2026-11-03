@@ -4215,7 +4215,9 @@
    "defaults": {
     "m": "0"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "wall",
+   "color": "#cfd8e3"
   },
   "door": {
    "uid": true,
@@ -4236,7 +4238,9 @@
      "desc": "No sound when it starts and stops moving (read by the game, not shown by the map editor)",
      "value": "false"
     }
-   }
+   },
+   "title": "movable",
+   "color": "#ffb347"
   },
   "region": {
    "uid": true,
@@ -4254,7 +4258,9 @@
      "desc": "Activation enables the timer \"Activation Trigger\" names instead of running a trigger (read by the game, not shown by the map editor)",
      "value": "false"
     }
-   }
+   },
+   "title": "region",
+   "color": "#3C9DFF"
   },
   "bg": {
    "uid": false,
@@ -4269,7 +4275,9 @@
     "f": "0",
     "s": "true"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "background",
+   "color": "#7a8a99"
   },
   "water": {
    "uid": true,
@@ -4286,7 +4294,9 @@
      "desc": "Attaches water to movable (read by the game, not shown by the map editor)",
      "value": "-1"
     }
-   }
+   },
+   "title": "water",
+   "color": "#33c3ff"
   },
   "pushf": {
    "uid": true,
@@ -4299,7 +4309,9 @@
     "damage": "0",
     "attach": "-1"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "pusher",
+   "color": "#c77dff"
   },
   "player": {
    "uid": true,
@@ -4317,7 +4329,15 @@
     "botaction": "0",
     "ondeath": "-1"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "player",
+   "color": "#ff6666",
+   "box": {
+    "x": -15,
+    "y": -82,
+    "w": 30,
+    "h": 82
+   }
   },
   "enemy": {
    "uid": true,
@@ -4335,7 +4355,15 @@
     "botaction": "0",
     "ondeath": "-1"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "enemy",
+   "color": "#ff3355",
+   "box": {
+    "x": -15,
+    "y": -82,
+    "w": 30,
+    "h": 82
+   }
   },
   "vehicle": {
    "uid": true,
@@ -4348,7 +4376,59 @@
     "toy": "0",
     "hpp": "100"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "vehicle",
+   "color": "#e0c341",
+   "box": {
+    "x": -21,
+    "y": -21,
+    "w": 42,
+    "h": 42
+   },
+   "modelBoxes": {
+    "veh_jeep": {
+     "x": -99,
+     "y": -32,
+     "w": 222,
+     "h": 111
+    },
+    "veh_walker": {
+     "x": -110,
+     "y": -56,
+     "w": 233,
+     "h": 257
+    },
+    "veh_capsule": {
+     "x": -30,
+     "y": -60,
+     "w": 60,
+     "h": 120
+    },
+    "veh_crate": {
+     "x": -30,
+     "y": -30,
+     "w": 60,
+     "h": 60
+    },
+    "veh_drone": {
+     "x": -13,
+     "y": -11,
+     "w": 45,
+     "h": 34
+    },
+    "veh_rope": {
+     "x": -10,
+     "y": 0,
+     "w": 20,
+     "h": 188
+    },
+    "veh_corvette": {
+     "x": -49,
+     "y": -46,
+     "w": 182,
+     "h": 129
+    }
+   }
   },
   "barrel": {
    "uid": true,
@@ -4359,7 +4439,15 @@
     "tox": "0",
     "toy": "0"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "barrel",
+   "color": "#ff7b39",
+   "box": {
+    "x": -15,
+    "y": -20,
+    "w": 30,
+    "h": 40
+   }
   },
   "gun": {
    "uid": true,
@@ -4370,7 +4458,15 @@
     "command": "-1",
     "upg": "0"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "gun",
+   "color": "#9cff6b",
+   "box": {
+    "x": -25,
+    "y": -7,
+    "w": 50,
+    "h": 14
+   }
   },
   "decor": {
    "uid": true,
@@ -4393,6 +4489,14 @@
      "desc": "What a text decoration (models text, text2, text3) says (read by the game, not shown by the map editor)",
      "value": ""
     }
+   },
+   "title": "decoration",
+   "color": "#b3e5c5",
+   "box": {
+    "x": -16,
+    "y": -16,
+    "w": 32,
+    "h": 32
    }
   },
   "lamp": {
@@ -4403,7 +4507,15 @@
     "power": "0.4",
     "flare": "1"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "lamp",
+   "color": "#fff27a",
+   "box": {
+    "x": -16,
+    "y": -16,
+    "w": 32,
+    "h": 32
+   }
   },
   "trigger": {
    "uid": true,
@@ -4420,6 +4532,14 @@
      "desc": "Runs when the level starts, and when a match starts a new round (read by the game, not shown by the map editor)",
      "value": "false"
     }
+   },
+   "title": "trigger",
+   "color": "#33ff33",
+   "box": {
+    "x": -16,
+    "y": -16,
+    "w": 32,
+    "h": 32
    }
   },
   "timer": {
@@ -4432,7 +4552,15 @@
     "target": "-1",
     "delay": "30"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "timer",
+   "color": "#ffd84d",
+   "box": {
+    "x": -16,
+    "y": -16,
+    "w": 32,
+    "h": 32
+   }
   },
   "song": {
    "uid": true,
@@ -4444,7 +4572,15 @@
     "loop": "true",
     "callback": "-1"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "song",
+   "color": "#ff9ad5",
+   "box": {
+    "x": -16,
+    "y": -16,
+    "w": 32,
+    "h": 32
+   }
   },
   "inf": {
    "uid": false,
@@ -4454,7 +4590,15 @@
     "mark": "hero1_guns",
     "forteam": "0"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "engine mark",
+   "color": "#ffffff",
+   "box": {
+    "x": -16,
+    "y": -16,
+    "w": 32,
+    "h": 32
+   }
   },
   "image": {
    "uid": false,
@@ -4465,7 +4609,15 @@
     "width": "100",
     "height": "100"
    },
-   "gameOnly": {}
+   "gameOnly": {},
+   "title": "image info",
+   "color": "#a0a0ff",
+   "box": {
+    "x": -16,
+    "y": -16,
+    "w": 32,
+    "h": 32
+   }
   }
  }
 }

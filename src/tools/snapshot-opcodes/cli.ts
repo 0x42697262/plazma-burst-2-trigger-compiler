@@ -2,11 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { DEFAULT_EDITOR, DEFAULT_SOURCE, SNAPSHOT_FILE } from './paths.ts';
-import { EDITOR_FILES, EDITOR_FLAG, FILE_ENCODING, HELP_FLAG, SOURCE_FLAG } from './keys.ts';
+import { EDITOR_FILES, EDITOR_FLAG, FILE_ENCODING, HELP_FLAG, SOURCE_FLAG, VEHICLE_TAG } from './keys.ts';
 import { FIRST_USER_ARGUMENT, FLAG_VALUE_OFFSET, JSON_INDENT } from './constants.ts';
 import { TEXT } from './text.ts';
 import { readOpcodeTable, toSnapshot } from './snapshot.ts';
-import type { EditorRules } from './snapshot.ts';
+import type { Box, EditorRules } from './snapshot.ts';
 
 const argumentsList = process.argv.slice(FIRST_USER_ARGUMENT);
 if (argumentsList.includes(HELP_FLAG)) {
@@ -27,10 +27,18 @@ if (!table) {
 const editorModule = async (file: string): Promise<Record<string, unknown>> => import(pathToFileURL(path.join(editorFolder, file)).href) as Promise<Record<string, unknown>>;
 const keys = await editorModule(EDITOR_FILES.keys);
 const kinds = await editorModule(EDITOR_FILES.kinds);
-const kindOf = kinds.kindOf as (tag: string) => { shape: string } | null;
+const constants = await editorModule(EDITOR_FILES.constants);
+type EditorKind = { shape: string; title: string; color: string; box?: Box | ((attributes: Record<string, string>) => Box) };
+const kindOf = kinds.kindOf as (tag: string) => EditorKind | null;
+const boxOf = (kind: EditorKind): Box | null => (kind.box === undefined ? null : typeof kind.box === 'function' ? kind.box({}) : kind.box);
 const editor: EditorRules = {
   tags: kinds.KIND_TAGS as readonly string[],
   shapeOf: (tag) => kindOf(tag)?.shape ?? null,
+  lookOf: (tag) => {
+    const kind = kindOf(tag);
+    return kind ? { title: kind.title, color: kind.color, box: boxOf(kind) } : null;
+  },
+  modelBoxes: { [VEHICLE_TAG]: constants.VEHICLE_BOX as Record<string, Box> },
   defaults: keys.DEFAULTS as EditorRules['defaults'],
   gameOnly: keys.GAME_ONLY as EditorRules['gameOnly'],
   noUid: keys.NO_UID as ReadonlySet<string>,

@@ -44,6 +44,7 @@ describe('snapshot-opcodes', () => {
     assert.ok(table);
     const editor: EditorRules = {
       tags: ['door', 'inf'], shapeOf: (tag) => (tag === 'door' ? 'rect' : 'point'),
+      lookOf: (tag) => (tag === 'inf' ? { title: 'engine mark', color: '#ffffff', box: { x: -16, y: -16, w: 32, h: 32 } } : null),
       defaults: { door: { maxspeed: '10' }, inf: { mark: 'hero1_guns', forteam: '0' } },
       gameOnly: { door: { mute: { kind: 'bool', title: 'Mute', desc: 'No sound', value: 'false' } } },
       noUid: new Set(['inf']), noPlace: new Set(),
@@ -54,7 +55,7 @@ describe('snapshot-opcodes', () => {
     assert.deepEqual(snapshot.categories, [{ name: 'Movable', color: '#5f6887' }]);
     assert.deepEqual(snapshot.tags, {
       door: { uid: true, place: true, rect: true, defaults: { maxspeed: '10' }, gameOnly: { mute: { kind: 'bool', title: 'Mute', desc: 'No sound', value: 'false' } } },
-      inf: { uid: false, place: true, rect: false, defaults: { mark: 'hero1_guns', forteam: '0' }, gameOnly: {} },
+      inf: { uid: false, place: true, rect: false, defaults: { mark: 'hero1_guns', forteam: '0' }, gameOnly: {}, title: 'engine mark', color: '#ffffff', box: { x: -16, y: -16, w: 32, h: 32 } },
     });
   });
 });
