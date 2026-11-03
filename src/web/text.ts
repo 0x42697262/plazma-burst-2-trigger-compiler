@@ -29,6 +29,12 @@ export const TEXT = Object.freeze({
   optionNames: Object.freeze({ obfuscate: 'obfuscate', directIndex: 'direct array index', numberText: 'protect text from the site editor', replace: 'replace the previous build' }),
   noCommands: 'No matching command',
   nullJson: 'null',
+  blueprint: Object.freeze({
+    siteKey: (tag: string, line: number): string => `${tag}@${line}`, siteId: (key: string, occurrence: number): string => `${key}#${occurrence}`,
+    hostId: (index: number): string => `host:${index}`, markLabel: (mark: string): string => `engine mark ${mark}`,
+    position: (left: number, top: number): string => `x: ${left}, y: ${top}`,
+    area: (left: number, top: number, width: number, height: number): string => `x: ${left}, y: ${top}, w: ${width}, h: ${height}`,
+  }),
   chipTitle: 'Show this setting',
   dock: Object.freeze({ settings: 'Settings', reference: 'Reference', output: 'Output', empty: 'No open files. Press ⌘P / Ctrl+P to open one, or pick an example.' }),
   reference: Object.freeze({

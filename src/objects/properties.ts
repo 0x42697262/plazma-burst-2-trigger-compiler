@@ -5,7 +5,11 @@ import type { ConstructorInfo } from './keys.ts';
 export type Property = { name: string; kind: string; title: string; desc: string; fallback: string | null; gameOnly: boolean };
 type ParamRow = { cls: string; name: string; kind: string; title: string; desc: string };
 type GameOnlyParam = { kind: string; title: string; desc: string; value: string };
-type TagRules = { uid: boolean; place: boolean; rect: boolean; defaults: Record<string, string>; gameOnly: Record<string, GameOnlyParam> };
+type Box = { x: number; y: number; w: number; h: number };
+type TagRules = {
+  uid: boolean; place: boolean; rect: boolean; defaults: Record<string, string>; gameOnly: Record<string, GameOnlyParam>;
+  title?: string; color?: string; box?: Box; modelBoxes?: Record<string, Box>;
+};
 
 const PARAMS: readonly ParamRow[] = snapshot.params;
 const MARK_PAIRS: Readonly<Record<string, string>> = snapshot.markPairs;

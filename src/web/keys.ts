@@ -128,6 +128,10 @@ export const PANEL = Object.freeze({
 export const SELECTOR = Object.freeze({ active: '.active' });
 export const ROW_SELECTOR = '.row, .stack';
 export const WORD_GAP = /\s+/;
+export const BLUEPRINT = Object.freeze({
+  leftSide: -1, vehicleTag: 'vehicle', fallbackColor: '#9aa0a6',
+  attribute: Object.freeze({ x: 'x', y: 'y', w: 'w', h: 'h', side: 'side', model: 'model', uid: 'uid' }),
+});
 export const DOCK = Object.freeze({
   panel: Object.freeze({ output: 'output', reference: 'reference', settings: 'settings' } as const),
   filePrefix: 'file:', fileComponent: 'file', dragHandle: 'tabbar',
