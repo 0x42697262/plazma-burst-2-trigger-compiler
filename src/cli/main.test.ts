@@ -154,18 +154,16 @@ describe('compile CLI', () => {
     assert.notEqual(fs.readFileSync(path.join(folder, 'r.xml'), 'utf8'), first);
   });
 
-  it('adds every declared object without a map only with --objects', () => {
+  it('writes map block objects without a map, and lists their uids', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'f.ptc');
-    fs.writeFileSync(source, 'player slots[] = "#player*{1..16}";\nregion goal = "#goal" at 100, 50;\non start { action(SetCharHP, slots[0], 50); action(TeleportInitiatorFromTo, goal, goal); }\n');
+    fs.writeFileSync(source, 'map {\n  slots = [];\n  for (let i = 1; i <= 16; i += 1) { push(slots, Player("#player*{i}")); }\n  goal = Region("#goal", x: 100, y: 50);\n}\non start { action(SetCharHP, slots[0], 50); action(TeleportInitiatorFromTo, goal, goal); }\n');
     const { lines, output } = capture();
-    assert.equal(main([source, '--out', folder], output), 0);
-    assert.ok(!fs.readFileSync(path.join(folder, 'f.xml'), 'utf8').includes('<player'));
-    assert.equal(main([source, '--out', folder, '--objects'], output), 0, lines.err.join('\n'));
+    assert.equal(main([source, '--out', folder], output), 0, lines.err.join('\n'));
     const xml = fs.readFileSync(path.join(folder, 'f.xml'), 'utf8');
     assert.equal((xml.match(/<player uid="#player\*/g) ?? []).length, 16);
-    assert.match(xml, /<region uid="#goal" x="100" y="50"/);
-    assert.ok(lines.err.some((line) => line.includes('delete any the map already has') && line.includes('#player*16')));
+    assert.match(xml, /<region uid="#goal" x="100" y="50" w="10" h="10" use_target="-1" use_on="0" attach="-1" \/>/);
+    assert.ok(lines.out.some((line) => line.includes('would get it twice') && line.includes('#player*16')));
   });
 
   it('records a build manifest and replaces across renamed builds', () => {
@@ -230,39 +228,59 @@ describe('compile CLI', () => {
     assert.match(lines.err.at(-1) ?? '', /--target needs triggers or pcode/);
   });
 
-  it('adds declared objects the host map lacks, and only those', () => {
+  it('adds map block objects the host map lacks and updates the others in place', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'o.ptc');
     const host = path.join(folder, 'host.xml');
     fs.writeFileSync(source, [
-      'water pool = "#water*1";', 'region spawn = "#SPAWN1";', 'door gate = "#door*7" at 50, -60;', 'gun rifle = "#gun*9";',
-      'on start { action(MovableTo, gate, spawn); action(395, pool, 5); action(SetGunPower, rifle, 2); }', '',
+      'water pool = "#water*1";', 'region spawn = "#SPAWN1";',
+      'map {', '  gate = Door("#door*7", maxspeed: 9999);', '  gate.x ?= 50;', '  gate.y ?= -60;', '  rifle = Gun("#gun*9");', '  old = Door("#old", vis: false);', '  old.x ?= 1;',
+      '  EngineMark(sky, forteam: Space);', '  Wall(0, 300, 2000, 30, m: DarkPlate);', '}',
+      'on start { action(MovableTo, gate, spawn); action(395, pool, 5); action(SetGunPower, rifle, 2); action(MovableTo, old, spawn); }', '',
     ].join('\n'));
-    fs.writeFileSync(host, '<player x="0" y="0" />\n<water uid="#water*1" x="0" y="0" w="10" h="10" damage="0" friction="true" />\n<region uid="#SPAWN1" x="0" y="0" w="10" h="10" use_target="-1" use_on="0" attach="-1" />\n');
+    fs.writeFileSync(host, [
+      '<player x="0" y="0" />', '<water uid="#water*1" x="0" y="0" w="10" h="10" damage="0" friction="true" />',
+      '<region uid="#SPAWN1" x="0" y="0" w="10" h="10" use_target="-1" use_on="0" attach="-1" />',
+      '<door uid="#old" x="500" y="7" w="20" h="10" maxspeed="10" vis="true" attach="-1" />', '<inf x="0" y="0" mark="sky" forteam="4" />', '',
+    ].join('\n'));
     const { lines, output } = capture();
     assert.equal(main([source, '--out', folder, '--into', host], output), 0, lines.err.join('\n'));
     const merged = fs.readFileSync(path.join(folder, 'o-map.xml'), 'utf8');
-    assert.match(merged, /<door uid="#door\*7" x="50" y="-60" w="10" h="10" moving="false" tarx="0" tary="0" maxspeed="10" vis="true" attach="-1" \/>/);
+    assert.match(merged, /<door uid="#door\*7" x="50" y="-60" w="10" h="10" moving="false" tarx="0" tary="0" maxspeed="9999" vis="true" attach="-1" \/>/);
     assert.match(merged, /<gun uid="#gun\*9" x="\d+" y="\d+" model="gun_rifle" command="-1" upg="0" \/>/);
+    assert.match(merged, /<door uid="#old" x="500" y="7" w="20" h="10" maxspeed="10" vis="false" attach="-1" \/>/);
+    assert.match(merged, /<inf x="0" y="0" mark="sky" forteam="5" \/>/);
+    assert.match(merged, /<box x="0" y="300" w="2000" h="30" m="4" \/>/);
     assert.equal(merged.match(/uid="#water\*1"/g)?.length, 1);
-    assert.equal(merged.match(/uid="#SPAWN1"/g)?.length, 1);
-    assert.ok(lines.out.some((line) => line.startsWith('Added door #door*7 at 50, -60')));
-    assert.deepEqual(lines.err, ['warning: the trigger text has no timers; in the editor, add timers for: #o:start-timer -> #o:start']);
+    assert.ok(lines.out.includes('Added Door #door*7'));
+    assert.ok(lines.out.includes('#old: vis true → false'));
+    assert.ok(lines.out.includes('engine mark sky: forteam 4 → 5'));
+    assert.ok(lines.out.some((line) => line.includes('adds them again unless --replace')));
+    const build = JSON.parse(fs.readFileSync(path.join(folder, 'o.build.json'), 'utf8')) as { walls: string[] };
+    assert.deepEqual(build.walls, ['<box x="0" y="300" w="2000" h="30" m="4" />']);
+    fs.copyFileSync(path.join(folder, 'o-map.xml'), host);
+    assert.equal(main([source, '--out', folder, '--into', host, '--replace'], output), 0, lines.err.join('\n'));
+    const again = fs.readFileSync(path.join(folder, 'o-map.xml'), 'utf8');
+    assert.equal(again.match(/<box /g)?.length, 1);
+    assert.equal(again.match(/uid="#door\*7"/g)?.length, 1);
   });
 
-  it('refuses an object whose uid is another kind in the map, and can skip creating', () => {
+  it('refuses an object whose uid is another kind in the map, and a host object the map lacks', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'k.ptc');
     const host = path.join(folder, 'host.xml');
     fs.writeFileSync(source, 'water pool = "#water*1";\ndoor gate = "#door*2";\non start { action(395, pool, 5); action(MovableTo, gate, "#r"); }\n');
-    fs.writeFileSync(host, '<door uid="#water*1" x="0" y="0" />\n');
+    fs.writeFileSync(host, '<door uid="#water*1" x="0" y="0" />\n<door uid="#door*2" x="0" y="0" />\n');
     const { lines, output } = capture();
     assert.equal(main([source, '--out', folder, '--into', host], output), 1);
     assert.match(lines.err.at(-1) ?? '', /"pool" is declared as water, but #water\*1 in the map is a <door>/);
     fs.writeFileSync(host, '<player x="0" y="0" />\n');
-    assert.equal(main([source, '--out', folder, '--into', host, '--no-create'], output), 0);
-    assert.doesNotMatch(fs.readFileSync(path.join(folder, 'k-map.xml'), 'utf8'), /<water|<door/);
-    assert.ok(lines.err.some((line) => line.includes('the map has no #door*2 for "gate"')));
+    assert.equal(main([source, '--out', folder, '--into', host], output), 1);
+    assert.match(lines.err.join('\n'), /The map has no #door\*2 for "gate".*map \{ gate = Door\("#door\*2"\); \}/);
+    fs.writeFileSync(source, 'map { pool = Door("#water*1"); }\non start { action(MovableTo, pool, "#r"); }\n');
+    fs.writeFileSync(host, '<water uid="#water*1" x="0" y="0" />\n');
+    assert.equal(main([source, '--out', folder, '--into', host], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /The map has #water\*1 as a <water>, but line 1 creates a Door with that uid/);
   });
 
   it('prints the exported variables and warns about unexported ones the host map uses', () => {

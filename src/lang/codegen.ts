@@ -324,11 +324,11 @@ export class Generator {
           define(declaration.name, declaration.location);
           if (declaration.tree === null) {
             this.globals.set(declaration.name, { kind: 'object', keyword: declaration.keyword, uid: declaration.uid });
-            this.objects.push({ keyword: declaration.keyword, name: declaration.name, uid: declaration.uid, x: declaration.x, y: declaration.y, built: declaration.built });
+            this.objects.push({ keyword: declaration.keyword, name: declaration.name, uid: declaration.uid, built: declaration.built });
           } else {
             this.globals.set(declaration.name, { kind: 'objectArray', keyword: declaration.keyword, tree: declaration.tree, dimensions: depthOf(declaration.tree) });
             for (const [path, uid] of leavesOf(declaration.tree, [])) {
-              this.objects.push({ keyword: declaration.keyword, name: TEXT.elementPath(declaration.name, path), uid, x: null, y: null, built: declaration.built });
+              this.objects.push({ keyword: declaration.keyword, name: TEXT.elementPath(declaration.name, path), uid, built: declaration.built });
             }
           }
           break;

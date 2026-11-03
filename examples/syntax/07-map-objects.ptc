@@ -1,13 +1,21 @@
-// Map objects: declared with their kind and uid, used in action(...).
+// Map objects: a map { } block creates them while compiling; a declaration outside one names
+// an object the map already has. Both are used in action(...).
 // Named values (Color.*, Team.*...) come from the editor's own lists.
-region spawn = "#spawn" at 0, -100;
-region exits[] = ["#exit1", "#exit2", "#exit3"];
-player hero = "#player*0";
+region spawn = "#spawn";                 // the map already has it
+map {
+  exits = [];
+  for (let i = 1; i <= 3; i += 1) {
+    push(exits, Region("#exit{i}", x: i * 200, y: -100, w: 60, h: 100));
+  }
+  guard = Actor("#guard", team: Team.BlueTeam, botaction: DoNothing);
+  guard.x ?= 0;                          // only when created: drag it freely afterwards
+  Wall(0, 0, 1000, 30, m: DarkPlate);
+}
 const BIG = 500;
 var color = Color.NoirLime;   // never changes, so it counts as a fixed value
 
 export function heal() {
-  action(SetCharHP, hero, BIG);
+  action(SetCharHP, guard, BIG);
   say("healed", color);
 }
 

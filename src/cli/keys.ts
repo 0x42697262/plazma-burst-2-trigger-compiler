@@ -11,8 +11,6 @@ export const FLAG = Object.freeze({
   frames: '--frames',
   at: '--at',
   noSyncMark: '--no-sync-mark',
-  noCreate: '--no-create',
-  objects: '--objects',
   noNumberText: '--no-number-text',
   directIndex: '--direct-index',
   target: '--target',

@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { compileSource } from './compile.ts';
-import { checkObjects, objectElement } from '../objects/objects.ts';
+import { checkObjects } from '../objects/objects.ts';
 
 const actions = (source: string) => compileSource(source, 't').program.triggers.flatMap((trigger) => trigger.actions);
 
@@ -9,7 +9,7 @@ describe('map object declarations', () => {
   it('passes a declared object as its uid, for every kind', () => {
     const source = `
 water pool = "#water*1";
-region spawn = "#SPAWN1" at 100, -200;
+region spawn = "#SPAWN1";
 door gate = "#door*3";
 player hero = "#player*0";
 actor guard = "#enemy*1";
@@ -33,7 +33,7 @@ on start {
     assert.deepEqual(used.map((action) => [action.opcode, action.targetA, action.targetB]), [
       [395, '#water*1', '10'], [0, '#door*3', '#SPAWN1'], [23, '#player*0', '200'], [23, '#enemy*1', '50'], [64, '#gun*2', '3'], [99, '#trigger*9', '0'], [25, '#timer*1', '0'], [54, '#light*1', '0'],
     ]);
-    assert.deepEqual(result.objects.find((object) => object.name === 'spawn'), { keyword: 'region', name: 'spawn', uid: '#SPAWN1', x: 100, y: -200, built: false });
+    assert.deepEqual(result.objects.find((object) => object.name === 'spawn'), { keyword: 'region', name: 'spawn', uid: '#SPAWN1', built: false });
   });
 
   it('refuses an object of the wrong kind, like a strict cast', () => {
@@ -52,7 +52,7 @@ on start {
   it('keeps player slots and other characters apart in the map', () => {
     const result = compileSource('player hero = "#player*1";\nactor guard = "#enemy*1";\non start { action(SetCharHP, hero, 1); action(SetCharHP, guard, 1); }', 't');
     const spawned = checkObjects(result.objects, '<player x="0" y="0" />\n');
-    assert.deepEqual(spawned.missing.map((object) => objectElement(object, { x: 0, y: 0 }, (value) => value).split(' ')[0]), ['<player', '<enemy']);
+    assert.deepEqual(spawned.missing.map((object) => object.uid), ['#player*1', '#enemy*1']);
     const swapped = checkObjects(result.objects, '<enemy uid="#player*1" x="0" y="0" />\n<player uid="#enemy*1" x="0" y="0" />\n');
     assert.match(swapped.problems.join('\n'), /"hero" is declared as player, but #player\*1 in the map is a <enemy>\. Declare it as actor\./);
     assert.match(swapped.problems.join('\n'), /"guard" is declared as actor, but #enemy\*1 in the map is a <player>\. Declare it as player\./);
@@ -85,5 +85,9 @@ on start {
     assert.equal(actions('on start { action(MovableTo, "#door*1", "#r"); }')[1]?.targetA, '#door*1');
     assert.ok(actions('var water = 1;\nvar region = water + 1;'));
     assert.throws(() => actions('water pool = "water*1";'), /must start with #/);
+  });
+
+  it('refuses "at", which belonged to the old create-if-missing declarations', () => {
+    assert.throws(() => actions('door gate = "#door*3" at 400, -120;'), /line 1: "at" is gone.*map \{ gate = /);
   });
 });

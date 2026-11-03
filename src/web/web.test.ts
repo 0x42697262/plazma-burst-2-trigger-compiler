@@ -7,7 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '', objects: false };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '' };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -61,7 +61,7 @@ describe('web page logic', () => {
     assert.ok(first.uids.length >= 1);
     const withBuild = first.map;
     workspace.set('/work/main.ptc', 'var n = 0;\nvar tag = "v2";\non start { n += 2; say("v2"); }\n');
-    const second = build(workspace, '/work/main.ptc', { ...OPTIONS, nameSeed: '2', replace: true }, withBuild, {}, first.uids);
+    const second = build(workspace, '/work/main.ptc', { ...OPTIONS, nameSeed: '2', replace: true }, withBuild, {}, { uids: first.uids, walls: first.walls });
     assert.ok(second.map.includes('#gate1') && second.map.includes('"v2"') && !second.map.includes('"v1"'));
     for (const uid of first.uids) assert.ok(!second.map.includes(uid), `stale ${uid}`);
   });
@@ -75,7 +75,7 @@ describe('web page logic', () => {
     assert.deepEqual(first.problems, []);
     assert.equal(simulate(first.result!, 1)[0], 'chat: count 3');
     assert.ok(!first.xml.includes('count'));
-    const second = build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: 'b', replace: true }, first.map, {}, first.uids);
+    const second = build(workspace, '/work/main.ptc', { ...OPTIONS, obfuscate: true, obfuscateSeed: 'b', replace: true }, first.map, {}, { uids: first.uids, walls: first.walls });
     assert.equal(simulate(second.result!, 1)[0], 'chat: count 3');
     for (const uid of first.uids) assert.ok(!second.map.includes(`"${uid}"`), `stale ${uid}`);
     const order = [...second.map.matchAll(/<trigger uid="([^"]+)"/g)].map((match) => match[1]);
@@ -96,19 +96,36 @@ describe('web page logic', () => {
     assert.equal(simulate(first.result!, 1)[0], 'chat: n 1');
   });
 
-  it('adds every declared object without a map only when asked', () => {
+  it('writes map block objects, and updates the host map in place', () => {
     const workspace = new Workspace(null);
-    workspace.set('/work/main.ptc', 'player slots[] = "#player*{1..16}";\ndoor gate = "#gate";\non start { action(SetCharHP, slots[0], 50); action(MovableTo, gate, "#r"); }\n');
+    workspace.set('/work/main.ptc', 'map {\n  slots = [];\n  for (let i = 1; i <= 16; i += 1) { push(slots, Player("#player*{i}", x: i * 10, y: 0)); }\n  gate = Door("#gate", maxspeed: 50);\n  gate.x ?= 5;\n  Wall(0, 100, 50, 10);\n}\non start { action(SetCharHP, slots[0], 50); action(MovableTo, gate, "#r"); }\n');
     workspace.activate('/work/main.ptc');
-    assert.ok(!build(workspace, '/work/main.ptc', OPTIONS, null).xml.includes('<player'));
-    const fresh = build(workspace, '/work/main.ptc', { ...OPTIONS, objects: true }, null);
+    const fresh = build(workspace, '/work/main.ptc', OPTIONS, null);
+    assert.deepEqual(fresh.problems.filter((problem) => problem.severity === 'error'), []);
     assert.equal((fresh.xml.match(/<player uid="#player\*/g) ?? []).length, 16);
-    assert.ok(fresh.xml.includes('<door uid="#gate"'));
+    assert.ok(fresh.xml.includes('<door uid="#gate" x="5" y="'));
+    assert.ok(fresh.xml.includes('<box x="0" y="100" w="50" h="10" m="0" />'));
     assert.ok(fresh.notes.some((note) => note.includes('#player*16')));
-    const host = '<player uid="#player*1" x="0" y="0" />\n';
-    const merged = build(workspace, '/work/main.ptc', { ...OPTIONS, objects: true }, host);
+    const host = '<player uid="#player*1" x="7" y="0" />\n<door uid="#gate" x="300" y="0" w="10" h="10" maxspeed="10" />\n';
+    const merged = build(workspace, '/work/main.ptc', { ...OPTIONS, replace: true }, host);
     assert.equal((merged.map.match(/uid="#player\*1"/g) ?? []).length, 1);
-    assert.equal((merged.map.match(/<player uid="#player\*/g) ?? []).length, 16);
+    assert.ok(merged.map.includes('<player uid="#player*1" x="10" y="0" />'));
+    assert.ok(merged.map.includes('<door uid="#gate" x="300" y="0" w="10" h="10" maxspeed="50" />'));
+    assert.ok(merged.notes.includes('#gate: maxspeed 10 → 50'));
+    const again = build(workspace, '/work/main.ptc', { ...OPTIONS, replace: true }, merged.map, {}, { uids: merged.uids, walls: merged.walls });
+    assert.equal((again.map.match(/<box /g) ?? []).length, 1);
+    const lines = (map: string): string[] => map.split('\n').sort();
+    assert.deepEqual(lines(again.map), lines(merged.map));
+    assert.deepEqual(again.notes.filter((note) => note.includes('→')), []);
+  });
+
+  it('refuses a host object the map lacks, naming the map block line to write', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'door gate = "#gate";\non start { action(MovableTo, gate, "#r"); }\n');
+    workspace.activate('/work/main.ptc');
+    const result = build(workspace, '/work/main.ptc', OPTIONS, '<player x="0" y="0" />\n');
+    assert.equal(result.map, '');
+    assert.match(result.notes.join('\n'), /map \{ gate = Door\("#gate"\); \}/);
   });
 
   it('replaces an older build of the program in the host map when asked', () => {

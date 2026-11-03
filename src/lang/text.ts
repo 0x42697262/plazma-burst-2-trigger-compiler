@@ -82,6 +82,8 @@ export const TEXT = Object.freeze({
   elementPath: (name: string, path: readonly string[]): string => `${name}${path.map((index) => `[${index}]`).join('')}`,
   indexList: (indexes: readonly (string | null)[]): string => indexes.map((index) => `[${index ?? '?'}]`).join(''),
   oneIndex: (name: string): string => `"${name}" is an array of values: it takes one index`,
+  objectAtGone: (keyword: string, name: string, uid: string): string =>
+    `"at" is gone: a declaration such as ${keyword} ${name} = "${uid}"; means the map already has the object. To create it, write it in a map block: map { ${name} = ...("${uid}", x: 0, y: 0); }`,
   assignIfCreatedTarget: '?= sets a property only when the object is created: gate.x ?= 0;',
   propertyOperator: 'a property takes = or ?=, like gate.x = 0;',
   positionalAfterNamed: (name: string): string => `${name}(...): named arguments (x: 0) come after the others`,

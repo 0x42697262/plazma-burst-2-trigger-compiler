@@ -1,12 +1,13 @@
 import { compileSource } from '../lang/compile.ts';
 import { compileAssembly } from '../compiler/assemble.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
-import { emitXml, escapeXml, stagingPosition } from '../emit/xml-emitter.ts';
+import { emitXml, stagingPosition } from '../emit/xml-emitter.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap, removeOwned } from '../emit/merge.ts';
-import { XML_LINE_END } from '../emit/keys.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
-import { checkObjects, objectElement } from '../objects/objects.ts';
+import { checkObjects } from '../objects/objects.ts';
+import { missingHostObject } from '../objects/missing.ts';
+import { placeObjects, regionsOf } from '../emit/place.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames, seededPrefix } from '../compiler/names.ts';
 import { isRandomSeed, resolveSeed } from '../obfuscate/random.ts';
@@ -21,8 +22,10 @@ import type { Workspace } from './workspace.ts';
 import type { Target } from '../pcode/keys.ts';
 
 export type Options = {
-  prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string; objects: boolean;
+  prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string;
 };
+export type BuildRecord = { uids: readonly string[]; walls: readonly string[] };
+export const EMPTY_RECORD: BuildRecord = Object.freeze({ uids: [], walls: [] });
 export type Problem = ServiceDiagnostic & { file: string };
 export type Build = {
   result: CompileResult | null;
@@ -32,6 +35,7 @@ export type Build = {
   map: string;
   notes: string[];
   uids: string[];
+  walls: string[];
 };
 
 export const prefixFor = (file: string): string => {
@@ -62,9 +66,9 @@ export function problemsOf(workspace: Workspace, file: string, options: Partial<
   return found.map((entry) => ({ ...entry, file }));
 }
 
-export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null, environment: Environment = {}, recordedUids: readonly string[] = []): Build {
+export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null, environment: Environment = {}, recorded: BuildRecord = EMPTY_RECORD): Build {
   const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex, options.target, environment));
-  const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [], uids: [] };
+  const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [], uids: [], walls: [] };
   if (problems.some((entry) => entry.severity === 'error')) return empty;
   const source = workspace.get(file) ?? '';
   const nameSeed = options.nameSeed.trim();
@@ -88,15 +92,17 @@ export function build(workspace: Workspace, file: string, options: Options, host
   }
   const notes: string[] = [];
   const check = hostMap === null ? null : checkObjects(result.objects, hostMap);
-  const adding = check?.missing ?? (options.objects ? [...result.objects] : []);
-  if (check === null && adding.length > 0) notes.push(TEXT.objectsWithoutMap(adding.map((object) => object.uid).join(TEXT.listSeparator)));
-  const created = adding.map((object, index) => {
-    const staging = stagingPosition(index, result.program);
-    notes.push(TEXT.added(object.keyword, object.uid, object.x ?? staging.x, object.y ?? staging.y));
-    return objectElement(object, staging, escapeXml) + XML_LINE_END;
-  }).join('');
-  notes.push(...(check?.problems ?? []));
-  const xml = emitXml(result.program) + created;
+  const objectProblems = [...(check?.problems ?? []), ...(check?.missing ?? []).map(missingHostObject)];
+  const names = createNames(prefix);
+  const recordedUids = new Set(recorded.uids);
+  const host = hostMap === null ? null : options.replace ? removeOwned(hostMap, (uid) => recordedUids.has(uid) || names.ownsUid(uid)) : hostMap;
+  const placement = placeObjects(result.mapObjects, {
+    host, staging: (index) => stagingPosition(index, result.program), previousWalls: options.replace ? recorded.walls : [], replacing: options.replace,
+  });
+  notes.push(...placement.notes);
+  const blocking = [...objectProblems, ...placement.problems];
+  const program = placement.declaresVarSync ? { ...result.program, varSyncMark: false } : result.program;
+  const xml = emitXml(program) + placement.xml;
   let text = '';
   try {
     text = joinTextBlocks(emitText(result.program));
@@ -110,22 +116,20 @@ export function build(workspace: Workspace, file: string, options: Options, host
   }
   let map = '';
   const uids = [...result.program.triggers.map((trigger) => trigger.uid), ...result.program.timers.map((timer) => timer.uid)];
-  if (hostMap !== null) {
-    const names = createNames(prefix);
-    const recorded = new Set(recordedUids);
-    const host = options.replace ? removeOwned(hostMap, (uid) => recorded.has(uid) || names.ownsUid(uid)) : hostMap;
-    notes.push(...checkHostNames(result.program, host), ...checkHostUses(host, names.ownsVariable, result.exports));
+  notes.push(...blocking);
+  if (placement.host !== null) {
+    notes.push(...checkHostNames(result.program, placement.host), ...checkHostUses(placement.host, names.ownsVariable, result.exports));
     try {
-      map = appendToMap(host, xml);
+      if (blocking.length === 0) map = appendToMap(placement.host, xml);
     } catch (error) {
       notes.push(error instanceof Error ? error.message : String(error));
     }
   }
-  return { result, problems, xml, text, map, notes, uids };
+  return { result, problems, xml, text, map, notes, uids, walls: placement.walls };
 }
 
 export function simulate(result: CompileResult, frames: number): string[] {
-  const simulation = new Simulation(result.program);
+  const simulation = new Simulation(result.program, { regions: regionsOf(result.mapObjects) });
   simulation.tick(frames);
   const show = (value: unknown): string => (typeof value === 'string' || Array.isArray(value) ? JSON.stringify(value) : stringOf(value));
   return [

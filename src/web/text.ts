@@ -12,7 +12,6 @@ export const TEXT = Object.freeze({
   variable: (name: string, value: string): string => `${name} = ${value}`,
   simulationError: (line: string): string => `error: ${line}`,
   unsimulated: (opcode: number): string => `not simulated: action ${opcode}`,
-  added: (keyword: string, uid: string, positionX: number, positionY: number): string => `added ${keyword} ${uid} at ${positionX}, ${positionY}`,
   html: Object.freeze({
     pre: (code: string): string => `<pre>${code}</pre>`,
     code: (code: string): string => `<code>${code}</code>`,
@@ -26,7 +25,6 @@ export const TEXT = Object.freeze({
   closeMark: '×',
   addFile: '+',
   randomSeed: (seed: string): string => `Obfuscation seed: ${seed}. Put it in the seed box to build the same again.`,
-  objectsWithoutMap: (uids: string): string => `Objects added without a map to check: delete any the map already has (${uids}).`,
   textNeedsOrder: 'Obfuscated: the jumps depend on trigger order. Paste the text blocks into new triggers in the listed order, after all other triggers; the XML keeps the order by itself.',
   textNeedsTimers: (list: string): string => `The trigger text holds no timers; add these in the editor: ${list}`,
   separator: '\n',

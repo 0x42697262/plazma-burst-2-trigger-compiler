@@ -10,6 +10,9 @@ export const OP_PREFIX = 'op';
 export const UID_ATTRIBUTE = /\buid="([^"]*)"/g;
 export const UID_ATTRIBUTE_ONE = /\buid="([^"]*)"/;
 export const MAP_ELEMENT = /<[A-Za-z][\w-]*\b[^>]*\/>\r?\n?/g;
+export const ELEMENT_PARTS = /^<([A-Za-z][\w-]*)\b([^>]*?)\s*\/>$/;
+export const ELEMENT_ATTRIBUTE = /([A-Za-z0-9_]+)="([^"]*)"/g;
+export const REGION_TAG = 'region';
 export const TRAILING_LINE_END = /\s*$/;
 export const ATTRIBUTE_SEPARATOR = ' ';
 export const BASE_MAP = [

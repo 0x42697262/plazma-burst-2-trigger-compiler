@@ -2,7 +2,7 @@ import examples from 'virtual:examples';
 import { CodeEditor } from './editor.ts';
 import { Workspace } from './workspace.ts';
 import { build, checkOptions, parseEnvironment, simulate } from './pipeline.ts';
-import type { Build, Options } from './pipeline.ts';
+import type { Build, BuildRecord, Options } from './pipeline.ts';
 import { ATTRIBUTE, CLASS, EMPTY_OBJECT, ENTER, FOLDER_POSITION, KEYDOWN, LIBRARY_FOLDER, OUTPUT_BUTTONS, TAB_ACTIVE, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT } from './keys.ts';
 import { DEFAULT_FRAMES, DEFAULT_GUARD, STATUS_TIME } from './constants.ts';
 import { TEXT } from './text.ts';
@@ -38,7 +38,6 @@ const targetSelect = element<HTMLSelectElement>(ELEMENT.target);
 const replaceInput = element<HTMLInputElement>(ELEMENT.replace);
 const nameSeedInput = element<HTMLInputElement>(ELEMENT.nameSeed);
 const obfuscateInput = element<HTMLInputElement>(ELEMENT.obfuscate);
-const objectsInput = element<HTMLInputElement>(ELEMENT.objects);
 const obfuscateSeedInput = element<HTMLInputElement>(ELEMENT.obfuscateSeed);
 const newSeedButton = element<HTMLButtonElement>(ELEMENT.newSeed);
 const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
@@ -59,7 +58,6 @@ targetSelect.value = savedOptions.target ?? DEFAULT_TARGET;
 replaceInput.checked = savedOptions.replace ?? false;
 nameSeedInput.value = savedOptions.nameSeed ?? '';
 obfuscateInput.checked = savedOptions.obfuscate ?? false;
-objectsInput.checked = savedOptions.objects ?? false;
 obfuscateSeedInput.value = savedOptions.obfuscateSeed ?? '';
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 
@@ -72,7 +70,7 @@ let statusTimer = 0;
 
 const options = (): Options => {
   const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked, nameSeed: nameSeedInput.value,
-    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value, objects: objectsInput.checked,
+    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value,
   };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   return value;
@@ -135,14 +133,19 @@ const show = (name: OutputName): void => {
   }
 };
 
-const buildStore = (): Record<string, string[]> => JSON.parse(storage?.getItem(STORAGE.build) ?? EMPTY_OBJECT) as Record<string, string[]>;
+const buildStore = (): Record<string, unknown> => JSON.parse(storage?.getItem(STORAGE.build) ?? EMPTY_OBJECT) as Record<string, unknown>;
+
+const recordOf = (stored: unknown): BuildRecord => {
+  if (Array.isArray(stored)) return { uids: stored.filter((uid): uid is string => typeof uid === 'string'), walls: [] };
+  const record = stored as Partial<BuildRecord> | undefined;
+  return { uids: record?.uids ?? [], walls: record?.walls ?? [] };
+};
 
 const compile = (): Build => {
   const file = editor.activeFile;
-  const recorded = buildStore()[file] ?? [];
-  last = build(workspace, file, options(), hostMap, environment(), recorded);
+  last = build(workspace, file, options(), hostMap, environment(), recordOf(buildStore()[file]));
   if (hostMap !== null && last.map !== '') {
-    storage?.setItem(STORAGE.build, JSON.stringify({ ...buildStore(), [file]: last.uids }));
+    storage?.setItem(STORAGE.build, JSON.stringify({ ...buildStore(), [file]: { uids: last.uids, walls: last.walls } }));
   }
   status.textContent = summary(last);
   return last;
@@ -250,7 +253,7 @@ environmentInput.addEventListener(EVENT.input, () => {
   environmentButton.textContent = TEXT.environmentButton(Object.keys(environment()).length);
   editor.relint();
 });
-for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput, objectsInput]) {
+for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput]) {
   input.addEventListener(EVENT.change, () => {
     options();
     editor.relint();

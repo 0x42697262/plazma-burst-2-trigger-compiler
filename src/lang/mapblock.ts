@@ -591,8 +591,8 @@ function bindings(mapNames: readonly MapName[], records: readonly string[][], ob
     if (other >= 0) fail(entry.location, TEXT.mixedKinds(entry.name, first?.keyword ?? '', other, described[other]?.keyword ?? ''));
     const keyword = first?.keyword ?? '';
     const isBuilt = described.some((item) => item.built);
-    if (entry.array) declarations.push({ kind: 'object', keyword, name: entry.name, uid: '', x: null, y: null, tree: described.map((item) => item.uid ?? ''), built: isBuilt, location: entry.location });
-    else declarations.push({ kind: 'object', keyword, name: entry.name, uid: first?.uid ?? '', x: null, y: null, tree: null, built: isBuilt, location: entry.location });
+    if (entry.array) declarations.push({ kind: 'object', keyword, name: entry.name, uid: '', tree: described.map((item) => item.uid ?? ''), built: isBuilt, location: entry.location });
+    else declarations.push({ kind: 'object', keyword, name: entry.name, uid: first?.uid ?? '', tree: null, built: isBuilt, location: entry.location });
   });
   return declarations;
 }

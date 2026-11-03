@@ -183,27 +183,20 @@ class Parser {
     if (dimensions === 1 && this.current.kind === 'string') {
       const tree = this.uids(this.next(), name, location);
       this.expect(PUNCTUATOR.semicolon);
-      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, built: false, location };
+      return { kind: 'object', keyword, name, uid: '', tree, built: false, location };
     }
     if (dimensions > 0) {
       const tree = this.objectTree(dimensions, name, location);
       this.expect(PUNCTUATOR.semicolon);
-      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, built: false, location };
+      return { kind: 'object', keyword, name, uid: '', tree, built: false, location };
     }
     if (this.current.kind !== 'string') this.fail(TEXT.string);
     const expanded = this.uids(this.next(), name, location);
     if (expanded.length !== 1) throw new SourceError(location.line, TEXT.uidRangeNeedsArray(name), this.file);
     const uid = expanded[0] as string;
-    let positionX: number | null = null;
-    let positionY: number | null = null;
-    if (this.isWord(OBJECT_AT)) {
-      this.next();
-      positionX = this.signedNumber();
-      this.expect(PUNCTUATOR.comma);
-      positionY = this.signedNumber();
-    }
+    if (this.isWord(OBJECT_AT)) throw new SourceError(location.line, TEXT.objectAtGone(keyword, name, uid), this.file);
     this.expect(PUNCTUATOR.semicolon);
-    return { kind: 'object', keyword, name, uid, x: positionX, y: positionY, tree: null, built: false, location };
+    return { kind: 'object', keyword, name, uid, tree: null, built: false, location };
   }
 
   private objectTree(depth: number, name: string, location: Location): ObjectTree[] {
@@ -247,13 +240,6 @@ class Parser {
 
   private isWord(word: string): boolean {
     return this.current.kind === 'identifier' && this.current.text === word;
-  }
-
-  private signedNumber(): number {
-    const negative = this.accept(PUNCTUATOR.minus);
-    if (this.current.kind !== 'number') return this.fail(TEXT.number);
-    const value = Number(this.next().text);
-    return negative ? -value : value;
   }
 
   private stringText(token: Token): string {

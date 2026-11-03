@@ -3,9 +3,11 @@ import { KIND_HINT } from './keys.ts';
 export const TEXT = Object.freeze({
   wrongKindInMap: (name: string, uid: string, keyword: string, tag: string): string =>
     `"${name}" is declared as ${keyword}, but ${uid} in the map is a <${tag}>.${tag === KIND_HINT.playerTag ? ` Declare it as ${KIND_HINT.playerKind}.` : tag === KIND_HINT.enemyTag ? ` Declare it as ${KIND_HINT.enemyKind}.` : ''}`,
-  unknownKind: (keyword: string): string => `Unknown object kind "${keyword}".`,
   element: (tag: string, attributes: readonly string[]): string => `<${tag} ${attributes.join(' ')} />`,
   attribute: (name: string, value: string): string => `${name}="${value}"`,
+  missing: (name: string, uid: string): string => `The map has no ${uid} for "${name}"; add it to the map, or remove the declaration.`,
+  missingWithHint: (name: string, uid: string, constructorName: string): string =>
+    `The map has no ${uid} for "${name}". A declaration outside a map block means the map already has the object; to create it, write it in a map block: map { ${name} = ${constructorName}("${uid}"); }`,
   or: ', ',
   functionOr: (names: string): string => `@function, a trigger uid or ${names}`,
   objectOr: (constructorName: string, names: string): string => `a ${constructorName}, its uid or ${names}`,

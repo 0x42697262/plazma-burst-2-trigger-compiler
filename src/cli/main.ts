@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { emitXml, escapeXml, stagingPosition } from '../emit/xml-emitter.ts';
-import { XML_LINE_END } from '../emit/keys.ts';
-import { checkObjects, objectElement } from '../objects/objects.ts';
+import { emitXml, stagingPosition } from '../emit/xml-emitter.ts';
+import { checkObjects } from '../objects/objects.ts';
+import { placeObjects, regionsOf } from '../emit/place.ts';
+import { missingHostObject } from '../objects/missing.ts';
 import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
@@ -71,20 +72,24 @@ const writeFile = (file: string, content: string, output: Output): void => {
   output.out(TEXT.wrote(file));
 };
 
-const readBuildUids = (file: string): string[] => {
-  if (!fs.existsSync(file)) return [];
+type BuildRecord = { uids: string[]; walls: string[] };
+
+const texts = (value: unknown): string[] => (Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : []);
+
+const readBuildRecord = (file: string): BuildRecord => {
+  if (!fs.existsSync(file)) return { uids: [], walls: [] };
   try {
-    const parsed = JSON.parse(fs.readFileSync(file, FILE_ENCODING)) as { uids?: unknown };
-    return Array.isArray(parsed.uids) ? parsed.uids.filter((uid): uid is string => typeof uid === 'string') : [];
+    const parsed = JSON.parse(fs.readFileSync(file, FILE_ENCODING)) as { uids?: unknown; walls?: unknown };
+    return { uids: texts(parsed.uids), walls: texts(parsed.walls) };
   } catch {
-    return [];
+    return { uids: [], walls: [] };
   }
 };
 
 const showValue = (value: unknown): string => (typeof value === 'string' || Array.isArray(value) ? JSON.stringify(value) : stringOf(value));
 
 const simulate = (result: CompileResult, frames: number, output: Output): void => {
-  const simulation = new Simulation(result.program);
+  const simulation = new Simulation(result.program, { regions: regionsOf(result.mapObjects) });
   simulation.tick(frames);
   for (const [name, value] of Object.entries(simulation.variables)) output.out(TEXT.variable(name, showValue(value)));
   for (const line of simulation.chat) output.out(TEXT.chat(line));
@@ -126,20 +131,20 @@ export function main(argumentsList: readonly string[], output: Output): number {
     if (result.exports.length > 0) output.out(TEXT.exported(result.exports.map((entry) => TEXT.exportedEntry(entry.name, entry.gameName))));
     const base = path.join(lastValue(parsed, FLAG.out) ?? DEFAULT_OUT, path.basename(file, path.extname(file)));
     const check = hostMap === null ? null : checkObjects(result.objects, hostMap);
-    if (check && check.problems.length > 0) throw new UsageError(TEXT.objectProblems(check.problems));
-    const allObjects = check === null && parsed.flags.has(FLAG.objects);
-    if (check !== null && parsed.flags.has(FLAG.objects)) output.err(TEXT.warning(TEXT.objectsIgnored));
-    const creating = allObjects ? [...result.objects] : check !== null && !parsed.flags.has(FLAG.noCreate) ? check.missing : [];
-    if (allObjects && creating.length > 0) output.err(TEXT.warning(TEXT.objectsWithoutMap(creating.map((object) => object.uid))));
-    if (check !== null && parsed.flags.has(FLAG.noCreate)) {
-      for (const object of check.missing) output.err(TEXT.warning(TEXT.objectMissing(object.name, object.uid)));
-    }
-    const objectXml = creating.map((object, index) => {
-      const staging = stagingPosition(index, result.program, layout);
-      output.out(TEXT.objectCreated(object.keyword, object.uid, object.x ?? staging.x, object.y ?? staging.y));
-      return objectElement(object, staging, escapeXml) + XML_LINE_END;
-    }).join('');
-    const xml = emitXml(result.program, layout) + objectXml;
+    const objectProblems = [...(check?.problems ?? []), ...(check?.missing ?? []).map(missingHostObject)];
+    if (objectProblems.length > 0) throw new UsageError(TEXT.objectProblems(objectProblems));
+    const names = createNames(prefix);
+    const buildPath = base + OUTPUT.build;
+    const recorded = replacing ? readBuildRecord(buildPath) : { uids: [], walls: [] };
+    const recordedUids = new Set(recorded.uids);
+    const host = hostMap === null ? null : replacing ? removeOwned(hostMap, (uid) => recordedUids.has(uid) || names.ownsUid(uid)) : hostMap;
+    const placement = placeObjects(result.mapObjects, {
+      host, staging: (index) => stagingPosition(index, result.program, layout), previousWalls: recorded.walls, replacing,
+    });
+    if (placement.problems.length > 0) throw new UsageError(TEXT.objectProblems(placement.problems));
+    for (const note of placement.notes) output.out(note);
+    const program = placement.declaresVarSync ? { ...result.program, varSyncMark: false } : result.program;
+    const xml = emitXml(program, layout) + placement.xml;
     writeFile(base + OUTPUT.xml, xml, output);
     try {
       writeFile(base + OUTPUT.text, joinTextBlocks(emitText(result.program)), output);
@@ -154,16 +159,12 @@ export function main(argumentsList: readonly string[], output: Output): number {
     if (result.obfuscation !== null) {
       writeFile(base + OUTPUT.names, JSON.stringify({ prefix, seed, names: describeLegend(prefix, result.obfuscation.legend) }, null, JSON_INDENT), output);
     }
-    if (hostMap !== null) {
-      const names = createNames(prefix);
-      const buildPath = base + OUTPUT.build;
-      const recorded = new Set(replacing ? readBuildUids(buildPath) : []);
-      const host = replacing ? removeOwned(hostMap, (uid) => recorded.has(uid) || names.ownsUid(uid)) : hostMap;
-      for (const warning of checkHostNames(result.program, host)) output.err(TEXT.warning(warning));
-      for (const warning of checkHostUses(host, names.ownsVariable, result.exports)) output.err(TEXT.warning(warning));
-      writeFile(base + OUTPUT.map, appendToMap(host, xml), output);
+    if (placement.host !== null) {
+      for (const warning of checkHostNames(result.program, placement.host)) output.err(TEXT.warning(warning));
+      for (const warning of checkHostUses(placement.host, names.ownsVariable, result.exports)) output.err(TEXT.warning(warning));
+      writeFile(base + OUTPUT.map, appendToMap(placement.host, xml), output);
       const producedUids = [...result.program.triggers.map((trigger) => trigger.uid), ...result.program.timers.map((timer) => timer.uid)];
-      writeFile(buildPath, JSON.stringify({ prefix, uids: producedUids }, null, JSON_INDENT), output);
+      writeFile(buildPath, JSON.stringify({ prefix, uids: producedUids, walls: placement.walls }, null, JSON_INDENT), output);
     }
     if (parsed.flags.has(FLAG.run)) simulate(result, frames, output);
     return 0;
