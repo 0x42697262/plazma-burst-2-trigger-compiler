@@ -43,6 +43,9 @@ describe('map blocks', () => {
     const [decor] = objects('map { Decor("#d", model: c12345, f: YesAndGlow, text: "hi"); }');
     assert.deepEqual(attributes(decor), { model: 'c12345', f: '2', text: 'hi' });
     fails('map { Actor("#e", botaction: 7); }', /line 1: Actor botaction takes a Behavior value .*got "7"/);
+    fails('map { Actor("#e", char: hero); }', /Actor char takes a Skin value .*or a custom one such as c12345, got "hero"/);
+    fails('map { Decor("#d", model: "c1x"); }', /Decor model takes a DecorModel value/);
+    assert.equal(attributes(objects('map { Background(0, 0, 10, 10, m: c77); }')[0]).m, 'c77');
     fails('map { Actor("#e", botaction: Team.RedTeam); }', /not a Team value/);
     fails('var DoNothing = 1;\nmap { Actor("#e", botaction: DoNothing); }', /"DoNothing" is a value of this property and also a name in the program/);
     fails('map { Door("#d", maxSpeed: 5); }', /Door has no property "maxSpeed"; it has x, y, w, h, moving/);
@@ -77,6 +80,7 @@ describe('map blocks', () => {
     assert.deepEqual(marks.map((mark) => attributes(mark)), [{ mark: 'var_sync' }, { mark: 'sky', forteam: '5' }, { mark: 'gamescale', forteam: '1.5' }]);
     assert.equal(objects('map { EngineMark(EnableVarSyncTriggerActions); }')[0]?.mark, 'var_sync');
     fails('map { EngineMark(nopsi, forteam: 3); }', /the engine mark nopsi takes no value/);
+    assert.equal(attributes(objects('map { EngineMark(hero1_guns, forteam: Team.RedTeam); }')[0]).forteam, '12');
     fails('map { EngineMark(he_nades_count, forteam: 1.5); }', /EngineMark forteam takes a whole number of 0 or more/);
     fails('map { EngineMark(sky); EngineMark(sky, forteam: 4); }', /line 1: sky is created twice/);
     fails('map { EngineMark(); }', /EngineMark\(\.\.\.\) needs the mark as its first argument/);

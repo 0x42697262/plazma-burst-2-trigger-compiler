@@ -54,7 +54,13 @@ export const UNLISTED_KINDS: Readonly<Record<string, Readonly<Record<string, str
 });
 export const ANY_TAG = '*';
 export const NO_VALUE_KIND = 'nochange';
-export const OPEN_LISTS: ReadonlySet<string> = new Set(['char', 'decor_model', 'gun_model']);
+export const OPEN_LISTS: ReadonlySet<string> = new Set(['char', 'decor_model', 'gun_model', 'bg_model']);
+export const CUSTOM_VALUES: Readonly<Record<string, RegExp>> = Object.freeze({
+  char: /^(-?[0-9]+|c[0-9]+)$/, decor_model: /^c[0-9]+$/, bg_model: /^c[0-9]+$/, gun_model: /^[A-Za-z0-9_]+$/,
+});
+export const MARK_VALUE_OVERRIDES: Readonly<Record<string, string>> = Object.freeze({
+  hero1_guns: 'team+any', hero2_guns: 'team+any', hero2_guns_nonades: 'team+any', hero2_guns_nades: 'team+any',
+});
 const CHARACTER_ACTIONS: Readonly<Record<string, string>> = Object.freeze({
   x: 'MoveCharToReguin', y: 'MoveCharToReguin', hea: 'SetCharHP', hmax: 'SetCharCurrentMaxHPValue', team: 'SetCharTeam', botaction: 'SetAIBehavior', char: 'SetCharSkin',
 });

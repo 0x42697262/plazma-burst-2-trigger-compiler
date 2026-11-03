@@ -1,5 +1,5 @@
 import { groupForKind, hasPlaceholder, mergedKinds, valueGroup, valueList, valueTable } from '../opcodes/values.ts';
-import { OPEN_LISTS } from './keys.ts';
+import { CUSTOM_VALUES, OPEN_LISTS } from './keys.ts';
 import { constructorForTag } from './properties.ts';
 import { BOOL_TEXT, KIND_PART, NUMBER_KIND, NUMBER_LIMIT, REFERENCE_KINDS, TRIGGER_TAG, UID_MARK, WHOLE_KINDS } from './constants.ts';
 import { TEXT } from './text.ts';
@@ -71,8 +71,13 @@ function checkListText(kind: string, text: string): Checked {
   const known = mergedKinds(kind).some((part) => Object.hasOwn(valueTable(part), text));
   if (known) return ok(text);
   if (hasPlaceholder(kind) && numberText(text) !== null) return ok(String(Number(text)));
-  if (OPEN_LISTS.has(mergedKinds(kind)[0] ?? kind) && text !== '') return ok(text);
+  if (isCustom(kind, text)) return ok(text);
   return error(TEXT.notInList(text, describeKind(kind)));
+}
+
+function isCustom(kind: string, text: string): boolean {
+  const base = mergedKinds(kind)[0] ?? kind;
+  return OPEN_LISTS.has(base) && (CUSTOM_VALUES[base]?.test(text) ?? false);
 }
 
 function checkReference(kind: string, value: BuildValue): Checked {
@@ -109,7 +114,7 @@ export function checkValue(kind: string, value: BuildValue): Checked {
   if (value.kind === 'name') {
     const raw = listLike(kind) ? valueList(kind).members.get(value.name) : undefined;
     if (raw !== undefined) return ok(raw);
-    return OPEN_LISTS.has(mergedKinds(kind)[0] ?? kind) ? ok(value.name) : error(TEXT.notInList(value.name, describeKind(kind)));
+    return isCustom(kind, value.name) ? ok(value.name) : error(TEXT.notInList(value.name, describeKind(kind)));
   }
   if (isNumberKind(kind)) return checkNumber(kind, value.text);
   if (listLike(kind)) return checkListText(kind, value.text);

@@ -17,7 +17,7 @@ export const TEXT = Object.freeze({
   wholeNumber: (limit: string): string => `a whole number${limit}`,
   number: (limit: string): string => `a number${limit}`,
   listKind: (group: string, open: boolean, numbers: boolean): string =>
-    `a ${group} value (see docs/actions.md)${numbers ? ' or a number' : ''}${open ? ', or any custom value' : ''}`,
+    `a ${group} value (see docs/actions.md)${numbers ? ' or a number' : ''}${open ? ', or a custom one such as c12345' : ''}`,
   textKind: 'text',
   mapObject: 'a map object',
   functionReference: (name: string): string => `@${name}`,

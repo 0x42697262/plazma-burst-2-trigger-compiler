@@ -1,5 +1,5 @@
 import snapshot from '../opcodes/snapshot.json' with { type: 'json' };
-import { ANY_TAG, CONSTRUCTORS, NO_VALUE_KIND, POSITION_ATTRIBUTES, SIZE_ATTRIBUTES, UNLISTED_KINDS } from './keys.ts';
+import { ANY_TAG, CONSTRUCTORS, MARK_VALUE_OVERRIDES, NO_VALUE_KIND, POSITION_ATTRIBUTES, SIZE_ATTRIBUTES, UNLISTED_KINDS } from './keys.ts';
 import type { ConstructorInfo } from './keys.ts';
 
 export type Property = { name: string; kind: string; title: string; desc: string; fallback: string | null; gameOnly: boolean };
@@ -44,9 +44,9 @@ export function propertiesOf(tag: string): readonly Property[] {
 
 export const propertyOf = (tag: string, name: string): Property | null => propertiesOf(tag).find((property) => property.name === name) ?? null;
 
-export const markValueKind = (mark: string): string => MARK_PAIRS[mark] ?? NO_VALUE_KIND;
+export const markValueKind = (mark: string): string => MARK_VALUE_OVERRIDES[mark] ?? MARK_PAIRS[mark] ?? NO_VALUE_KIND;
 
-export const markValueKinds = (): readonly string[] => [...new Set(Object.values(MARK_PAIRS))].filter((kind) => kind !== NO_VALUE_KIND);
+export const markValueKinds = (): readonly string[] => [...new Set([...Object.values(MARK_PAIRS), ...Object.values(MARK_VALUE_OVERRIDES)])].filter((kind) => kind !== NO_VALUE_KIND);
 
 export const constructorOf = (name: string): ConstructorInfo | null => (Object.hasOwn(CONSTRUCTORS, name) ? CONSTRUCTORS[name] ?? null : null);
 
