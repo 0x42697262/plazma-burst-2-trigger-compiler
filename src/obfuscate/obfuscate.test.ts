@@ -6,6 +6,8 @@ import { frontEndFor } from '../cli/frontends.ts';
 import { prefixFromFile } from '../cli/main.ts';
 import { compileSource } from '../lang/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
+import type { Region } from '../sim/simulator.ts';
+import { regionsOf } from '../emit/place.ts';
 import { emitXml } from '../emit/xml-emitter.ts';
 import { OPCODE } from '../opcodes/constants.ts';
 import { EDITOR_SAVED_ACTIONS } from '../program/constants.ts';
@@ -24,8 +26,8 @@ const SMALL_GUARD = 500;
 const SEED = 'test-seed';
 const CODED = /^[\uE000-\uF8FF]{2,}$/;
 
-const simulate = (program: Program) => {
-  const simulation = new Simulation(program, { players: PLAYERS, maxSteps: MAX_STEPS });
+const simulate = (program: Program, regions: Readonly<Record<string, Region>> = {}) => {
+  const simulation = new Simulation(program, { players: PLAYERS, maxSteps: MAX_STEPS, regions });
   simulation.tick();
   simulation.playerSays(0, '-help');
   simulation.playerJoins();
@@ -61,9 +63,11 @@ describe('obfuscation', () => {
           const frontEnd = frontEndFor(fullPath);
           const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(fullPath);
           const options: Partial<CompileOptions> = { target, loopGuard: SMALL_GUARD };
-          const plain = simulate(frontEnd.compile(source, prefix, options, fullPath).program);
+          const plainResult = frontEnd.compile(source, prefix, options, fullPath);
+          const regions = regionsOf(plainResult.mapObjects);
+          const plain = simulate(plainResult.program, regions);
           const result = frontEnd.compile(source, prefix, { ...options, obfuscate: { seed: SEED } }, fullPath);
-          const hidden = simulate(result.program);
+          const hidden = simulate(result.program, regions);
           const reveal = result.obfuscation?.reveal ?? ((name: string) => name);
           assert.deepEqual(hidden.chat, plain.chat);
           assert.deepEqual(hidden.errors.map(errorText), plain.errors.map(errorText));

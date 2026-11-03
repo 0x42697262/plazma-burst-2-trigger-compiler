@@ -6,6 +6,8 @@ import { frontEndFor } from '../cli/frontends.ts';
 import { prefixFromFile } from '../cli/main.ts';
 import { compileSource } from '../lang/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
+import type { Region } from '../sim/simulator.ts';
+import { regionsOf } from '../emit/place.ts';
 import type { CompileOptions } from '../compiler/compile.ts';
 import type { Program } from '../program/types.ts';
 
@@ -17,8 +19,8 @@ const MAX_STEPS = 50_000_000;
 const SMALL_GUARD = 500;
 const MACHINE_VARIABLE = /^~[A-Za-z0-9]+:(vm\.|left~|right~|stop~)/;
 
-const simulate = (program: Program, frames = FRAMES) => {
-  const simulation = new Simulation(program, { players: PLAYERS, maxSteps: MAX_STEPS });
+const simulate = (program: Program, frames = FRAMES, regions: Readonly<Record<string, Region>> = {}) => {
+  const simulation = new Simulation(program, { players: PLAYERS, maxSteps: MAX_STEPS, regions });
   simulation.tick();
   simulation.playerSays(0, '-help');
   simulation.playerJoins();
@@ -41,8 +43,10 @@ describe('p-code target', () => {
         const frontEnd = frontEndFor(fullPath);
         const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(fullPath);
         const compile = (target: CompileOptions['target']) => frontEnd.compile(source, prefix, { target, loopGuard: SMALL_GUARD, directIndex: true, protectNumberText: false }, fullPath);
-        const native = simulate(compile('triggers').program);
-        const machine = simulate(compile('pcode').program);
+        const nativeResult = compile('triggers');
+        const regions = regionsOf(nativeResult.mapObjects);
+        const native = simulate(nativeResult.program, FRAMES, regions);
+        const machine = simulate(compile('pcode').program, FRAMES, regions);
         assert.deepEqual(machine.chat, native.chat);
         assert.deepEqual(machine.errors, native.errors);
         assert.deepEqual(machine.variables, native.variables);

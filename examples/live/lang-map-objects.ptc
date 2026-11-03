@@ -1,0 +1,24 @@
+// Map objects created by a map { } block: the game reads the regions where the compiler put them.
+var lowX = 0;
+var lowY = 0;
+var highX = 0;
+var highY = 0;
+var count = 0;
+
+map {
+  zones = [];
+  for (let i = 0; i < 4; i += 1) {
+    push(zones, Region("#ptc_zone{i}", x: -800 + i * 100, y: -400 - i * 10, w: 50, h: 40));
+  }
+  lift = Door("#ptc_lift", x: -800, y: -600, w: 100, h: 20, maxspeed: 25);
+  Wall(-900, -300, 50, 50, m: DarkPlate);
+}
+
+on start {
+  action(VarSetRegionX, lowX, zones[0]);
+  action(VarSetRegionY, lowY, zones[0]);
+  action(VarSetRegionX, highX, zones[3]);
+  action(VarSetRegionY, highY, zones[3]);
+  action(MovableTo, lift, zones[2]);
+  count = len(zones);
+}

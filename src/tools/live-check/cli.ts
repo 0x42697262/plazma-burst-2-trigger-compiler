@@ -4,6 +4,8 @@ import vm from 'node:vm';
 import { spawn } from 'node:child_process';
 import { emitXml } from '../../emit/xml-emitter.ts';
 import { appendToMap } from '../../emit/merge.ts';
+import { placeObjects, regionsOf } from '../../emit/place.ts';
+import type { MapObject } from '../../objects/types.ts';
 import { BASE_MAP } from '../../emit/keys.ts';
 import { Simulation } from '../../sim/simulator.ts';
 import { frontEndFor } from '../../cli/frontends.ts';
@@ -14,7 +16,7 @@ import { prepareSandbox } from './sandbox.ts';
 import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, DIRECT_INDEX_FLAG, PCODE_FLAG, OBFUSCATE_FLAG, OBFUSCATE_SEED, PCODE_TARGET, ONLY_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
 import {
   CLICK_ATTEMPTS, CLICK_PAUSE, CONSOLE_TIMEOUT, DEBUG_PORT, ENTER_KEY_CODE, FIRST_USER_ARGUMENT, GAMING_TIMEOUT, LAUNCH_TIMEOUT, MENU_TIMEOUT, MILLISECONDS,
-  RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_MAX_STEPS, PCODE_LOOP_GUARD, SIMULATED_PLAYERS, SPACE_KEY_CODE,
+  RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_MAX_STEPS, PCODE_LOOP_GUARD, SIMULATED_PLAYERS, SPACE_KEY_CODE, STAGING,
 } from './constants.ts';
 import { TEXT } from './text.ts';
 import { Session, listTargets, sleep, waitFor } from './cdp.ts';
@@ -23,7 +25,7 @@ import type { CompileOptions } from '../../compiler/compile.ts';
 import { DEFAULT_TARGET, VM_VARIABLE } from '../../pcode/keys.ts';
 import type { Snapshot } from './compare.ts';
 
-type Case = { name: string; prefix: string; xml: string; simulated: Snapshot; errors: string[]; mapDependent: readonly string[] };
+type Case = { name: string; prefix: string; xml: string; objects: readonly MapObject[]; simulated: Snapshot; errors: string[]; mapDependent: readonly string[] };
 
 const print = (line: string): void => {
   process.stdout.write(line + TEXT.lineEnd);
@@ -38,10 +40,10 @@ function loadCases(options: Partial<CompileOptions>): Case[] {
     const frontEnd = frontEndFor(file);
     const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(file);
     const result = frontEnd.compile(source, prefix, options, file);
-    const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS, maxSteps: SIMULATED_MAX_STEPS });
+    const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS, maxSteps: SIMULATED_MAX_STEPS, regions: regionsOf(result.mapObjects) });
     simulation.tick(SIMULATED_FRAMES);
     return {
-      name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), simulated: encodeVariables(simulation.variables), errors: simulation.errors,
+      name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), objects: result.mapObjects, simulated: encodeVariables(simulation.variables), errors: simulation.errors,
       mapDependent: result.obfuscation?.mapDependent ?? [],
     };
   });
@@ -108,7 +110,10 @@ async function main(): Promise<number> {
     obfuscate: flags.includes(OBFUSCATE_FLAG) ? { seed: OBFUSCATE_SEED } : null,
   }).filter((entry) => only.length === 0 || only.some((part) => entry.name.includes(part)));
   prepareSandbox(flags.includes(REBUILD_FLAG), print);
-  const map = cases.reduce((combined, entry) => appendToMap(combined, entry.xml), BASE_MAP);
+  const map = cases.reduce((combined, entry) => {
+    const placement = placeObjects(entry.objects, { host: combined, staging: () => STAGING, previousWalls: [], replacing: true });
+    return appendToMap(placement.host ?? combined, entry.xml + placement.xml);
+  }, BASE_MAP);
   fs.writeFileSync(MAP_FILE, map);
   print(TEXT.wroteMap(MAP_FILE, cases.length));
   if (flags.includes(SIMULATE_FLAG)) {
