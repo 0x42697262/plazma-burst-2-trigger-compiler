@@ -14,7 +14,12 @@ export type Expression =
   | { kind: 'call'; callee: string; args: Expression[]; location: Location }
   | { kind: 'reference'; name: string; location: Location }
   | { kind: 'unary'; operator: '-' | '!'; operand: Expression; location: Location }
-  | { kind: 'binary'; operator: BinaryOperator; left: Expression; right: Expression; location: Location };
+  | { kind: 'binary'; operator: BinaryOperator; left: Expression; right: Expression; location: Location }
+  | { kind: 'member'; object: string; property: string; location: Location }
+  | { kind: 'construct'; name: string; args: Expression[]; named: NamedArgument[]; location: Location }
+  | { kind: 'array'; elements: Expression[]; location: Location };
+
+export type NamedArgument = { name: string; value: Expression; location: Location };
 
 export type Target = { kind: 'name'; name: string } | { kind: 'index'; array: string; index: Expression };
 
@@ -31,7 +36,8 @@ export type Statement =
   | { kind: 'return'; value: Expression | null; location: Location }
   | { kind: 'wait'; frames: Expression; location: Location }
   | { kind: 'block'; body: Statement[]; location: Location }
-  | { kind: 'match'; subject: Expression; arms: MatchArm[]; location: Location };
+  | { kind: 'match'; subject: Expression; arms: MatchArm[]; location: Location }
+  | { kind: 'property'; object: string; property: string; value: Expression; initial: boolean; location: Location };
 
 export type MatchArm = { patterns: Expression[] | null; body: Statement[]; location: Location };
 
@@ -39,7 +45,8 @@ export type Declaration =
   | { kind: 'var'; name: string; array: boolean; value: Expression | null; exported: boolean; location: Location }
   | { kind: 'const'; name: string; value: Expression; secret: boolean; location: Location }
   | { kind: 'extern'; name: string; hostName: string; location: Location }
-  | { kind: 'object'; keyword: string; name: string; uid: string; x: number | null; y: number | null; tree: ObjectTree[] | null; location: Location }
+  | { kind: 'object'; keyword: string; name: string; uid: string; x: number | null; y: number | null; tree: ObjectTree[] | null; built: boolean; location: Location }
+  | { kind: 'map'; body: Statement[]; location: Location }
   | { kind: 'function'; name: string; params: string[]; body: Statement[]; exported: boolean; location: Location }
   | { kind: 'on'; event: 'start' | 'join' | 'chat'; body: Statement[]; location: Location }
   | { kind: 'every'; frames: number; body: Statement[]; location: Location };

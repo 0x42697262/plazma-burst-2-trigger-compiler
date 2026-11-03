@@ -33,7 +33,7 @@ on start {
     assert.deepEqual(used.map((action) => [action.opcode, action.targetA, action.targetB]), [
       [395, '#water*1', '10'], [0, '#door*3', '#SPAWN1'], [23, '#player*0', '200'], [23, '#enemy*1', '50'], [64, '#gun*2', '3'], [99, '#trigger*9', '0'], [25, '#timer*1', '0'], [54, '#light*1', '0'],
     ]);
-    assert.deepEqual(result.objects.find((object) => object.name === 'spawn'), { keyword: 'region', name: 'spawn', uid: '#SPAWN1', x: 100, y: -200 });
+    assert.deepEqual(result.objects.find((object) => object.name === 'spawn'), { keyword: 'region', name: 'spawn', uid: '#SPAWN1', x: 100, y: -200, built: false });
   });
 
   it('refuses an object of the wrong kind, like a strict cast', () => {

@@ -1,4 +1,5 @@
 import { MAX_UID_RANGE } from './constants.ts';
+import { propertiesOf } from '../objects/properties.ts';
 export const TEXT = Object.freeze({
   where: (line: number, message: string, file?: string): string => (file === undefined ? `line ${line}: ${message}` : `${file} line ${line}: ${message}`),
   exportable: '"function" or "var"',
@@ -26,6 +27,7 @@ export const TEXT = Object.freeze({
   secretLeak: (name: string, where: string): string => `the secret ${name} would be written into the map (${where}); use it only inside a const, like const HASH = hash(${name});`,
   leakPlace: (uid: string, position: number, line: number | null): string => `trigger ${uid}, action ${position}${line === null ? '' : `, from line ${line}`}`,
   leakTimer: (uid: string): string => `timer ${uid}`,
+  leakObject: (object: string, attribute: string, line: number): string => `the ${attribute} of the map object ${object}, from line ${line}`,
   leakEncoded: (variable: string): string => `the encoded text of ${variable} (it is decoded at map start)`,
   unknownFunction: (name: string): string => `unknown function "${name}"`,
   duplicate: (name: string): string => `"${name}" is already defined`,
@@ -80,5 +82,56 @@ export const TEXT = Object.freeze({
   elementPath: (name: string, path: readonly string[]): string => `${name}${path.map((index) => `[${index}]`).join('')}`,
   indexList: (indexes: readonly (string | null)[]): string => indexes.map((index) => `[${index ?? '?'}]`).join(''),
   oneIndex: (name: string): string => `"${name}" is an array of values: it takes one index`,
+  assignIfCreatedTarget: '?= sets a property only when the object is created: gate.x ?= 0;',
+  propertyOperator: 'a property takes = or ?=, like gate.x = 0;',
+  positionalAfterNamed: (name: string): string => `${name}(...): named arguments (x: 0) come after the others`,
+  notAnObject: (object: string, property: string): string => `${object}.${property}: only map objects have properties, and they are set in a map block`,
+  runTimeProperty: (object: string, property: string, action: string | null): string =>
+    `${object}.${property} is set while compiling, in a map block; while the map runs, change it with an action${action === null ? ' (see docs/actions.md)' : `, such as action(${action}, ${object}, ...)`}`,
+  constructorOutsideMap: (name: string): string => `${name}(...) creates a map object: write it in a map { } block`,
+  arrayLiteralOutsideMap: 'an array literal [...] works only in a map block; declare arrays with var list[];',
   sayColor: 'the color of say(...) must be a fixed value: a number, text, a named value, a constant, or a variable that never changes',
+});
+
+export const MAP_TEXT = Object.freeze({
+  arrayAndValue: (name: string): string => `"${name}" holds an array in one place and a value in another`,
+  arrayNeedsName: 'an array literal [...] can only be assigned to a name of the map block without let, like slots = [];',
+  nestedArray: 'map blocks have one-dimensional arrays only',
+  notInMap: (kind: string): string => `"${kind}" does not work in a map block: it runs while compiling`,
+  changesProgram: (name: string): string => `"${name}" belongs to the program; a map block runs while compiling and cannot change it`,
+  hostProperty: (name: string): string => `"${name}" is declared outside a map block, so the map already has it and the compiler does not change it; create it in a map block to set properties`,
+  hostPropertyValue: 'properties can only be set on objects created in a map block',
+  unknownMapName: (name: string): string => `"${name}" is not a map object of this map block`,
+  notAMapObject: (property: string): string => `.${property} is set on something that is not a map object`,
+  positionalProperty: (name: string): string => `${name} is the first argument of the constructor and cannot be set as a property`,
+  unknownProperty: (name: string): string => `no map object has a property "${name}"`,
+  valueNameClash: (name: string): string => `"${name}" is a value of this property and also a name in the program; write the qualified form (Group.${name}) or the raw value`,
+  unknownFunction: (name: string): string => `unknown function "${name}"`,
+  hostArray: (name: string): string => `the object array "${name}" is declared outside a map block; a map block can use its single objects only`,
+  reservedCharacter: 'text in a map block cannot contain the control characters U+0002, U+0003, U+001E or U+001F',
+  forbiddenCall: (name: string): string => `${name}(...) does not work in a map block: it runs while compiling, not in the game`,
+  propertyRead: (object: string, property: string): string => `${object}.${property}: properties can be set in a map block, not read`,
+  referenceOutsideValue: 'a trigger reference (@name) works only as a property value or inside action(...)',
+  unknownConstructor: (name: string): string => `unknown map object "${name}"`,
+  tooManyPositional: (name: string, positional: readonly string[]): string => `${name}(...) takes ${positional.length} argument(s) without a name (${positional.join(', ')}); name the others, like x: 0`,
+  missingPositional: (name: string, argument: string): string => `${name}(...) needs the ${argument} as its first argument`,
+  duplicateArgument: (name: string, argument: string): string => `${name}(...) gets ${argument} twice`,
+  noSuchProperty: (name: string, property: string, tag: string): string =>
+    `${name} has no property "${property}"; it has ${propertiesOf(tag).map((entry) => entry.name).join(', ')}`,
+  markerInText: 'a map object, @function or value name cannot be used inside text or arithmetic',
+  badUid: (name: string): string => `${name}(...) needs a uid that starts with #, like "#door*1"`,
+  badValue: (name: string, attribute: string, message: string): string => `${name} ${attribute} ${message}`,
+  markTakesNoValue: (mark: string): string => `the engine mark ${mark} takes no value (forteam)`,
+  mixedValues: (name: string): string => `"${name}" holds map objects and other values`,
+  noUidInArray: (name: string, constructorName: string): string => `"${name}" holds a ${constructorName}, which has no uid; arrays of map objects need uids`,
+  mixedKinds: (name: string, first: string, index: number, other: string): string =>
+    `"${name}" holds ${first} objects, but element ${index} is a ${other}; an array holds one kind, so that an index that changes while the map runs cannot pick the wrong kind`,
+  buildFailed: (problem: string): string => `cannot build the map objects while compiling: ${problem}`,
+  entityValue: (object: string, attribute: string, value: string): string =>
+    `${object} ${attribute}: the game reads ${JSON.stringify(value)} with & < > " and line breaks as XML entities (&amp; &lt; &gt; &quot; &#10;)`,
+  numberText: (object: string, attribute: string, value: string): string =>
+    `${object} ${attribute}: the website editor turns ${JSON.stringify(value)} into the number ${Number(value)} when it loads the map`,
+  hashValue: (object: string, attribute: string, value: string): string =>
+    `${object} ${attribute}: "${value}" starts with "#"; the game replaces it with an object index if a uid matches`,
+  createdTwice: (key: string, line: number): string => `${key} is created twice (also on line ${line})`,
 });

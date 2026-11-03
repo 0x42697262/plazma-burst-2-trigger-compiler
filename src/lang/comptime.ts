@@ -51,6 +51,7 @@ const declarationName = (declaration: Declaration): string | null => {
   switch (declaration.kind) {
     case 'on':
     case 'every':
+    case 'map':
       return null;
     default:
       return declaration.name;
@@ -189,7 +190,7 @@ export function foldConstants(file: SourceFile, environment: Environment): Folde
     const starting = file.declarations.flatMap((declaration) => (declaration.kind === 'var' && declaration.value !== null && !mentionsPending(declaration.value) ? [declaration.value] : []));
     const needed = new Set([expression, ...starting].flatMap((part) => [...calledBy(part)]));
     const kept = file.declarations.flatMap((declaration): Declaration[] => {
-      if (declaration.kind === 'on' || declaration.kind === 'every') return [];
+      if (declaration.kind === 'on' || declaration.kind === 'every' || declaration.kind === 'map') return [];
       if (declaration.kind === 'function' && !needed.has(declaration.name)) return [];
       if (declaration.kind === 'var' && declaration.value !== null && mentionsPending(declaration.value)) return [{ ...declaration, value: null }];
       if (declaration.kind !== 'const') return [declaration];

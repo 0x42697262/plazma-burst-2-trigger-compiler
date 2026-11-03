@@ -6,7 +6,8 @@ import type { Opcode } from '../opcodes/table.ts';
 import { takesVariableName } from '../opcodes/table.ts';
 import { LOOSE_VALUE_KINDS } from '../opcodes/keys.ts';
 import { objectKind } from '../objects/objects.ts';
-import { OBJECT_PARAM_KINDS } from '../objects/keys.ts';
+import { OBJECT_PARAM_KINDS, RUN_TIME_ACTIONS } from '../objects/keys.ts';
+import { constructorOf } from '../objects/properties.ts';
 import type { Names } from '../compiler/names.ts';
 import { CompileError } from '../compiler/names.ts';
 import type { Declaration, Expression, Location, ObjectTree, SourceFile, Statement, TemplatePart } from './ast.ts';
@@ -25,7 +26,7 @@ import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
 import { callGraph, reachable, usedFunctions, writtenNames } from './calls.ts';
 
-export type GenerateOptions = { protectNumberText: boolean; directIndex: boolean; compileTimeFunctions?: ReadonlySet<string> };
+export type GenerateOptions = { protectNumberText: boolean; directIndex: boolean; compileTimeFunctions?: ReadonlySet<string>; referencedFunctions?: ReadonlySet<string> };
 
 const DEFAULT_GENERATE: GenerateOptions = Object.freeze({ protectNumberText: true, directIndex: false });
 
@@ -175,6 +176,7 @@ export class Generator {
   private readonly protectNumberText: boolean;
   private readonly directIndex: boolean;
   private readonly compileTimeFunctions: ReadonlySet<string>;
+  private readonly referencedFunctions: ReadonlySet<string>;
   private readonly textConstants = new Map<string, string>();
   private readonly globals = new Map<string, SymbolEntry>();
   private readonly functions = new Map<string, FunctionInfo>();
@@ -196,10 +198,11 @@ export class Generator {
     this.protectNumberText = options.protectNumberText;
     this.directIndex = options.directIndex;
     this.compileTimeFunctions = options.compileTimeFunctions ?? new Set();
+    this.referencedFunctions = options.referencedFunctions ?? new Set();
     this.frame = new Frame(names, EMPTY_TEXT, false);
     const graph = callGraph(file);
     this.reach = reachable(graph);
-    this.used = usedFunctions(file, graph);
+    this.used = usedFunctions(file, graph, options.referencedFunctions ?? new Set());
     this.written = writtenNames(file);
     this.usesStack = [...this.reach.entries()].some(([name, targets]) => targets.has(name));
   }
@@ -321,11 +324,11 @@ export class Generator {
           define(declaration.name, declaration.location);
           if (declaration.tree === null) {
             this.globals.set(declaration.name, { kind: 'object', keyword: declaration.keyword, uid: declaration.uid });
-            this.objects.push({ keyword: declaration.keyword, name: declaration.name, uid: declaration.uid, x: declaration.x, y: declaration.y });
+            this.objects.push({ keyword: declaration.keyword, name: declaration.name, uid: declaration.uid, x: declaration.x, y: declaration.y, built: declaration.built });
           } else {
             this.globals.set(declaration.name, { kind: 'objectArray', keyword: declaration.keyword, tree: declaration.tree, dimensions: depthOf(declaration.tree) });
             for (const [path, uid] of leavesOf(declaration.tree, [])) {
-              this.objects.push({ keyword: declaration.keyword, name: TEXT.elementPath(declaration.name, path), uid, x: null, y: null });
+              this.objects.push({ keyword: declaration.keyword, name: TEXT.elementPath(declaration.name, path), uid, x: null, y: null, built: declaration.built });
             }
           }
           break;
@@ -417,7 +420,7 @@ export class Generator {
       info.params.forEach((parameter, index) => this.frame.bindParameter(parameter, info.paramVariables[index] ?? EMPTY_TEXT));
       this.statements(declaration.body);
       if (!terminates(declaration.body)) this.setReturnValue(null);
-    }, declaration.exported);
+    }, declaration.exported || this.referencedFunctions.has(declaration.name));
   }
 
   private setReturnValue(value: Expression | null): void {
@@ -531,7 +534,16 @@ export class Generator {
       case 'match':
         this.matchStatement(statement);
         break;
+      case 'property':
+        fail(statement.location, this.propertyMessage(statement.object, statement.property));
+        break;
     }
+  }
+
+  private propertyMessage(object: string, property: string): string {
+    const entry = this.frame.lookup(object) ?? this.globals.get(object);
+    if (entry?.kind !== 'object' && entry?.kind !== 'objectArray') return TEXT.notAnObject(object, property);
+    return TEXT.runTimeProperty(object, property, RUN_TIME_ACTIONS[entry.keyword]?.[property] ?? null);
   }
 
   private namesIn(expression: Expression, found = new Set<string>()): Set<string> {
@@ -787,6 +799,12 @@ export class Generator {
         break;
       case 'reference':
         return fail(expression.location, TEXT.labelArgument);
+      case 'member':
+        return fail(expression.location, this.propertyMessage(expression.object, expression.property));
+      case 'construct':
+        return fail(expression.location, TEXT.constructorOutsideMap(expression.name));
+      case 'array':
+        return fail(expression.location, TEXT.arrayLiteralOutsideMap);
       default:
         break;
     }
@@ -1293,7 +1311,7 @@ export class Generator {
       this.voidBuiltin(expression);
       return null;
     }
-    const info = this.functions.get(name) ?? fail(expression.location, TEXT.unknownFunction(name));
+    const info = this.functions.get(name) ?? fail(expression.location, constructorOf(name) === null ? TEXT.unknownFunction(name) : TEXT.constructorOutsideMap(name));
     this.checkArity(expression, info.params.length);
     const values = expression.args.map((argument, index) => {
       const laterHasCall = expression.args.slice(index + 1).some(hasCall);

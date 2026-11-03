@@ -2,7 +2,7 @@ import { ELEMENT_WITH_UID, OBJECT_KINDS, POSITION_ATTRIBUTES, UID_ATTRIBUTE_NAME
 import type { ObjectKindInfo } from './keys.ts';
 import { TEXT } from './text.ts';
 
-export type ObjectSpec = { keyword: string; name: string; uid: string; x: number | null; y: number | null };
+export type ObjectSpec = { keyword: string; name: string; uid: string; x: number | null; y: number | null; built: boolean };
 export type Position = { x: number; y: number };
 export type ObjectCheck = { missing: ObjectSpec[]; problems: string[] };
 

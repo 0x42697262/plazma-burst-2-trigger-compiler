@@ -106,8 +106,8 @@ export function reachable(graph: ReadonlyMap<string, ReadonlySet<string>>): Map<
   return result;
 }
 
-export function usedFunctions(file: SourceFile, graph: ReadonlyMap<string, ReadonlySet<string>>): Set<string> {
-  const pending: string[] = [];
+export function usedFunctions(file: SourceFile, graph: ReadonlyMap<string, ReadonlySet<string>>, referenced: ReadonlySet<string> = new Set()): Set<string> {
+  const pending: string[] = [...referenced];
   for (const declaration of file.declarations) {
     const found = new Set<string>();
     if (declaration.kind === 'function' && declaration.exported) found.add(declaration.name);

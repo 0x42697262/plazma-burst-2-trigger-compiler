@@ -1,8 +1,9 @@
-import type { Declaration, Expression, Import, Location, MatchArm, ObjectTree, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
+import type { Declaration, Expression, Import, Location, MatchArm, NamedArgument, ObjectTree, SourceFile, Statement, Target, TemplatePart } from './ast.ts';
 import { SourceError, tokenize } from './lexer.ts';
 import type { StringPart, Token } from './lexer.ts';
-import { COMPOUND_ASSIGNMENTS, CONTEXTUAL, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, STATEMENT_KEYWORDS, UID_MARK, UID_RANGE } from './keys.ts';
+import { COMPOUND_ASSIGNMENTS, CONTEXTUAL, EVENT, KEYWORD, OBJECT_AT, PRECEDENCE, PUNCTUATOR, STARTS_UPPERCASE, STATEMENT_KEYWORDS, UID_MARK, UID_RANGE } from './keys.ts';
 import { isObjectKeyword } from '../objects/objects.ts';
+import { constructorOf } from '../objects/properties.ts';
 import { VALUE_GROUP_LIST, valueGroup } from '../opcodes/values.ts';
 
 const fail = (location: Location, message: string): never => {
@@ -15,10 +16,12 @@ class Parser {
   private readonly tokens: Token[];
   private readonly file: string | undefined;
   private position = 0;
+  private inMap: boolean;
 
-  constructor(tokens: Token[], file: string | undefined) {
+  constructor(tokens: Token[], file: string | undefined, inMap = false) {
     this.tokens = tokens;
     this.file = file;
+    this.inMap = inMap;
   }
 
   private peek(offset: number): Token {
@@ -94,6 +97,15 @@ class Parser {
   private declaration(): Declaration {
     const location = this.location();
     if (this.accept(KEYWORD.var)) return this.variableDeclaration(location, false);
+    if (this.isWord(CONTEXTUAL.map) && this.peek(1).kind === 'punctuator' && this.peek(1).text === PUNCTUATOR.openBrace) {
+      this.next();
+      this.inMap = true;
+      try {
+        return { kind: 'map', body: this.block(), location };
+      } finally {
+        this.inMap = false;
+      }
+    }
     const secret = this.current.kind === 'identifier' && this.current.text === CONTEXTUAL.secret && this.peek(1).kind === 'keyword' && this.peek(1).text === KEYWORD.const;
     if (secret) this.next();
     if (this.accept(KEYWORD.const)) {
@@ -171,12 +183,12 @@ class Parser {
     if (dimensions === 1 && this.current.kind === 'string') {
       const tree = this.uids(this.next(), name, location);
       this.expect(PUNCTUATOR.semicolon);
-      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, location };
+      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, built: false, location };
     }
     if (dimensions > 0) {
       const tree = this.objectTree(dimensions, name, location);
       this.expect(PUNCTUATOR.semicolon);
-      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, location };
+      return { kind: 'object', keyword, name, uid: '', x: null, y: null, tree, built: false, location };
     }
     if (this.current.kind !== 'string') this.fail(TEXT.string);
     const expanded = this.uids(this.next(), name, location);
@@ -191,7 +203,7 @@ class Parser {
       positionY = this.signedNumber();
     }
     this.expect(PUNCTUATOR.semicolon);
-    return { kind: 'object', keyword, name, uid, x: positionX, y: positionY, tree: null, location };
+    return { kind: 'object', keyword, name, uid, x: positionX, y: positionY, tree: null, built: false, location };
   }
 
   private objectTree(depth: number, name: string, location: Location): ObjectTree[] {
@@ -358,6 +370,12 @@ class Parser {
 
   private simpleStatement(location: Location): Statement {
     const expression = this.expression();
+    const initial = this.isPunctuator(PUNCTUATOR.assignIfCreated);
+    if (expression.kind === 'member' && (initial || this.isPunctuator(PUNCTUATOR.assign))) {
+      this.next();
+      return { kind: 'property', object: expression.object, property: expression.property, value: this.expression(), initial, location };
+    }
+    if (initial) throw new SourceError(this.current.line, TEXT.assignIfCreatedTarget, this.file);
     const operatorText = this.current.text;
     const isAssign = this.isPunctuator(PUNCTUATOR.assign);
     const compound = this.current.kind === 'punctuator' ? COMPOUND_ASSIGNMENTS[operatorText] : undefined;
@@ -370,7 +388,29 @@ class Parser {
   private targetOf(expression: Expression): Target {
     if (expression.kind === 'name') return { kind: 'name', name: expression.name };
     if (expression.kind === 'index' && !expression.more) return { kind: 'index', array: expression.array, index: expression.index };
+    if (expression.kind === 'member') throw new SourceError(expression.location.line, TEXT.propertyOperator, this.file);
     throw new SourceError(expression.location.line, TEXT.assignTarget);
+  }
+
+  private construct(name: string, location: Location): Expression {
+    this.expect(PUNCTUATOR.openParen);
+    const args: Expression[] = [];
+    const named: NamedArgument[] = [];
+    if (!this.isPunctuator(PUNCTUATOR.closeParen)) {
+      do {
+        const argumentLocation = this.location();
+        if (this.current.kind === 'identifier' && this.peek(1).kind === 'punctuator' && this.peek(1).text === PUNCTUATOR.colon) {
+          const argumentName = this.next().text;
+          this.next();
+          named.push({ name: argumentName, value: this.expression(), location: argumentLocation });
+        } else {
+          if (named.length > 0) throw new SourceError(argumentLocation.line, TEXT.positionalAfterNamed(name), this.file);
+          args.push(this.expression());
+        }
+      } while (this.accept(PUNCTUATOR.comma));
+    }
+    this.expect(PUNCTUATOR.closeParen);
+    return { kind: 'construct', name, args, named, location };
   }
 
   private parenthesized(): Expression {
@@ -414,20 +454,34 @@ class Parser {
     }
     if (token.kind === 'string') {
       this.next();
-      return { kind: 'string', parts: token.parts.map((part) => templatePart(part, this.file)), location };
+      return { kind: 'string', parts: token.parts.map((part) => templatePart(part, this.file, this.inMap)), location };
     }
     if (this.accept(KEYWORD.true)) return { kind: 'boolean', value: true, location };
     if (this.accept(KEYWORD.false)) return { kind: 'boolean', value: false, location };
     if (this.accept(PUNCTUATOR.at)) return { kind: 'reference', name: this.identifier(), location };
     if (this.isPunctuator(PUNCTUATOR.openParen)) return this.parenthesized();
+    if (this.inMap && this.accept(PUNCTUATOR.openBracket)) {
+      const elements: Expression[] = [];
+      if (!this.isPunctuator(PUNCTUATOR.closeBracket)) {
+        do elements.push(this.expression());
+        while (this.accept(PUNCTUATOR.comma));
+      }
+      this.expect(PUNCTUATOR.closeBracket);
+      return { kind: 'array', elements, location };
+    }
     if (token.kind !== 'identifier') return this.fail(TEXT.expression);
     const name = this.identifier();
     if (this.accept(PUNCTUATOR.dot)) {
       const member = this.current.kind === 'keyword' ? this.next().text : this.identifier();
-      const group = valueGroup(name) ?? fail(location, TEXT.unknownValueGroup(name, VALUE_GROUP_LIST.map((entry) => entry.name)));
+      const group = valueGroup(name);
+      if (group === null) {
+        if (STARTS_UPPERCASE.test(name)) return fail(location, TEXT.unknownValueGroup(name, VALUE_GROUP_LIST.map((entry) => entry.name)));
+        return { kind: 'member', object: name, property: member, location };
+      }
       const text = group.members.get(member) ?? fail(location, TEXT.unknownValueMember(name, member));
       return { kind: 'named', group: name, member, paramKind: group.paramKind, text, location };
     }
+    if (this.inMap && constructorOf(name) !== null && this.isPunctuator(PUNCTUATOR.openParen)) return this.construct(name, location);
     if (this.accept(PUNCTUATOR.openParen)) {
       const args: Expression[] = [];
       if (!this.isPunctuator(PUNCTUATOR.closeParen)) {
@@ -451,9 +505,9 @@ class Parser {
   }
 }
 
-function templatePart(part: StringPart, file: string | undefined): TemplatePart {
+function templatePart(part: StringPart, file: string | undefined, inMap: boolean): TemplatePart {
   if (part.kind === 'text') return part;
-  const parser = new Parser(tokenize(part.source, part.line), file);
+  const parser = new Parser(tokenize(part.source, part.line), file, inMap);
   const expression = parser.expression();
   if (!parser.atEnd()) throw new SourceError(part.line, TEXT.expected(TEXT.quoted(PUNCTUATOR.closeBrace), TEXT.expression));
   return { kind: 'expression', expression };

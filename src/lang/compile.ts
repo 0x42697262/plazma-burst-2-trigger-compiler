@@ -6,6 +6,9 @@ import { parseSource } from './parser.ts';
 import { generate } from './codegen.ts';
 import { keepExported } from './symbols.ts';
 import { checkSecrets, foldConstants } from './comptime.ts';
+import { buildMaps } from './mapblock.ts';
+import type { AttributeValue, BuiltObject, MapBuild } from './mapblock.ts';
+import type { MapObject } from '../objects/types.ts';
 import type { Folded } from './comptime.ts';
 import { SourceError } from './lexer.ts';
 import { TEXT } from './text.ts';
@@ -39,6 +42,21 @@ function loadFiles(source: string, origin: SourceOrigin | null): SourceFile {
   return { declarations, imports: [] };
 }
 
+function mapObjectsOf(objects: readonly BuiltObject[], entries: ReadonlyMap<string, string>): MapObject[] {
+  const textOf = (value: AttributeValue, location: BuiltObject['location']): string => {
+    if (value.kind === 'text') return value.text;
+    const uid = entries.get(value.name);
+    if (uid === undefined) throw new CompileError(TEXT.where(location.line, TEXT.unknownFunction(value.name), location.file));
+    return uid;
+  };
+  return objects.map((object) => ({
+    constructorName: object.constructorName, tag: object.tag, uid: object.uid, mark: object.mark,
+    set: object.set.map(([name, value]) => [name, textOf(value, object.location)] as const),
+    initial: object.initial.map(([name, value]) => [name, textOf(value, object.location)] as const),
+    line: object.location.line, ...(object.location.file === undefined ? {} : { file: object.location.file }),
+  }));
+}
+
 export function compileSource(source: string, prefix: string, options: Partial<CompileOptions> = {}, origin: SourceOrigin | null = null): CompileResult {
   const merged: CompileOptions = { ...DEFAULT_OPTIONS, ...options };
   const names = createNames(prefix, merged.obfuscate);
@@ -57,10 +75,20 @@ export function compileSource(source: string, prefix: string, options: Partial<C
     if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
     throw error;
   }
+  let maps: MapBuild;
+  try {
+    maps = buildMaps(folded.file);
+  } catch (error) {
+    if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
+    throw error;
+  }
   const generateOptions = {
-    protectNumberText: merged.protectNumberText && merged.target !== 'pcode', directIndex: merged.directIndex || merged.target === 'pcode', compileTimeFunctions: folded.compileTimeFunctions,
+    protectNumberText: merged.protectNumberText && merged.target !== 'pcode', directIndex: merged.directIndex || merged.target === 'pcode',
+    compileTimeFunctions: new Set([...folded.compileTimeFunctions, ...maps.functions]), referencedFunctions: maps.references,
   };
-  const result = compileModule(generate(folded.file, names, generateOptions), names, merged);
+  const mapUids = maps.objects.flatMap((object) => (object.uid === null ? [] : [object.uid]));
+  const compiled = compileModule(generate(maps.file, names, generateOptions), names, { ...merged, externalUids: [...merged.externalUids, ...mapUids] });
+  const result: CompileResult = { ...compiled, warnings: [...maps.warnings, ...compiled.warnings], mapObjects: mapObjectsOf(maps.objects, compiled.entries) };
   const lineOf = (uid: string, position: number): number | null => result.sourceMap.find((entry) => entry.uid === uid)?.lines[position] ?? null;
   const machineUids = result.obfuscation?.machineUids ?? new Set<string>();
   checkSecrets(folded.secrets, [
@@ -69,6 +97,9 @@ export function compileSource(source: string, prefix: string, options: Partial<C
     })))),
     ...result.program.timers.map((timer) => ({ text: timer.uid, where: TEXT.leakTimer(timer.uid) })),
     ...(result.obfuscation?.texts ?? []).map((entry) => ({ text: entry.value, where: TEXT.leakEncoded(entry.variable) })),
+    ...result.mapObjects.flatMap((object) => [...object.set, ...object.initial].map(([name, text]) => ({
+      text, where: TEXT.leakObject(object.uid ?? object.mark ?? object.constructorName, name, object.line),
+    }))),
   ]);
   return result;
 }

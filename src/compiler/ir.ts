@@ -18,7 +18,7 @@ export type TimerSpec = { label: string; target: string; enabled: boolean; maxCa
 
 export type ExportedVariable = { name: string; gameName: string; lengthName: string | null };
 
-export type ObjectDeclaration = { keyword: string; name: string; uid: string; x: number | null; y: number | null };
+export type ObjectDeclaration = { keyword: string; name: string; uid: string; x: number | null; y: number | null; built: boolean };
 
 export type Module = {
   instructions: readonly Instruction[];

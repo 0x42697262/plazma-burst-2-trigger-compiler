@@ -21,6 +21,7 @@ import { createObfuscator } from '../obfuscate/obfuscate.ts';
 import type { Obfuscation } from '../obfuscate/obfuscate.ts';
 import type { EncodedText } from '../obfuscate/texts.ts';
 import type { LegendEntry } from './names.ts';
+import type { MapObject } from '../objects/types.ts';
 
 export type VarSyncMark = 'add' | 'present' | 'off';
 
@@ -43,6 +44,7 @@ export type CompileResult = {
   sourceMap: SourceMapEntry[];
   entries: Map<string, string>;
   objects: readonly ObjectDeclaration[];
+  mapObjects: readonly MapObject[];
   exports: readonly ExportedVariable[];
   obfuscation: ObfuscationReport | null;
 };
@@ -92,6 +94,7 @@ export function compileModule(module: Module, names: Names, options: CompileOpti
     sourceMap: laid?.sourceMap ?? [],
     entries,
     objects,
+    mapObjects: [],
     exports: module.exports ?? [],
     obfuscation: obfuscator === null ? null : {
       machineUids: obfuscationUids,

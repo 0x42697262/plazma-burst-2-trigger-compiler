@@ -7,7 +7,7 @@ export const KEYWORD = Object.freeze({
   if: 'if', else: 'else', while: 'while', for: 'for', player: 'player', break: 'break', continue: 'continue', return: 'return',
   true: 'true', false: 'false', wait: 'wait', import: 'import', match: 'match',
 } as const);
-export const CONTEXTUAL = Object.freeze({ secret: 'secret' } as const);
+export const CONTEXTUAL = Object.freeze({ secret: 'secret', map: 'map' } as const);
 export const COMPILE_TIME_BUILTIN = Object.freeze({ env: 'env' } as const);
 export const STD_IMPORT = 'std/';
 export const STD_SCHEME = 'std:';
@@ -15,12 +15,13 @@ export const COMPILE_TIME_PREFIX = 'comptime';
 export const COMPILE_TIME_RESULT = 'comptimeResult';
 export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat' } as const);
 export const PUNCTUATORS: readonly string[] = Object.freeze([
-  '..=', '+=', '-=', '*=', '/=', '%=', '=>', '==', '!=', '<=', '>=', '&&', '||', '..',
-  '(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '+', '-', '*', '/', '%', '!', '@', '.',
+  '..=', '?=', '+=', '-=', '*=', '/=', '%=', '=>', '==', '!=', '<=', '>=', '&&', '||', '..',
+  '(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '+', '-', '*', '/', '%', '!', '@', '.', ':',
 ]);
 export const PUNCTUATOR = Object.freeze({
   openParen: '(', closeParen: ')', openBrace: '{', closeBrace: '}', openBracket: '[', closeBracket: ']',
   semicolon: ';', comma: ',', assign: '=', at: '@', minus: '-', not: '!', arrow: '=>', wildcard: '_', dot: '.',
+  assignIfCreated: '?=', colon: ':',
 } as const);
 export const COMPOUND_ASSIGNMENTS: Readonly<Record<string, BinaryOperator>> = Object.freeze({
   '+=': '+', '-=': '-', '*=': '*', '/=': '/', '%=': '%', '..=': '..',
@@ -75,6 +76,7 @@ export const HIDDEN = Object.freeze({ players: 'players', count: 'count', index:
 export const WHOLE_NUMBER = /^-?[0-9]+$/;
 export const DEFAULT_SYNC_MODE = 'replace';
 export const OBJECT_AT = 'at';
+export const STARTS_UPPERCASE = /^[A-Z]/;
 export const UID_RANGE = /^\s*(-?[0-9]+)\s*\.\.\s*(-?[0-9]+)\s*$/;
 export const STATEMENT_KEYWORDS: ReadonlySet<string> = new Set(['if', 'while', 'for', 'let', 'return', 'break', 'continue', 'wait', 'match']);
 export const ARRAY_INDEX_PLACEHOLDER = 'i';
@@ -88,3 +90,20 @@ export const CURRENT_SEGMENT = '.';
 export const PARENT_SEGMENT = '..';
 export const ACTION_BUILTIN = 'action';
 export const SIDE_B = 'B';
+
+export const BUILD_NAMES = Object.freeze({ log: 'mapLog', count: 'mapCount', function: 'mapStep', parameter: 'mapValue', counter: 'mapIndex' });
+export const BUILD_SUFFIX = '_';
+export const BUILD_RECORD = Object.freeze({ object: 'N', property: 'S', bind: 'B', element: 'A' });
+export const MAP_MARK = Object.freeze({ start: '\u0002', field: '\u0003', record: '\u001E', unit: '\u001F' });
+export const MARK_TYPE = Object.freeze({ object: 'O', host: 'H', name: 'N', named: 'G', function: 'F' });
+export const MARK_KIND = 'engine_mark';
+export const TEXT_KIND = 'string';
+export const ZERO_TEXT = '0';
+export const ONE_TEXT = '1';
+export const PROPERTY_ARITY = 2;
+export const FORBIDDEN_IN_MAP: ReadonlySet<string> = new Set([
+  BUILTIN.say, BUILTIN.action, BUILTIN.sync, BUILTIN.random, BUILTIN.time, BUILTIN.slot, BUILTIN.initiator, BUILTIN.name, BUILTIN.chatText,
+  BUILTIN.talker, BUILTIN.talkerName, BUILTIN.talkerLogin, BUILTIN.login, BUILTIN.killer, BUILTIN.multiplayer, BUILTIN.mapId, BUILTIN.team,
+  COMPILE_TIME_BUILTIN.env,
+]);
+export const OPEN_LIST = '\u0002open';
