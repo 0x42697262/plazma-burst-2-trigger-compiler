@@ -22,5 +22,7 @@ export const ARGUMENT_VALUE_BEFORE_CURSOR = /(?:^|,)\s*([a-z_][a-z0-9_]*)\s*:\s*
 export const PROPERTY_VALUE_BEFORE_CURSOR = /([A-Za-z_][A-Za-z0-9_]*)\.([a-z_][a-z0-9_]*)\s*\??=\s*([A-Za-z0-9_]*)$/;
 export const ARGUMENT_NAME_AFTER = /^\s*:/;
 export const ASSIGNMENT = '=';
+export const INTERPOLATION = /\{([^{}]*)\}/g;
+export const WORD_PATTERN = /[A-Za-z_][A-Za-z0-9_]*/g;
 export const NAMED_ARGUMENT = ': ';
 export const constructorAssignment = (name: string): RegExp => new RegExp(`\\b${name}\\s*=\\s*([A-Z][A-Za-z]*)\\s*\\(`);

@@ -15,8 +15,8 @@ import type { Property } from '../objects/properties.ts';
 import { describeKind } from '../objects/value-check.ts';
 import {
   ACTION_BEFORE_CURSOR, ARGUMENT_NAME_AFTER, ARGUMENT_NAME_BEFORE_CURSOR, ARGUMENT_VALUE_BEFORE_CURSOR, ASSIGNMENT, COMPLETION_KIND, CONSTRUCTOR_BEFORE_CURSOR,
-  DECLARING_KEYWORDS, DIAGNOSTIC_LINE, DOT, MEMBER_BEFORE_CURSOR, NAMED_ARGUMENT, NEWLINE, OPEN_BRACKET, PROPERTY_VALUE_BEFORE_CURSOR, SERVICE_PREFIX, SEVERITY,
-  SYMBOL_KIND, WORD_CHARACTER, DIGITS, constructorAssignment,
+  DECLARING_KEYWORDS, DIAGNOSTIC_LINE, DOT, INTERPOLATION, MEMBER_BEFORE_CURSOR, NAMED_ARGUMENT, NEWLINE, OPEN_BRACKET, PROPERTY_VALUE_BEFORE_CURSOR, SERVICE_PREFIX, SEVERITY,
+  SYMBOL_KIND, WORD_CHARACTER, WORD_PATTERN, DIGITS, constructorAssignment,
 } from './keys.ts';
 import { AFTER_NEXT, FIRST_LINE, FIRST_PARAMETER, MAX_ACTION_COMPLETIONS } from './constants.ts';
 import { TEXT } from './text.ts';
@@ -273,6 +273,65 @@ function findDeclaration(source: string, file: string, read: SourceReader, name:
     if (match) return { file: imported.file, line: match.line, column: match.column };
   }
   return null;
+}
+
+type Occurrence = { line: number; column: number; segment: number };
+
+function occurrences(source: string, name: string): { found: Occurrence[]; segmentAt: (line: number, column: number) => number } {
+  const tokens = tokensOf(source);
+  const found: Occurrence[] = [];
+  const starts: { line: number; column: number; segment: number }[] = [];
+  let depth = 0;
+  let segment = 0;
+  tokens.forEach((token, index) => {
+    starts.push({ line: token.line - FIRST_LINE, column: token.column, segment });
+    if (token.kind === 'punctuator' && token.text === PUNCTUATOR.openBrace) depth += 1;
+    if (token.kind === 'punctuator' && token.text === PUNCTUATOR.closeBrace) {
+      depth -= 1;
+      if (depth === 0) segment += 1;
+    }
+    if (token.kind === 'punctuator' && token.text === PUNCTUATOR.semicolon && depth === 0) segment += 1;
+    const previous = tokens[index - 1];
+    const next = tokens[index + 1];
+    const member = previous?.kind === 'punctuator' && previous.text === PUNCTUATOR.dot;
+    const namedArgument = next?.kind === 'punctuator' && next.text === PUNCTUATOR.colon;
+    if (token.kind === 'identifier' && token.text === name && !member && !namedArgument) found.push({ line: token.line - FIRST_LINE, column: token.column, segment });
+    if (token.kind === 'string') {
+      for (const match of token.text.matchAll(INTERPOLATION)) {
+        const inner = match[1] ?? '';
+        for (const word of inner.matchAll(WORD_PATTERN)) {
+          if (word[0] === name) found.push({ line: token.line - FIRST_LINE, column: token.column + (match.index ?? 0) + 1 + (word.index ?? 0), segment });
+        }
+      }
+    }
+  });
+  const segmentAt = (line: number, column: number): number => {
+    let result = 0;
+    for (const start of starts) {
+      if (start.line > line || (start.line === line && start.column > column)) break;
+      result = start.segment;
+    }
+    return result;
+  };
+  return { found, segmentAt };
+}
+
+export function references(source: string, position: Position, file: string, read: SourceReader): ServiceLocation[] {
+  const { word } = wordAt(source, position);
+  if (word === '' || KEYWORDS.has(word)) return [];
+  const local = declarationsOf(source).filter((entry) => entry.name === word && entry.kind !== SYMBOL_KIND.event);
+  const before = local.filter((entry) => entry.line <= position.line);
+  const chosen = before[before.length - 1] ?? local[0];
+  if (chosen && !chosen.topLevel) {
+    const { found, segmentAt } = occurrences(source, word);
+    const segment = segmentAt(chosen.line, chosen.column);
+    return found.filter((entry) => entry.segment === segment && (entry.line > chosen.line || (entry.line === chosen.line && entry.column >= chosen.column)))
+      .map((entry) => ({ file, line: entry.line, column: entry.column }));
+  }
+  const declared = findDeclaration(source, file, read, word, position.line);
+  if (declared === null) return [];
+  const sources = [{ file, source }, ...importedSources(source, file, read)];
+  return sources.flatMap((entry) => occurrences(entry.source, word).found.map((found) => ({ file: entry.file, line: found.line, column: found.column })));
 }
 
 export function definition(source: string, position: Position, file: string, read: SourceReader): ServiceLocation | null {

@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { complete, definition, diagnose, hover, symbols } from './service.ts';
+import { complete, definition, diagnose, hover, references, symbols } from './service.ts';
 
 const FILES: Record<string, string> = {
   '/w/lib/tools.ptc': 'function shout(text) {\n  return text .. "!";\n}\nfunction broken() {\n  missing = 1;\n}\n',
@@ -78,6 +78,19 @@ describe('language service', () => {
     assert.match(hover(source, { line: 1, column: 10 }, MAIN, read) ?? '', /Door\(uid, \.\.\.\)\*\* creates a `<door>`/);
     assert.match(hover(source, { line: 1, column: 22 }, MAIN, read) ?? '', /\*\*maxspeed\*\* \(Speed\): a number of 0 or more, editor default `10`/);
     assert.match(hover(source, { line: 5, column: 8 }, MAIN, read) ?? '', /\*\*vis\*\* \(Visible\)/);
+  });
+
+  it('finds references: globals across imports and text, locals in their function only', () => {
+    const files: Record<string, string> = { '/w/lib.ptc': 'var score = 0;\nfunction bump() { score += 1; }\n' };
+    const reader = (name: string): string | null => files[name] ?? null;
+    const source = ['import "lib.ptc";', 'function show(n) { let i = n; say("{score} {i}"); }', 'function other(n) { let i = 2; }', 'map { gate = Door("#d", score: 1); gate.score = 2; }', 'on start { show(score); }'].join('\n');
+    const found = references(source, { line: 4, column: 17 }, '/w/main.ptc', reader).map((entry) => `${entry.file}:${entry.line}:${entry.column}`);
+    assert.deepEqual(found, ['/w/main.ptc:1:36', '/w/main.ptc:4:16', '/w/lib.ptc:0:4', '/w/lib.ptc:1:18']);
+    const locals = references(source, { line: 1, column: 23 }, '/w/main.ptc', reader).map((entry) => `${entry.line}:${entry.column}`);
+    assert.deepEqual(locals, ['1:23', '1:44']);
+    const parameter = references(source, { line: 1, column: 14 }, '/w/main.ptc', reader).map((entry) => `${entry.line}:${entry.column}`);
+    assert.deepEqual(parameter, ['1:14', '1:27']);
+    assert.deepEqual(references(source, { line: 0, column: 1 }, '/w/main.ptc', reader), []);
   });
 });
 

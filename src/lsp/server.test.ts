@@ -72,5 +72,8 @@ describe('language server over stdio', () => {
 
     const found = await request('textDocument/definition', { textDocument: { uri }, position: { line: 3, character: 3 } });
     assert.deepEqual(found.range.start, { line: 1, character: 9 });
+
+    const used = await request('textDocument/references', { textDocument: { uri }, position: { line: 0, character: 5 }, context: { includeDeclaration: true } });
+    assert.deepEqual(used.map((entry: any) => [entry.range.start.line, entry.range.start.character, entry.range.end.character]), [[0, 4, 9], [1, 23, 28]]);
   });
 });

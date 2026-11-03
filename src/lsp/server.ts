@@ -5,9 +5,9 @@ import {
 } from 'vscode-languageserver/node';
 import type { CompletionItem, Diagnostic, DocumentSymbol, InitializeResult } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { complete, definition, diagnose, diagnoseAssembly, hover, symbols } from '../service/service.ts';
+import { complete, definition, diagnose, diagnoseAssembly, hover, references, symbols } from '../service/service.ts';
 import type { CompletionKind, ServiceDiagnostic, SymbolKind as ServiceSymbolKind } from '../service/service.ts';
-import { ASSEMBLY_EXTENSION, FILE_ENCODING, SERVER_NAME, TRIGGER_CHARACTERS } from './keys.ts';
+import { ASSEMBLY_EXTENSION, FILE_ENCODING, SERVER_NAME, TRIGGER_CHARACTERS, WORD_AT } from './keys.ts';
 import { sourcePath } from '../cli/sources.ts';
 
 const connection = createConnection(ProposedFeatures.all);
@@ -68,6 +68,7 @@ connection.onInitialize((): InitializeResult => ({
     completionProvider: { triggerCharacters: TRIGGER_CHARACTERS },
     hoverProvider: true,
     definitionProvider: true,
+    referencesProvider: true,
     documentSymbolProvider: true,
   },
   serverInfo: { name: SERVER_NAME },
@@ -105,6 +106,19 @@ connection.onDefinition((parameters) => {
   if (!found) return null;
   const position = { line: found.line, character: found.column };
   return { uri: pathToFileURL(found.file).href, range: { start: position, end: position } };
+});
+
+connection.onReferences((parameters) => {
+  const document = documents.get(parameters.textDocument.uri);
+  if (!document) return [];
+  const position = { line: parameters.position.line, column: parameters.position.character };
+  const { line, character } = parameters.position;
+  const word = document.getText({ start: { line, character: 0 }, end: { line: line + 1, character: 0 } });
+  const found = references(document.getText(), position, pathOf(document.uri), read);
+  const length = WORD_AT(word, character);
+  return found.map((entry) => ({
+    uri: pathToFileURL(entry.file).href, range: { start: { line: entry.line, character: entry.column }, end: { line: entry.line, character: entry.column + length } },
+  }));
 });
 
 connection.onDocumentSymbol((parameters): DocumentSymbol[] => {
