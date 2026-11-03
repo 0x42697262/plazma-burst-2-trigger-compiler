@@ -5,14 +5,17 @@ export type SnapshotAction = { alias?: string; a: string; b: string; desc: strin
 export type ValueTables = Record<string, Record<string, string>>;
 export type ParamRow = { cls: string; name: string; kind: string; title: string; desc: string };
 export type GameOnlyParam = { kind: string; title: string; desc: string; value: string };
+export type Category = { name: string; color: string };
 export type TagRules = { uid: boolean; place: boolean; rect: boolean; defaults: Record<string, string>; gameOnly: Record<string, GameOnlyParam> };
 export type Snapshot = {
   source: string; fetched: string; actions: Record<string, SnapshotAction>; values: ValueTables;
-  params?: ParamRow[]; markPairs?: Record<string, string>; tags?: Record<string, TagRules>;
+  params?: ParamRow[]; markPairs?: Record<string, string>; categories?: Category[]; tags?: Record<string, TagRules>;
 };
 
 type RawAction = { desc: string; a: string; b: string; alias?: string };
-type RawTable = { source: string; fetched: string; actions: Record<string, RawAction>; values?: ValueTables; params?: ParamRow[]; markPairs?: Record<string, string> };
+type RawTable = {
+  source: string; fetched: string; actions: Record<string, RawAction>; values?: ValueTables; params?: ParamRow[]; markPairs?: Record<string, string>; categories?: Category[];
+};
 
 export type EditorRules = {
   tags: readonly string[];
@@ -59,6 +62,7 @@ export function toSnapshot(table: RawTable, editor: EditorRules | null = null): 
   const snapshot: Snapshot = { source: table.source, fetched: table.fetched, actions, values: table.values ?? {} };
   if (table.params) snapshot.params = [...table.params].map(paramRow);
   if (table.markPairs) snapshot.markPairs = { ...table.markPairs };
+  if (table.categories) snapshot.categories = [...table.categories].map((category) => ({ name: category.name, color: category.color }));
   if (editor) snapshot.tags = tagRules(editor);
   return snapshot;
 }

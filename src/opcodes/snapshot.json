@@ -4093,6 +4093,120 @@
   "dm_max_guns_on_spawn": "value>=0+round1",
   "level_errors": "nochange"
  },
+ "categories": [
+  {
+   "name": "Movable",
+   "color": "#5f6887"
+  },
+  {
+   "name": "Region",
+   "color": "#94a4c1"
+  },
+  {
+   "name": "Vehicle",
+   "color": "#efefef"
+  },
+  {
+   "name": "Character",
+   "color": "#ac961b"
+  },
+  {
+   "name": "Gravity",
+   "color": "#ffff00"
+  },
+  {
+   "name": "Scenario",
+   "color": "#ffa500"
+  },
+  {
+   "name": "Gun",
+   "color": "#ff214b"
+  },
+  {
+   "name": "Barrel",
+   "color": "#e76565"
+  },
+  {
+   "name": "Trigger",
+   "color": "#ef51ef"
+  },
+  {
+   "name": "Timer",
+   "color": "#d988d9"
+  },
+  {
+   "name": "Decoration",
+   "color": "#8080ff"
+  },
+  {
+   "name": "Gravitator Area Field",
+   "color": "#2cb3f1"
+  },
+  {
+   "name": "Gameplay",
+   "color": "#28c28d"
+  },
+  {
+   "name": "Sound",
+   "color": "#00ff00"
+  },
+  {
+   "name": "Interface",
+   "color": "#6cff00"
+  },
+  {
+   "name": "Light",
+   "color": "#7fff79"
+  },
+  {
+   "name": "Trigger execution",
+   "color": "#474b54"
+  },
+  {
+   "name": "Var",
+   "color": "#ffffff"
+  },
+  {
+   "name": "Session vars",
+   "color": "#aaaaff"
+  },
+  {
+   "name": "URL",
+   "color": "#aaffaa"
+  },
+  {
+   "name": "AI",
+   "color": "#ffaaaa"
+  },
+  {
+   "name": "Environment",
+   "color": "#ffffaa"
+  },
+  {
+   "name": "Text-to-speech",
+   "color": "#aaaaaa"
+  },
+  {
+   "name": "Map preview",
+   "color": "#ffaaff"
+  },
+  {
+   "name": "Experience",
+   "color": "#aaffff"
+  },
+  {
+   "name": "Array",
+   "color": "#777777"
+  },
+  {
+   "name": "Graphics",
+   "color": "#555555"
+  },
+  {
+   "name": "Water",
+   "color": "#ffffff"
+  }
+ ],
  "tags": {
   "box": {
    "uid": false,

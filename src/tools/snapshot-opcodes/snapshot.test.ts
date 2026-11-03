@@ -40,7 +40,7 @@ describe('snapshot-opcodes', () => {
   });
 
   it('keeps the parameter table, the mark pairs and the editor rules of each map element', () => {
-    const table = readOpcodeTable(SAMPLE.replace('"actions": {', '"params": [{ "cls": "door", "name": "maxspeed", "kind": "value>=0", "title": "Speed", "desc": "Speed", "extra": 1 }],\n  "markPairs": { "sky": "sky_model" },\n  "actions": {'));
+    const table = readOpcodeTable(SAMPLE.replace('"actions": {', '"params": [{ "cls": "door", "name": "maxspeed", "kind": "value>=0", "title": "Speed", "desc": "Speed", "extra": 1 }],\n  "markPairs": { "sky": "sky_model" },\n  "categories": [{ "name": "Movable", "color": "#5f6887", "extra": 1 }],\n  "actions": {'));
     assert.ok(table);
     const editor: EditorRules = {
       tags: ['door', 'inf'], shapeOf: (tag) => (tag === 'door' ? 'rect' : 'point'),
@@ -51,6 +51,7 @@ describe('snapshot-opcodes', () => {
     const snapshot = toSnapshot(table, editor);
     assert.deepEqual(snapshot.params, [{ cls: 'door', name: 'maxspeed', kind: 'value>=0', title: 'Speed', desc: 'Speed' }]);
     assert.deepEqual(snapshot.markPairs, { sky: 'sky_model' });
+    assert.deepEqual(snapshot.categories, [{ name: 'Movable', color: '#5f6887' }]);
     assert.deepEqual(snapshot.tags, {
       door: { uid: true, place: true, rect: true, defaults: { maxspeed: '10' }, gameOnly: { mute: { kind: 'bool', title: 'Mute', desc: 'No sound', value: 'false' } } },
       inf: { uid: false, place: true, rect: false, defaults: { mark: 'hero1_guns', forteam: '0' }, gameOnly: {} },
