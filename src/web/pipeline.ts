@@ -21,12 +21,13 @@ import { TEXT } from './text.ts';
 import type { Workspace } from './workspace.ts';
 import type { Target } from '../pcode/keys.ts';
 import type { TamperMode } from '../tamper/keys.ts';
+import { TAMPER_MODE } from '../tamper/keys.ts';
 import type { TamperCheck } from '../tamper/tamper.ts';
 import { tamperCheckOf } from '../tamper/options.ts';
 
 export type Options = {
   prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string;
-  tamper: TamperMode; tamperSeed: string;
+  tamper: TamperMode; tamperSeed: string; tamperAnnounce: boolean;
 };
 export type BuildRecord = { uids: readonly string[]; walls: readonly string[] };
 export const EMPTY_RECORD: BuildRecord = Object.freeze({ uids: [], walls: [] });
@@ -53,8 +54,8 @@ export type Environment = Readonly<Record<string, string>>;
 export const checkOptions = (numberText: boolean, directIndex: boolean, target: Target, environment: Environment = {}, tamper: TamperCheck | null = null): Partial<CompileOptions> =>
   ({ protectNumberText: numberText, directIndex, target, environment, tamper });
 
-export const tamperOf = (mode: TamperMode, seed: string, fallbackSeed: string): TamperCheck | null =>
-  tamperCheckOf({ mode, seed: seed.trim() === '' ? null : seed, layers: null, fallbackSeed: () => fallbackSeed });
+export const tamperOf = (mode: TamperMode, seed: string, fallbackSeed: string, announce = false): TamperCheck | null =>
+  tamperCheckOf({ mode, seed: seed.trim() === '' ? null : seed, layers: null, fallbackSeed: () => fallbackSeed, announce: announce && mode === TAMPER_MODE.enforce });
 
 export function parseEnvironment(text: string): Environment {
   const environment: Record<string, string> = {};
@@ -87,7 +88,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const compileOptions: Partial<CompileOptions> = {
     loopGuard: options.guard > 0 ? options.guard : null,
     varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : 'add',
-    ...checkOptions(options.numberText, options.directIndex, options.target, environment, tamperOf(options.tamper, options.tamperSeed, seed ?? (nameSeed || plainPrefix))),
+    ...checkOptions(options.numberText, options.directIndex, options.target, environment, tamperOf(options.tamper, options.tamperSeed, seed ?? (nameSeed || plainPrefix), options.tamperAnnounce)),
     obfuscate: seed === null ? null : { seed },
   };
   let result: CompileResult;

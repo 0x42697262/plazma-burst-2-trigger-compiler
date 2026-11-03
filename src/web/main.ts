@@ -65,6 +65,7 @@ const obfuscateInput = element<HTMLInputElement>(ELEMENT.obfuscate);
 const obfuscateSeedInput = element<HTMLInputElement>(ELEMENT.obfuscateSeed);
 const tamperSelect = element<HTMLSelectElement>(ELEMENT.tamperCheck);
 const tamperSeedInput = element<HTMLInputElement>(ELEMENT.tamperSeed);
+const tamperAnnounceInput = element<HTMLInputElement>(ELEMENT.tamperAnnounce);
 const tamperMode = (): TamperMode => (isTamperMode(tamperSelect.value) ? tamperSelect.value : TAMPER_MODE.off);
 const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
 const environment = () => parseEnvironment(environmentInput.value);
@@ -97,6 +98,7 @@ obfuscateInput.checked = savedOptions.obfuscate ?? false;
 obfuscateSeedInput.value = savedOptions.obfuscateSeed ?? '';
 tamperSelect.value = savedOptions.tamper ?? TAMPER_MODE.off;
 tamperSeedInput.value = savedOptions.tamperSeed ?? '';
+tamperAnnounceInput.checked = savedOptions.tamperAnnounce ?? false;
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 element(ELEMENT.shortcutHelp).textContent = TEXT.shortcutHelp(shortcut(SHORTCUT.build), shortcut(SHORTCUT.run), shortcut(SHORTCUT.palette), shortcut(SHORTCUT.files), shortcut(SHORTCUT.settings), shortcut(SHORTCUT.reference));
 element(ELEMENT.compile).title = TEXT.withShortcut(element(ELEMENT.compile).title, shortcut(SHORTCUT.build));
@@ -118,7 +120,7 @@ const darkQuery = window.matchMedia(DARK_QUERY);
 
 const options = (): Options => {
   const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked, nameSeed: nameSeedInput.value,
-    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value, tamper: tamperMode(), tamperSeed: tamperSeedInput.value,
+    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value, tamper: tamperMode(), tamperSeed: tamperSeedInput.value, tamperAnnounce: tamperAnnounceInput.checked,
   };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   renderChips(value);
@@ -375,7 +377,7 @@ const optionChanged = (): void => {
   scheduleBlueprint();
 };
 environmentInput.addEventListener(EVENT.input, optionChanged);
-for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput, tamperSelect]) input.addEventListener(EVENT.change, optionChanged);
+for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput, tamperSelect, tamperAnnounceInput]) input.addEventListener(EVENT.change, optionChanged);
 for (const input of [nameSeedInput, obfuscateSeedInput, tamperSeedInput, prefixInput, guardInput, framesInput]) input.addEventListener(EVENT.input, optionChanged);
 const newSeed = (): void => {
   obfuscateSeedInput.value = randomSeed();
@@ -549,6 +551,7 @@ const commands = (): Command[] => {
       optionChanged();
     } })),
     toggle(obfuscateInput, TEXT.optionNames.obfuscate),
+    toggle(tamperAnnounceInput, TEXT.optionNames.tamperAnnounce),
     toggle(directIndexInput, TEXT.optionNames.directIndex),
     toggle(numberTextInput, TEXT.optionNames.numberText),
     toggle(replaceInput, TEXT.optionNames.replace),

@@ -5,18 +5,19 @@ import { layout } from '../compiler/layout.ts';
 import { lower } from '../compiler/lower.ts';
 import type { Names } from '../compiler/names.ts';
 import { INTERNAL_VARIABLE, VARIABLE_MARK } from '../compiler/keys.ts';
+import { TEXT } from './text.ts';
 import { OPCODE, SKIPS_NEXT } from '../opcodes/constants.ts';
 import type { Action, Timer, Trigger } from '../program/types.ts';
 import { UNLIMITED_CALLS } from '../program/constants.ts';
 import { createRandom } from '../obfuscate/random.ts';
 import type { Random } from '../obfuscate/random.ts';
-import { FINDING, FIRM_FINDINGS, ONE, SEED_PURPOSE, STATE, TAMPER_LABEL, TAMPER_LAYER, TAMPER_MODE, TAMPER_VARIABLE, ZERO } from './keys.ts';
+import { FINDING, FIRM_FINDINGS, ONE, SAY_COLOR, SEED_PURPOSE, STATE, TAMPER_LABEL, TAMPER_LAYER, TAMPER_MODE, TAMPER_VARIABLE, ZERO } from './keys.ts';
 import type { ActiveMode, FindingKind, TamperLayer } from './keys.ts';
 import {
   LATE_MILLISECONDS, PARTNER_SHARE, PULSE_SLACK, REACTION_DELAY, SOFT_PROOF, SOFT_WINDOW, TOKEN_RANGE, UNSET_BEAT, WATCHDOG_DELAY, WINDOW_UNSET,
 } from './constants.ts';
 
-export type TamperCheck = { mode: ActiveMode; seed: string; layers: readonly TamperLayer[] };
+export type TamperCheck = { mode: ActiveMode; seed: string; layers: readonly TamperLayer[]; announce?: boolean };
 
 export type CheckValue = { variable: string; value: number };
 
@@ -72,12 +73,14 @@ export function createTamper(names: Names, options: TamperCheck, setup: TamperSe
   const layers = new Set(options.layers);
   const has = (layer: TamperLayer): boolean => layers.has(layer);
   const enforce = options.mode === TAMPER_MODE.enforce;
+  const announce = enforce && options.announce === true;
   const internal = (stem: string): string => names.internalVariable(stem);
   const vars = {
     token: internal(TAMPER_VARIABLE.token), expect: internal(TAMPER_VARIABLE.expect), work: internal(TAMPER_VARIABLE.work), now: internal(TAMPER_VARIABLE.now),
     findings: internal(TAMPER_VARIABLE.findings), last: internal(TAMPER_VARIABLE.last), reported: internal(TAMPER_VARIABLE.reported), state: internal(TAMPER_VARIABLE.state),
     due: internal(TAMPER_VARIABLE.due), softCount: internal(TAMPER_VARIABLE.softCount), softStart: internal(TAMPER_VARIABLE.softStart),
     started: internal(TAMPER_VARIABLE.started), pulse: internal(TAMPER_VARIABLE.pulse), beat: internal(TAMPER_VARIABLE.beat),
+    alert: internal(TAMPER_VARIABLE.alert), alertSeen: internal(TAMPER_VARIABLE.alertSeen), firmProof: internal(TAMPER_VARIABLE.firmProof),
   };
   const stop = internal(INTERNAL_VARIABLE.stop);
   const found = (kind: FindingKind): string => foundUid(names, kind);
@@ -231,6 +234,14 @@ export function createTamper(names: Names, options: TamperCheck, setup: TamperSe
       act(OPCODE.timeSinceStart, vars.beat);
       act(OPCODE.negate, vars.beat);
     }
+    if (announce) {
+      act(OPCODE.setIfUndefined, vars.alert, ZERO);
+      act(OPCODE.setIfUndefined, vars.alertSeen, ZERO);
+      instructions.push({ kind: 'branch', condition: 'le', left: variable(vars.alert), right: variable(vars.alertSeen), label: TAMPER_LABEL.announced, location: null });
+      act(OPCODE.showText, TEXT.announcement, SAY_COLOR);
+      act(OPCODE.copyVariable, vars.alertSeen, vars.alert);
+      mark(TAMPER_LABEL.announced);
+    }
     if (enforce) {
       instructions.push({ kind: 'branch', condition: 'ne', left: variable(vars.state), right: literal(STATE.marked), label: TAMPER_LABEL.watchdogEnd, location: null });
       act(OPCODE.timeSinceStart, vars.now);
@@ -262,6 +273,7 @@ export function createTamper(names: Names, options: TamperCheck, setup: TamperSe
     if (anyFirm) {
       mark(TAMPER_LABEL.firm, true);
       count();
+      if (announce) act(OPCODE.setVariable, vars.firmProof, ONE);
       if (enforce) act(OPCODE.executeTrigger, names.triggerUid(TAMPER_LABEL.proof));
       finishRoutine();
     }
@@ -301,10 +313,17 @@ export function createTamper(names: Names, options: TamperCheck, setup: TamperSe
 
       const ownNames = (triggers: readonly Trigger[]): string[] => triggers.flatMap((trigger) => trigger.actions.flatMap((action: Action) => [action.targetA, action.targetB]));
       const reset = new Set([...ownNames(input.triggers), ...Object.values(vars), names.internalVariable(INTERNAL_VARIABLE.right)]
-        .filter((name) => isWholeVariable(name) && names.ownsVariable(name) && name !== vars.state && !input.kept(name)));
+        .filter((name) => isWholeVariable(name) && names.ownsVariable(name) && ![vars.state, vars.alert, vars.alertSeen].includes(name) && !input.kept(name)));
       mark(TAMPER_LABEL.reaction, true);
       act(OPCODE.setVariable, vars.state, STATE.done);
       if (input.tamperUid !== null) act(OPCODE.executeTrigger, input.tamperUid);
+      if (announce) {
+        instructions.push({ kind: 'branch', condition: 'ne', left: variable(vars.firmProof), right: literal(ONE), label: TAMPER_LABEL.quietReaction, location: null });
+        act(OPCODE.setIfUndefined, vars.alert, ZERO);
+        act(OPCODE.addValue, vars.alert, ONE);
+        act(OPCODE.syncReplace, vars.alert);
+        mark(TAMPER_LABEL.quietReaction);
+      }
       for (const name of [...reset].sort()) act(OPCODE.setVariable, name, ZERO);
       for (const uid of input.entryUids) act(OPCODE.disableTrigger, uid);
       for (const timer of [...input.timers, { uid: watchdogTimerUid }]) act(OPCODE.disableTimer, timer.uid);

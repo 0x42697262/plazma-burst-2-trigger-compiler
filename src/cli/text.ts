@@ -10,6 +10,7 @@ export const TEXT = Object.freeze({
     '  --obfuscate-seed <s>  seed for --obfuscate (implies it): the same seed gives the same build, a new seed changes every generated name; random picks a new one and prints it',
     '  --tamper-check <mode>  off (default), report or enforce: notice triggers run outside the program and values it did not write (see docs/tamper-check.md)',
     '  --tamper-seed <s>  seed for the tamper check values (default: the obfuscation seed, else random and printed)',
+    '  --tamper-announce  with enforce: in a multiplayer match, every player sees that the scripts were turned off on a game (no name)',
     '  --tamper-layers <list>  the checks to add, comma separated: flow,entry,value,watchdog (default: all)',
     '  --guard <n>       stop loops after n jumps back per event (default 100000)',
     '  --no-guard        no loop guard',

@@ -14,7 +14,7 @@ export const TEXT = Object.freeze({
   chips: Object.freeze({
     target: (target: string): string => target, obfuscate: 'obfuscated', directIndex: 'direct index', numberText: 'raw number text', replace: 'replace',
     prefix: (prefix: string): string => `prefix ${prefix}`, nameSeed: 'name seed', noGuard: 'no guard', guard: (guard: number): string => `guard ${guard}`,
-    environment: (count: number): string => `env ${count}`, tamper: (mode: string): string => `tamper ${mode}`,
+    environment: (count: number): string => `env ${count}`, tamper: (mode: string): string => `tamper ${mode}`, announce: 'announce',
   }),
   macKeys: Object.freeze({ mod: '⌘', shift: '⇧', enter: '↩', alt: '⌥' } as Record<string, string>),
   otherKeys: Object.freeze({ mod: 'Ctrl', shift: 'Shift', enter: 'Enter', alt: 'Alt' } as Record<string, string>),
@@ -31,7 +31,7 @@ export const TEXT = Object.freeze({
     tamper: (mode: string): string => `Tamper check: ${mode}`,
   }),
   commandDetail: Object.freeze({ example: 'example', output: 'output', option: 'setting', action: '', file: 'file' }),
-  optionNames: Object.freeze({ obfuscate: 'obfuscate', directIndex: 'direct array index', numberText: 'protect text from the site editor', replace: 'replace the previous build' }),
+  optionNames: Object.freeze({ tamperAnnounce: 'announce tamper findings in the match', obfuscate: 'obfuscate', directIndex: 'direct array index', numberText: 'protect text from the site editor', replace: 'replace the previous build' }),
   noCommands: 'No matching command',
   nullJson: 'null',
   pixels: (value: number): string => `${value}px`,

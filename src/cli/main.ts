@@ -128,6 +128,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const prefix = nameSeed !== null ? seededPrefix(nameSeed) : givenPrefix ?? (seed === null ? plainPrefix : seededPrefix(seed));
     const tamper = tamperCheckOf({
       mode: lastValue(parsed, FLAG.tamperCheck) ?? TAMPER_MODE.off, seed: lastValue(parsed, FLAG.tamperSeed), layers: lastValue(parsed, FLAG.tamperLayers),
+      announce: parsed.flags.has(FLAG.tamperAnnounce),
       fallbackSeed: () => {
         if (seed !== null) return seed;
         const fresh = randomSeed();

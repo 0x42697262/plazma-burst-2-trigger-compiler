@@ -21,6 +21,7 @@ export const FLAG = Object.freeze({
   tamperCheck: '--tamper-check',
   tamperSeed: '--tamper-seed',
   tamperLayers: '--tamper-layers',
+  tamperAnnounce: '--tamper-announce',
 });
 export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at, FLAG.target, FLAG.nameSeed, FLAG.obfuscateSeed, FLAG.tamperCheck, FLAG.tamperSeed, FLAG.tamperLayers]);
 export const POSITION_SEPARATOR = ',';

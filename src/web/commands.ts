@@ -47,6 +47,7 @@ export function optionChips(options: Options, environmentCount: number): Chip[] 
     chip(options.target !== DEFAULT_TARGET, TEXT.chips.target(options.target), ELEMENT.target),
     chip(options.obfuscate, TEXT.chips.obfuscate, ELEMENT.obfuscate),
     chip(options.tamper !== TAMPER_MODE.off, TEXT.chips.tamper(options.tamper), ELEMENT.tamperCheck),
+    chip(options.tamper === TAMPER_MODE.enforce && options.tamperAnnounce, TEXT.chips.announce, ELEMENT.tamperAnnounce),
     chip(options.directIndex, TEXT.chips.directIndex, ELEMENT.directIndex),
     chip(!options.numberText, TEXT.chips.numberText, ELEMENT.numberText),
     chip(options.replace, TEXT.chips.replace, ELEMENT.replace),

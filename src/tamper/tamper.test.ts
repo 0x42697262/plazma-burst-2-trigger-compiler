@@ -95,7 +95,7 @@ describe('tamper check: honest runs give no finding', () => {
         const plain = simulate(withMapTriggers(plainResult.program, plainResult.mapObjects), regions);
         for (const mode of MODES) {
           for (const obfuscate of [null, { seed: SEED }]) {
-            const options = { ...base, obfuscate, tamper: check(mode) };
+            const options = { ...base, obfuscate, tamper: { ...check(mode), announce: mode === 'enforce' } };
             const built = file.endsWith('.ptc')
               ? protectAll(plainSource, (text) => frontEnd.compile(text, prefix, options, fullPath))
               : { source: plainSource, result: frontEnd.compile(plainSource, prefix, options, fullPath) };
@@ -259,6 +259,36 @@ describe('tamper check', () => {
     assert.equal(findings(simulation, result), 1);
     assert.equal(simulation.variables[result.tamper?.variables.last ?? ''], FINDING.late);
     assert.equal(simulation.variables['~t_n~'], 6);
+  });
+
+  it('announces a firm finding to the other games of the match, without a name, after the delay', () => {
+    const source = 'var n = 0;\nfunction step() { n += 1; }\non start { step(); }\non chat { step(); }';
+    const result = compile(source, { tamper: { ...check('enforce'), announce: true } });
+    assert.equal(result.program.varSyncMark, true);
+    const cheater = simulate(result.program);
+    const honest = simulate(result.program);
+    const alert = Object.keys(cheater.variables).find((name) => name.includes('tc.alert~')) ?? '';
+    assert.notEqual(alert, '');
+    cheater.runUid(uidOf(result, '_step'));
+    cheater.tick(REACTION_FRAMES);
+    assert.equal(cheater.variables[result.tamper?.variables.state ?? ''], Number(STATE.done));
+    assert.equal(cheater.variables[alert], 1);
+    honest.variables[alert] = String(cheater.variables[alert]);
+    honest.tick(WATCHDOG_DELAY);
+    honest.tick(WATCHDOG_DELAY);
+    assert.deepEqual(honest.chat.filter((line) => line === TEXT.announcement), [TEXT.announcement]);
+    assert.ok(!honest.chat.some((line) => line.includes('ann') || line.includes('bob')));
+    assert.equal(findings(honest, result), undefined);
+    const soft = compile('var n = 0;\nevery 10 { n += 1; }', { tamper: { ...check('enforce'), announce: true } });
+    const stalled = new Simulation(soft.program);
+    stalled.tick(5);
+    const watchdog = stalled.timers.find((timer) => timer.uid.includes(':tc-watchdog-timer'));
+    assert.ok(watchdog);
+    watchdog.enabled = false;
+    stalled.tick(REACTION_FRAMES);
+    assert.equal(stalled.variables[soft.tamper?.variables.state ?? ''], Number(STATE.done));
+    assert.equal(stalled.variables[alert], 0);
+    assert.throws(() => tamperCheckOf({ mode: 'report', seed: null, layers: null, fallbackSeed: () => SEED, announce: true }), /only with --tamper-check enforce/);
   });
 
   it('gives no finding when the loop guard stops a loop', () => {

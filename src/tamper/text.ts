@@ -8,6 +8,8 @@ export const TEXT = Object.freeze({
   protectedAction: (name: string): string => `${name} is protected and cannot be passed to action(): the action could write it without the check.`,
   protectedMap: (name: string): string => `${name} is protected and cannot be used in a map block trigger: it would run without the check.`,
   protectedUnchecked: (name: string): string => `${name} is protected, but --tamper-check is off (or its value layer is), so nothing checks it.`,
+  announcement: 'The tamper check turned the scripts off on a game in this match.',
+  announceNeedsEnforce: '--tamper-announce works only with --tamper-check enforce.',
   tamperUnused: 'on tamper { } runs only with --tamper-check report or enforce; it is left out.',
   waitInTamper: 'wait() does not work in on tamper { }: enforce turns the program off right after the block.',
 });

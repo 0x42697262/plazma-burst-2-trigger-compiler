@@ -24,6 +24,9 @@ export const TAMPER_VARIABLE = Object.freeze({
   started: 'tc.started',
   pulse: 'tc.pulse',
   beat: 'tc.beat',
+  alert: 'tc.alert',
+  alertSeen: 'tc.alert-seen',
+  firmProof: 'tc.firm',
   wait: (index: number): string => `tc.wait${index}`,
   mirror: (name: string): string => `tc.mirror.${name}`,
   mask: (name: string): string => `tc.mask.${name}`,
@@ -45,9 +48,12 @@ export const TAMPER_LABEL = Object.freeze({
   softReset: ':tc-soft-reset',
   softCounted: ':tc-soft-counted',
   proofEnd: ':tc-proof-end',
+  announced: ':tc-announced',
+  quietReaction: ':tc-quiet-reaction',
 });
 
 export const STATE = Object.freeze({ marked: '1', done: '2' });
+export const SAY_COLOR = '0';
 export const ZERO = '0';
 export const ONE = '1';
 export const SEED_PURPOSE = Object.freeze({ tokens: 'tamper-tokens', masks: 'tamper-masks', reaction: 'tamper-reaction' });
