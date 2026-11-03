@@ -746,7 +746,7 @@ refuses a value from another group where a parameter has its own list. The raw v
 | Name | Value | Editor label |
 |---|---|---|
 | `EXOS` | `0` | EXOS |
-| `MainHeroPlayersNicknameIsDisplayed` | `1` | Main Hero (Player's nickname is displayed) |
+| `MainHero` or `MainHeroPlayersNicknameIsDisplayed` | `1` | Main Hero (Player's nickname is displayed) |
 | `NoirLime` | `2` | Noir Lime |
 | `Proxy` | `3` | Proxy |
 | `CivilSecurity` | `4` | Civil Security |
@@ -772,12 +772,12 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `GreenTeam` | `14` | Green Team |
 | `WhiteTeam` | `15` | White Team |
 | `BlackTeam` | `16` | Black Team |
-| `SpecialANoFriendlyFire` | `-1` | Special A (no friendly fire) |
-| `SpecialBNoFriendlyFire` | `-2` | Special B (no friendly fire) |
-| `SpecialCNoFriendlyFire` | `-3` | Special C (no friendly fire) |
-| `SpecialDNoFriendlyFire` | `-4` | Special D (no friendly fire) |
-| `SpecialENoFriendlyFire` | `-5` | Special E (no friendly fire) |
-| `SpecialFNoFriendlyFire` | `-6` | Special F (no friendly fire) |
+| `SpecialA` or `SpecialANoFriendlyFire` | `-1` | Special A (no friendly fire) |
+| `SpecialB` or `SpecialBNoFriendlyFire` | `-2` | Special B (no friendly fire) |
+| `SpecialC` or `SpecialCNoFriendlyFire` | `-3` | Special C (no friendly fire) |
+| `SpecialD` or `SpecialDNoFriendlyFire` | `-4` | Special D (no friendly fire) |
+| `SpecialE` or `SpecialENoFriendlyFire` | `-5` | Special E (no friendly fire) |
+| `SpecialF` or `SpecialFNoFriendlyFire` | `-6` | Special F (no friendly fire) |
 | `AnyTeam` | `-1` | Any Team |
 
 ### Behavior (`botaction`, 5)
@@ -788,7 +788,7 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `FollowThePlayer` | `1` | Follow the player |
 | `LookAround` | `2` | Look around |
 | `Investigate` | `3` | Investigate |
-| `DoNothingControllableWithTriggers` | `4` | Do nothing (controllable with Triggers) |
+| `DoNothing` or `DoNothingControllableWithTriggers` | `4` | Do nothing (controllable with Triggers) |
 
 ### Bool (`bool`, 2)
 
@@ -825,7 +825,7 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `gun_pistol` or `PistolC01p` | `gun_pistol` | Pistol C-01p |
 | `gun_pistol_b` or `PistolC01pRed` | `gun_pistol_b` | Pistol C-01p (Red) |
 | `gun_pistol2` or `PistolCSPro` | `gun_pistol2` | Pistol CS-Pro |
-| `gun_vehgun` or `VehicleRocketLauncherCorvette` | `gun_vehgun` | Vehicle Rocket Launcher (Corvette) |
+| `VehicleRocketLauncher` or `gun_vehgun` or `VehicleRocketLauncherCorvette` | `gun_vehgun` | Vehicle Rocket Launcher (Corvette) |
 | `gun_gl` or `GrenadeLauncherCSSpamThemBaby` | `gun_gl` | Grenade Launcher CS-SpamThemBaby |
 | `gun_rl` or `RocketLauncherCSLitBro` | `gun_rl` | Rocket Launcher CS-LitBro |
 | `gun_railgun` or `LiteRailgunV01CSHShot` | `gun_railgun` | Lite Railgun v01 CS-HShot |
@@ -835,13 +835,13 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `gun_apistol` or `AlienPistol` | `gun_apistol` | Alien Pistol |
 | `gun_arifle` or `AlienRifle` | `gun_arifle` | Alien Rifle |
 | `gun_arifle2` or `AlienShotgun` | `gun_arifle2` | Alien Shotgun |
-| `gun_vehcannon` or `VehicleCannonHoundWalkerCS` | `gun_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
+| `VehicleCannon` or `gun_vehcannon` or `VehicleCannonHoundWalkerCS` | `gun_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
 | `gun_defibrillator` or `Defibrillator` | `gun_defibrillator` | Defibrillator |
 | `gun_bfg` or `CSBNG` | `gun_bfg` | CS-BNG |
 | `gun_raygun` or `RayGunC01y` | `gun_raygun` | Ray Gun C-01y |
 | `gun_rayrifle` or `RayRifleTCoRR` | `gun_rayrifle` | Ray Rifle TCoRR |
-| `gun_vehminigun` or `VehicleMinigunDrone` | `gun_vehminigun` | Vehicle Minigun (Drone) |
-| `gun_vehminigl` or `VehicleGrenadeLauncherDrone` | `gun_vehminigl` | Vehicle Grenade Launcher (Drone) |
+| `VehicleMinigun` or `gun_vehminigun` or `VehicleMinigunDrone` | `gun_vehminigun` | Vehicle Minigun (Drone) |
+| `VehicleGrenadeLauncher` or `gun_vehminigl` or `VehicleGrenadeLauncherDrone` | `gun_vehminigl` | Vehicle Grenade Launcher (Drone) |
 | `gun_real_shotgun` or `ShotgunCSDAZ` | `gun_real_shotgun` | Shotgun CS-DAZ |
 | `gun_real_rifle` or `AssaultRifleCSRC` | `gun_real_rifle` | Assault Rifle CS-RC |
 | `gun_oicw` or `CombatRifleCSOICW` | `gun_oicw` | Combat Rifle CS-OICW |
@@ -853,8 +853,8 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `item_port` or `TeleportGrenadeV03CSPortNade` | `item_port` | Teleport Grenade v03 CS-PortNade |
 | `item_shield` or `PortableShieldV07CSQuarium` | `item_shield` | Portable Shield v07 CS-Quarium |
 | `gun_sp_sh` or `PortableShieldV07CSQuariumAsWeaponSlot7` | `gun_sp_sh` | Portable Shield v07 CS-Quarium (as weapon slot 7) |
-| `gun_glock` or `GlockUnfinishedWeapon` | `gun_glock` | Glock (unfinished weapon) |
-| `gun_m4a1` or `M4A1UnfinishedWeapon` | `gun_m4a1` | M4A1 (unfinished weapon) |
+| `Glock` or `gun_glock` or `GlockUnfinishedWeapon` | `gun_glock` | Glock (unfinished weapon) |
+| `M4A1` or `gun_m4a1` or `M4A1UnfinishedWeapon` | `gun_m4a1` | M4A1 (unfinished weapon) |
 | `gun_pixel_rifle` or `StarDefenderRifle` | `gun_pixel_rifle` | Star Defender Rifle |
 | `gun_pixel_rl` or `StarDefenderRocketLauncher` | `gun_pixel_rl` | Star Defender Rocket Launcher |
 | `darkstar_1_assault_rifle` or `CPAssaultRifleByDarkstar1` | `darkstar_1_assault_rifle` | CP-Assault Rifle by darkstar 1 |
@@ -918,19 +918,19 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `lazyrain_plasma_smg2` or `AlienPlasmaPistolYellowByLazyRain` | `lazyrain_plasma_smg2` | Alien Plasma Pistol (yellow) by LazyRain |
 | `roxxar_android_railgun` or `AndroidRailgunByRoxxar` | `roxxar_android_railgun` | Android Railgun by Roxxar |
 | `gun_invisgun` or `InvisibleGun` | `gun_invisgun` | Invisible gun |
-| `gun_sharkgun` or `SharkDoesNothing` | `gun_sharkgun` | Shark (does nothing) |
+| `Shark` or `gun_sharkgun` or `SharkDoesNothing` | `gun_sharkgun` | Shark (does nothing) |
 
 ### Sound (`sound`, 280)
 
 | Name | Value | Editor label |
 |---|---|---|
-| `null` or `SilenceForGunsOnly` | `null` | - silence - (for guns only) |
+| `Silence` or `null` or `SilenceForGunsOnly` | `null` | - silence - (for guns only) |
 | `hp_warn` or `BattlesuitLowHealth` | `hp_warn` | Battlesuit - Low health |
 | `hp_dead` or `BattlesuitDeath` | `hp_dead` | Battlesuit - Death |
 | `wea_pickup` or `WeaponPickedUp` | `wea_pickup` | Weapon - Picked up |
 | `wea2` or `WeaponImpact1` | `wea2` | Weapon - Impact 1 |
 | `wea1` or `WeaponImpact2` | `wea1` | Weapon - Impact 2 |
-| `wea_vehminigun` or `VehicleMinigunDrone` | `wea_vehminigun` | Vehicle minigun (Drone) |
+| `VehicleMinigun` or `wea_vehminigun` or `VehicleMinigunDrone` | `wea_vehminigun` | Vehicle minigun (Drone) |
 | `wea_sniper` or `SniperRifleCSYippeeKiYay` | `wea_sniper` | Sniper Rifle CS-YippeeKiYay |
 | `wea_shotgun_alt` or `AlienShotgun` | `wea_shotgun_alt` | Alien Shotgun |
 | `wea_shotgun` or `ShotgunC01s` | `wea_shotgun` | Shotgun C-01s |
@@ -944,8 +944,8 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `wea_pistol` or `PistolC01p` | `wea_pistol` | Pistol C-01p |
 | `wea_plasmagun` or `PlasmagunCSBloom` | `wea_plasmagun` | Plasmagun CS-Bloom |
 | `wea_mingun2` or `MinigunC02m` | `wea_mingun2` | Minigun C-02m |
-| `wea_mingun` or `WeaMinigunUnused` | `wea_mingun` | wea_minigun (unused) |
-| `wea_impulse` or `WeaImpulseUnused` | `wea_impulse` | wea_impulse (unused) |
+| `WeaMinigun` or `wea_mingun` or `WeaMinigunUnused` | `wea_mingun` | wea_minigun (unused) |
+| `WeaImpulse` or `wea_impulse` or `WeaImpulseUnused` | `wea_impulse` | wea_impulse (unused) |
 | `wea_evil_shot` or `CSBNG` | `wea_evil_shot` | CS-BNG |
 | `wea_energy` or `RayGunC01y` | `wea_energy` | Ray Gun C-01y |
 | `wea_defibrillator` or `Defibrillator` | `wea_defibrillator` | Defibrillator |
@@ -957,17 +957,17 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `walker_phase2` or `HoundWalkerCSPhase2` | `walker_phase2` | Hound Walker-CS - Phase 2 |
 | `walker_phase1` or `HoundWalkerCSPhase1` | `walker_phase1` | Hound Walker-CS - Phase 1 |
 | `walker_die` or `HoundWalkerCSTermination` | `walker_die` | Hound Walker-CS - Termination |
-| `wea_vehcannon` or `VehicleCannonHoundWalkerCS` | `wea_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
+| `VehicleCannon` or `wea_vehcannon` or `VehicleCannonHoundWalkerCS` | `wea_vehcannon` | Vehicle Cannon (Hound Walker-CS) |
 | `usurpation_hurt` or `UsurpationDestroyerHurt` | `usurpation_hurt` | Usurpation Destroyer - Hurt |
 | `usurpation_dying` or `UsurpationDestroyerDying` | `usurpation_dying` | Usurpation Destroyer - Dying |
 | `usurpation_death3` or `UsurpationDestroyerDeath3` | `usurpation_death3` | Usurpation Destroyer - Death 3 |
 | `usurpation_death2` or `UsurpationDestroyerDeath2` | `usurpation_death2` | Usurpation Destroyer - Death 2 |
 | `usurpation_alert` or `UsurpationDestroyerAlert` | `usurpation_alert` | Usurpation Destroyer - Alert |
-| `test_sound` or `VehicleRocketLauncherCorvetteReloading` | `test_sound` | Vehicle Rocket Launcher (Corvette) - Reloading |
+| `VehicleRocketLauncherReloading` or `test_sound` or `VehicleRocketLauncherCorvetteReloading` | `test_sound` | Vehicle Rocket Launcher (Corvette) - Reloading |
 | `teleport_spawn` or `Teleport` | `teleport_spawn` | Teleport |
 | `team_switch` or `HeroChange` | `team_switch` | Hero change |
 | `t_switch2` or `PanelBoardActivation` | `t_switch2` | Panel Board - Activation |
-| `t_switch1` or `PanelBoardActivation2Unused` | `t_switch1` | Panel Board - Activation 2 (unused) |
+| `PanelBoardActivation2` or `t_switch1` or `PanelBoardActivation2Unused` | `t_switch1` | Panel Board - Activation 2 (unused) |
 | `t_switch_denied` or `PanelBoardDenied` | `t_switch_denied` | Panel Board - Denied |
 | `t_door1_stop` or `MovableStart` | `t_door1_stop` | Movable - Start |
 | `t_door1_start` or `MovableStop` | `t_door1_start` | Movable - Stop |
@@ -1250,7 +1250,7 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `reakhohsha` or `ReakhohshaOperative` | `reakhohsha` | Reakhohsha Operative |
 | `star_defender` or `StarDefender` | `star_defender` | Star Defender |
 
-### CharacterModel (`char`, 89)
+### Skin (`char`, 89)
 
 | Name | Value | Editor label |
 |---|---|---|
@@ -1303,8 +1303,8 @@ refuses a value from another group where a parameter has its own list. The raw v
 | `UsurpationDestroyer` | `70` | Usurpation Destroyer |
 | `UsurpationSoldierMajor` | `71` | Usurpation Soldier Major |
 | `ProxyWhite` | `72` | Proxy (White) |
-| `BluePlayerNoirLime` | `73` | Blue Player (Noir Lime) |
-| `RedPlayerNoirLime` | `74` | Red Player (Noir Lime) |
+| `BluePlayer` or `BluePlayerNoirLime` | `73` | Blue Player (Noir Lime) |
+| `RedPlayer` or `RedPlayerNoirLime` | `74` | Red Player (Noir Lime) |
 | `BlueProxy` | `75` | Blue Proxy |
 | `RedProxy` | `76` | Red Proxy |
 | `BlueCivilSecurityLite` | `77` | Blue Civil Security Lite |
@@ -1439,3 +1439,164 @@ refuses a value from another group where a parameter has its own list. The raw v
 | Name | Value | Editor label |
 |---|---|---|
 | `Silence` | `-1` | - Silence - |
+
+### Direction (`side`, 2)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `Right` | `1` | Right ► |
+| `Left` | `-1` | ◄ Left |
+
+### Material (`box_model`, 22)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `Concrete` | `0` | Concrete |
+| `Grass` | `1` | Grass |
+| `Sand` | `2` | Sand |
+| `BrownConcrete` | `3` | Brown concrete |
+| `DarkPlate` | `4` | Dark plate |
+| `DryGrass` | `5` | Dry grass |
+| `DarkGrass` | `6` | Dark grass |
+| `CleanDarkPlate` | `7` | Clean dark plate |
+| `BrightPlate` | `8` | Bright plate |
+| `CleanBrightPlate` | `9` | Clean bright plate |
+| `UsurpationPlate` | `10` | Usurpation plate |
+| `Stripes` | `11` | Stripes |
+| `Asphalt` | `12` | Asphalt |
+| `WhiteConcrete` | `13` | White concrete |
+| `PBFTTPLikeConcrete` | `14` | PB:FTTP-like concrete |
+| `WetSand` | `15` | Wet sand |
+| `Mud` | `16` | Mud |
+| `UsurpationTiles` | `17` | Usurpation tiles |
+| `StoneBricks` | `18` | Stone bricks |
+| `Wood` | `19` | Wood |
+| `Rocks` | `20` | Rocks |
+| `Black` | `-1` | Black |
+
+### DrawInFront (`draw_in_front`, 3)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `No` | `0` | No |
+| `Yes` | `1` | Yes |
+| `YesAndGlow` or `YesAndGlowDecorationsOnly` | `2` | Yes and glow (decorations only) |
+
+### Upgrade (`gun_upgrade`, 4)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `NoUpgrades` | `0` | No upgrades |
+| `UpgradeLevel1` | `1` | Upgrade level 1 |
+| `UpgradeLevel2` | `2` | Upgrade level 2 |
+| `UpgradeLevel3` | `3` | Upgrade level 3 |
+
+### Activation (`region_activation`, 18)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `NoActivation` | `0` | No activation |
+| `USEKeyWithButton` | `1` | ''USE'' key (with button) |
+| `CharacterNotInVehicle` | `2` | Character not in vehicle |
+| `CharacterInAVehicle` | `3` | Character in a vehicle |
+| `Character` | `4` | Character |
+| `ByMovable` | `5` | By movable |
+| `Player` | `6` | Player |
+| `ContainingAllSingleplayerHeroes` | `7` | Containing all Singleplayer heroes |
+| `USEKeyWithoutButton` | `8` | ''USE'' key (without button) |
+| `USEKeyOnlyRedTeamWithButton` | `9` | ''USE'' key, only Red team (with button) |
+| `USEKeyOnlyBlueTeamWithButton` | `10` | ''USE'' key, only Blue team (with button) |
+| `USEKeyOnlyRedTeamWithoutButton` | `11` | ''USE'' key, only Red team (without button) |
+| `USEKeyOnlyBlueTeamWithoutButton` | `12` | ''USE'' key, only Blue team (without button) |
+| `RedTeamPlayer` | `13` | Red team Player |
+| `BlueTeamPlayer` | `14` | Blue team Player |
+| `USEKeyWithoutButtonWithoutSound` | `15` | ''USE'' key (without button, without sound) |
+| `Actor` | `17` | Actor |
+| `EnemyActor` | `18` | Enemy actor |
+
+### BarrelModel (`barrel_model`, 3)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `Orange` or `bar_orange` or `Orange78Dmg` | `bar_orange` | Orange (78 dmg) |
+| `Blue` or `bar_blue` or `Blue117Dmg` | `bar_blue` | Blue (117 dmg) |
+| `Red` or `bar_red` or `Red156Dmg` | `bar_red` | Red (156 dmg) |
+
+### VehicleModel (`vehicle_model`, 7)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `veh_jeep` or `MobileR081CS` | `veh_jeep` | Mobile r081-CS |
+| `veh_walker` or `HoundWalkerCS` | `veh_walker` | Hound Walker-CS |
+| `veh_capsule` or `LifeCapsule` | `veh_capsule` | Life-Capsule |
+| `veh_crate` or `Crate` | `veh_crate` | Crate |
+| `veh_drone` or `Drone` | `veh_drone` | Drone |
+| `veh_rope` or `Rope` | `veh_rope` | Rope |
+| `veh_corvette` or `Corvette` | `veh_corvette` | Corvette |
+
+### BackgroundModel (`bg_model`, 18)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `Basic` | `0` | Basic |
+| `Ground` | `1` | Ground |
+| `Usurpation` | `2` | Usurpation |
+| `White` | `3` | White |
+| `ElevatorPath` | `4` | Elevator path |
+| `ImpureCanal` | `5` | Impure canal |
+| `Red` | `6` | Red |
+| `Green` | `7` | Green |
+| `Blue` | `8` | Blue |
+| `Damned` | `9` | Damned |
+| `PanelDefault` | `10` | Panel default |
+| `PanelBright` | `11` | Panel bright |
+| `PanelDark` | `12` | Panel dark |
+| `Rocks` | `13` | Rocks |
+| `PixelWall` | `14` | Pixel wall |
+| `PixelBackground` | `15` | Pixel background |
+| `PixelOpenDoor` | `16` | Pixel open door |
+| `ShadowOnly` | `-1` | Shadow only |
+
+### EngineMark (`engine_mark`, 32)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `sky` or `ChangeSky` | `sky` | Change sky |
+| `shadowmap_size` or `ShadowmapSize` | `shadowmap_size` | Shadowmap size |
+| `casual` or `EnableCasualMode` | `casual` | Enable casual mode |
+| `nobase` or `DisableBaseNoise` | `nobase` | Disable base noise |
+| `game2` or `AlternativeGameplay` | `game2` | Alternative gameplay |
+| `strict_casual` or `EnableStrictCasualMode` | `strict_casual` | Enable strict casual mode |
+| `no_auto_revive` or `DisableAIRevive` | `no_auto_revive` | Disable AI revive |
+| `meat` or `ForceRagdollDisappearment` | `meat` | Force ragdoll disappearment |
+| `hero1_guns` or `SpawnMarineWeapons` | `hero1_guns` | Spawn marine weapons |
+| `hero2_guns` or `SpawnProxyWeapons` | `hero2_guns` | Spawn Proxy weapons |
+| `hero2_guns_nonades` or `SpawnProxyWeaponsNoNades` | `hero2_guns_nonades` | Spawn Proxy weapons (no nades) |
+| `hero2_guns_nades` or `SpawnProxyWeaponsOnlyNades` | `hero2_guns_nades` | Spawn Proxy weapons (only nades) |
+| `nopsi` or `DisablePsiSwords` | `nopsi` | Disable psi-swords |
+| `gamescale` or `ChangeGameScale` | `gamescale` | Change game scale |
+| `SetStartHENadesCount` or `he_nades_count` or `SetStartHENadesCountMPOnly` | `he_nades_count` | Set start HE nades count (MP only) |
+| `SetStartPortNadesCount` or `port_nades_count` or `SetStartPortNadesCountMPOnly` | `port_nades_count` | Set start Port nades count (MP only) |
+| `SetStartShieldNadesCount` or `sh_nades_count` or `SetStartShieldNadesCountMPOnly` | `sh_nades_count` | Set start Shield nades count (MP only) |
+| `snow` or `EnableSnowOnMap` | `snow` | Enable snow on map |
+| `UseCustomWaterColor` or `watercolor` or `UseCustomWaterColorHexColorCode` | `watercolor` | Use custom water color # (hex color code) |
+| `UseCustomAcidColor` or `acidcolor` or `UseCustomAcidColorHexColorCode` | `acidcolor` | Use custom acid color # (hex color code) |
+| `watertitle` or `UseCustomWaterTitle` | `watertitle` | Use custom water title |
+| `acidtitle` or `UseCustomAcidTitle` | `acidtitle` | Use custom acid title |
+| `dm_slots_on_spawn` or `ListOfSlotsThatCanBeRandomlyGivenToPlayerInDMTDMModesDuringRespawn` | `dm_slots_on_spawn` | List of slots that can be randomly given to player in DM/TDM modes during respawn |
+| `dm_max_guns_on_spawn` or `DefineHowManyWeaponsCanBeRandomlyGivenToPlayerInDMTDMModesDuringRespawn` | `dm_max_guns_on_spawn` | Define how many weapons can be randomly given to player in DM/TDM modes during respawn |
+| `level_errors` or `EnableLevelTriggerErrorReporting` | `level_errors` | Enable level trigger error reporting |
+| `var_sync` or `EnableVarSyncTriggerActions` | `var_sync` | Enable Var Sync trigger actions |
+| `no_light_break` or `DisallowLampDestructionAndCollisions` | `no_light_break` | Disallow lamp destruction and collisions |
+| `EnableNaiveHitConfirmation` or `naive_hit_confirmation` or `EnableNaiveHitConfirmationMPOnly` | `naive_hit_confirmation` | Enable naive hit confirmation (MP only) |
+| `DisallowManualQuickSavingOnALevel` or `no_quick_save` or `DisallowManualQuickSavingOnALevelHTML5PortOnly` | `no_quick_save` | Disallow manual quick saving on a level (HTML5 port only) |
+| `DisallowEnemiesOccasionallyDroppingWeaponsWhenDying` or `no_dying_weapon_drop` or `DisallowEnemiesOccasionallyDroppingWeaponsWhenDyingHTML5PortOnly` | `no_dying_weapon_drop` | Disallow enemies occasionally dropping weapons when dying (HTML5 port only) |
+| `DisallowEnemiesOccasionallyDroppingWeaponsWhenUnstable` or `no_unstable_weapon_drop` or `DisallowEnemiesOccasionallyDroppingWeaponsWhenUnstableHTML5PortOnly` | `no_unstable_weapon_drop` | Disallow enemies occasionally dropping weapons when unstable (HTML5 port only) |
+| `EnableGunDesynchronizationFixes` or `fix_gun_desynchronization` or `EnableGunDesynchronizationFixesMPOnly` | `fix_gun_desynchronization` | Enable gun desynchronization fixes (MP only) |
+
+### InVehicle (`vehicle+none+any`, 2)
+
+| Name | Value | Editor label |
+|---|---|---|
+| `DetectAutomaticly` | `-2` | - Detect automaticly - |
+| `No` | `-1` | - No - |

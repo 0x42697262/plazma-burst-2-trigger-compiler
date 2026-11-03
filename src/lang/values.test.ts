@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { compileSource } from './compile.ts';
-import { memberName, valueGroup } from '../opcodes/values.ts';
+import { memberName, valueGroup, valueList } from '../opcodes/values.ts';
 
 const actions = (source: string) => compileSource(source, 't').program.triggers.flatMap((trigger) => trigger.actions);
 
@@ -18,6 +18,15 @@ describe('named values', () => {
     assert.equal(valueGroup('Team')?.members.get('RedTeam'), '12');
     assert.equal(valueGroup('Team')?.members.get('AnyTeam'), '-1');
     assert.equal(valueGroup('GunModel')?.members.get('AssaultRifleC01r'), 'gun_rifle');
+    assert.equal(valueGroup('Behavior')?.members.get('DoNothing'), '4');
+    assert.equal(valueGroup('Behavior')?.members.get('DoNothingControllableWithTriggers'), '4');
+    assert.equal(valueGroup('Activation')?.members.has('USEKey'), false);
+    assert.equal(valueGroup('Direction')?.members.get('Left'), '-1');
+    assert.equal(valueGroup('Material')?.members.get('DarkPlate'), '4');
+    assert.equal(valueGroup('EngineMark')?.members.get('ChangeSky'), 'sky');
+    assert.equal(valueGroup('CharacterModel'), valueGroup('Skin'));
+    assert.equal(valueList('door+none').members.get('None'), '-1');
+    assert.equal(valueList('trigger+none').members.get('NoTrigger'), '-1');
   });
 
   it('writes the value into the action', () => {

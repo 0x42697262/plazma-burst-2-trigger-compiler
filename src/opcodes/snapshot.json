@@ -3615,5 +3615,743 @@
    "16": "Pixel open door",
    "-1": "Shadow only"
   }
+ },
+ "params": [
+  {
+   "cls": "*",
+   "name": "uid",
+   "kind": "string",
+   "title": "ID",
+   "desc": "Object ID"
+  },
+  {
+   "cls": "*",
+   "name": "x",
+   "kind": "value+round10",
+   "title": "X",
+   "desc": "Object position along X axis"
+  },
+  {
+   "cls": "*",
+   "name": "y",
+   "kind": "value+round10",
+   "title": "Y",
+   "desc": "Object position along Y axis"
+  },
+  {
+   "cls": "*",
+   "name": "tox",
+   "kind": "value",
+   "title": "Speed X",
+   "desc": "Object initial speed along X axis"
+  },
+  {
+   "cls": "*",
+   "name": "toy",
+   "kind": "value",
+   "title": "Speed Y",
+   "desc": "Object initial speed along Y axis"
+  },
+  {
+   "cls": "*",
+   "name": "hea",
+   "kind": "int",
+   "title": "Hitpoints",
+   "desc": "Initial hitpoints ammount"
+  },
+  {
+   "cls": "*",
+   "name": "hmax",
+   "kind": "int",
+   "title": "Max. Hitpoints",
+   "desc": "Maximal hitpoints ammount"
+  },
+  {
+   "cls": "*",
+   "name": "team",
+   "kind": "team",
+   "title": "Team",
+   "desc": "Default player team"
+  },
+  {
+   "cls": "*",
+   "name": "side",
+   "kind": "side",
+   "title": "Direction",
+   "desc": "Initial direction"
+  },
+  {
+   "cls": "*",
+   "name": "char",
+   "kind": "char",
+   "title": "Character",
+   "desc": "Player model"
+  },
+  {
+   "cls": "*",
+   "name": "incar",
+   "kind": "vehicle+none+any",
+   "title": "In car",
+   "desc": "Determines initial actor placement"
+  },
+  {
+   "cls": "*",
+   "name": "botaction",
+   "kind": "botaction",
+   "title": "AI Behaviour",
+   "desc": "Initial behaviour of computer-controlled actors"
+  },
+  {
+   "cls": "*",
+   "name": "ondeath",
+   "kind": "trigger+none",
+   "title": "Trigger on death",
+   "desc": "Trigger being called on actor death event"
+  },
+  {
+   "cls": "lamp",
+   "name": "power",
+   "kind": "value",
+   "title": "Power",
+   "desc": "Power of light"
+  },
+  {
+   "cls": "lamp",
+   "name": "flare",
+   "kind": "bool",
+   "title": "Has flare",
+   "desc": "Determines if light is visible on screen"
+  },
+  {
+   "cls": "gun",
+   "name": "model",
+   "kind": "gun_model",
+   "title": "Weapon model",
+   "desc": "Determines weapon model"
+  },
+  {
+   "cls": "gun",
+   "name": "command",
+   "kind": "team+any",
+   "title": "For team",
+   "desc": "Defines who can pick up this weapon"
+  },
+  {
+   "cls": "gun",
+   "name": "upg",
+   "kind": "gun_upgrade",
+   "title": "Upgrade level",
+   "desc": "Determines initial upgrade level for this weapon"
+  },
+  {
+   "cls": "*",
+   "name": "w",
+   "kind": "value>0+round10",
+   "title": "Width",
+   "desc": "Determines object's width"
+  },
+  {
+   "cls": "*",
+   "name": "h",
+   "kind": "value>0+round10",
+   "title": "Height",
+   "desc": "Determines object's height"
+  },
+  {
+   "cls": "bg",
+   "name": "m",
+   "kind": "bg_model",
+   "title": "Material",
+   "desc": "Determines object's material"
+  },
+  {
+   "cls": "water",
+   "name": "damage",
+   "kind": "value>=0",
+   "title": "Damage",
+   "desc": "Determines the amount of damage inflicted to alive actors by water region per 1/30 second"
+  },
+  {
+   "cls": "region",
+   "name": "use_target",
+   "kind": "trigger+none",
+   "title": "Activation Trigger",
+   "desc": "Trigger being called on Action event"
+  },
+  {
+   "cls": "region",
+   "name": "use_on",
+   "kind": "region_activation",
+   "title": "Activation on",
+   "desc": "Determines when trigger which is defined by \"Activation Trigger\" parameter runs"
+  },
+  {
+   "cls": "pushf",
+   "name": "tox",
+   "kind": "value",
+   "title": "Acceleration X",
+   "desc": "Defines acceleration along X axis for objects in Gravitator area field"
+  },
+  {
+   "cls": "pushf",
+   "name": "toy",
+   "kind": "value",
+   "title": "Acceleration Y",
+   "desc": "Defines acceleration along Y axis for objects in Gravitator area field"
+  },
+  {
+   "cls": "pushf",
+   "name": "stab",
+   "kind": "value>=0",
+   "title": "Stability damage",
+   "desc": "Defines how much stability damage Gravitator area field deals for alive actors per 1/30 second"
+  },
+  {
+   "cls": "pushf",
+   "name": "damage",
+   "kind": "pushf_damage",
+   "title": "Hitpoints damage",
+   "desc": "Defines how much hitpoint damage Gravitator area field deals for alive actors per 1/30 second"
+  },
+  {
+   "cls": "door",
+   "name": "maxspeed",
+   "kind": "value>=0",
+   "title": "Speed",
+   "desc": "Defines speed per 1/30 second"
+  },
+  {
+   "cls": "door",
+   "name": "vis",
+   "kind": "bool",
+   "title": "Visible",
+   "desc": "Determines whether door is visible or not"
+  },
+  {
+   "cls": "timer",
+   "name": "enabled",
+   "kind": "bool",
+   "title": "Launched on start",
+   "desc": "Defines if timer is initially started"
+  },
+  {
+   "cls": "timer",
+   "name": "maxcalls",
+   "kind": "maxcalls",
+   "title": "Max calls",
+   "desc": "Maximum calls"
+  },
+  {
+   "cls": "timer",
+   "name": "target",
+   "kind": "trigger+none",
+   "title": "Trigger on timeout",
+   "desc": "Trigger being called on Timeout event"
+  },
+  {
+   "cls": "timer",
+   "name": "delay",
+   "kind": "value>=0",
+   "title": "Delay",
+   "desc": "Delay between calls"
+  },
+  {
+   "cls": "decor",
+   "name": "model",
+   "kind": "decor_model",
+   "title": "Model",
+   "desc": "Decoration model"
+  },
+  {
+   "cls": "inf",
+   "name": "mark",
+   "kind": "engine_mark",
+   "title": "Modificator",
+   "desc": "Game modificator"
+  },
+  {
+   "cls": "inf",
+   "name": "forteam",
+   "kind": "nochange",
+   "title": "Parameter",
+   "desc": "Modificator parameter"
+  },
+  {
+   "cls": "vehicle",
+   "name": "model",
+   "kind": "vehicle_model",
+   "title": "Model",
+   "desc": "Vehicle model"
+  },
+  {
+   "cls": "vehicle",
+   "name": "hpp",
+   "kind": "value>=0",
+   "title": "% of Hitpoints",
+   "desc": "Percentage value based on default hitpoints ammount for current vehicle"
+  },
+  {
+   "cls": "barrel",
+   "name": "model",
+   "kind": "barrel_model",
+   "title": "Model",
+   "desc": "Barrel model"
+  },
+  {
+   "cls": "trigger",
+   "name": "enabled",
+   "kind": "bool",
+   "title": "Enabled",
+   "desc": "Defines if trigger can be started without being enabled by different trigger"
+  },
+  {
+   "cls": "trigger",
+   "name": "maxcalls",
+   "kind": "maxcalls",
+   "title": "Max calls",
+   "desc": "Maximum calls"
+  },
+  {
+   "cls": "box",
+   "name": "m",
+   "kind": "box_model",
+   "title": "Material",
+   "desc": "Determines object's material"
+  },
+  {
+   "cls": "bg",
+   "name": "c",
+   "kind": "string",
+   "title": "HEX multiplier",
+   "desc": "Multiplier material with this color"
+  },
+  {
+   "cls": "song",
+   "name": "url",
+   "kind": "string",
+   "title": "URL",
+   "desc": ".mp3 file URL"
+  },
+  {
+   "cls": "song",
+   "name": "volume",
+   "kind": "value>=0",
+   "title": "Volume",
+   "desc": "Volume"
+  },
+  {
+   "cls": "door",
+   "name": "attach",
+   "kind": "door+none",
+   "title": "Attach to",
+   "desc": "Prevents any free move and attaches movable to other movable"
+  },
+  {
+   "cls": "bg",
+   "name": "a",
+   "kind": "door+none",
+   "title": "Attach to",
+   "desc": "Attaches background to movable"
+  },
+  {
+   "cls": "decor",
+   "name": "attach",
+   "kind": "door+none",
+   "title": "Attach to",
+   "desc": "Attaches decoration to movable"
+  },
+  {
+   "cls": "pushf",
+   "name": "attach",
+   "kind": "door+none",
+   "title": "Attach to",
+   "desc": "Attaches pusher to movable"
+  },
+  {
+   "cls": "region",
+   "name": "attach",
+   "kind": "door+none",
+   "title": "Attach to",
+   "desc": "Attaches region to movable"
+  },
+  {
+   "cls": "water",
+   "name": "friction",
+   "kind": "bool",
+   "title": "Act as water",
+   "desc": "Acts as water"
+  },
+  {
+   "cls": "song",
+   "name": "loop",
+   "kind": "bool",
+   "title": "Loop",
+   "desc": "Loop"
+  },
+  {
+   "cls": "song",
+   "name": "callback",
+   "kind": "trigger+none",
+   "title": "Trigger on end",
+   "desc": "Trigger to call after song ends"
+  },
+  {
+   "cls": "image",
+   "name": "id",
+   "kind": "value>=0",
+   "title": "Custom Image ID",
+   "desc": "Custom Image identificator"
+  },
+  {
+   "cls": "image",
+   "name": "width",
+   "kind": "value>0",
+   "title": "Width in pixels",
+   "desc": "Image width"
+  },
+  {
+   "cls": "image",
+   "name": "height",
+   "kind": "value>0",
+   "title": "Height in pixels",
+   "desc": "Image height"
+  },
+  {
+   "cls": "*",
+   "name": "u",
+   "kind": "value",
+   "title": "Texture X offset",
+   "desc": "Texture offset in pixels"
+  },
+  {
+   "cls": "*",
+   "name": "v",
+   "kind": "value",
+   "title": "Texture Y offset",
+   "desc": "Texture offset in pixels"
+  },
+  {
+   "cls": "*",
+   "name": "f",
+   "kind": "draw_in_front",
+   "title": "Draw in front",
+   "desc": "Draw in front?"
+  },
+  {
+   "cls": "*",
+   "name": "s",
+   "kind": "bool",
+   "title": "Spawn shadow",
+   "desc": "Spawn shadow?"
+  },
+  {
+   "cls": "*",
+   "name": "r",
+   "kind": "value",
+   "title": "Initial rotation",
+   "desc": "Rotation in degrees"
+  },
+  {
+   "cls": "*",
+   "name": "sx",
+   "kind": "value",
+   "title": "Scale X",
+   "desc": "Texture X scale"
+  },
+  {
+   "cls": "*",
+   "name": "sy",
+   "kind": "value",
+   "title": "Scale Y",
+   "desc": "Texture Y scale"
+  }
+ ],
+ "markPairs": {
+  "sky": "sky_model",
+  "shadowmap_size": "value>0+round1",
+  "casual": "nochange",
+  "nobase": "nochange",
+  "game2": "nochange",
+  "strict_casual": "nochange",
+  "no_auto_revive": "nochange",
+  "meat": "nochange",
+  "hero1_guns": "nochange",
+  "hero2_guns": "nochange",
+  "hero2_guns_nonades": "nochange",
+  "hero2_guns_nades": "nochange",
+  "nopsi": "nochange",
+  "gamescale": "value>=0",
+  "he_nades_count": "value>=0+round1",
+  "port_nades_count": "value>=0+round1",
+  "sh_nades_count": "value>=0+round1",
+  "snow": "nochange",
+  "watercolor": "string",
+  "acidcolor": "string",
+  "watertitle": "string",
+  "acidtitle": "string",
+  "dm_slots_on_spawn": "string",
+  "dm_max_guns_on_spawn": "value>=0+round1",
+  "level_errors": "nochange"
+ },
+ "tags": {
+  "box": {
+   "uid": false,
+   "place": true,
+   "rect": true,
+   "defaults": {
+    "m": "0"
+   },
+   "gameOnly": {}
+  },
+  "door": {
+   "uid": true,
+   "place": true,
+   "rect": true,
+   "defaults": {
+    "moving": "false",
+    "tarx": "0",
+    "tary": "0",
+    "maxspeed": "10",
+    "vis": "true",
+    "attach": "-1"
+   },
+   "gameOnly": {
+    "mute": {
+     "kind": "bool",
+     "title": "Mute",
+     "desc": "No sound when it starts and stops moving (read by the game, not shown by the map editor)",
+     "value": "false"
+    }
+   }
+  },
+  "region": {
+   "uid": true,
+   "place": true,
+   "rect": true,
+   "defaults": {
+    "use_target": "-1",
+    "use_on": "0",
+    "attach": "-1"
+   },
+   "gameOnly": {
+    "uses_timer": {
+     "kind": "bool",
+     "title": "Uses timer",
+     "desc": "Activation enables the timer \"Activation Trigger\" names instead of running a trigger (read by the game, not shown by the map editor)",
+     "value": "false"
+    }
+   }
+  },
+  "bg": {
+   "uid": false,
+   "place": true,
+   "rect": true,
+   "defaults": {
+    "m": "0",
+    "c": "",
+    "a": "-1",
+    "u": "0",
+    "v": "0",
+    "f": "0",
+    "s": "true"
+   },
+   "gameOnly": {}
+  },
+  "water": {
+   "uid": true,
+   "place": true,
+   "rect": true,
+   "defaults": {
+    "damage": "0",
+    "friction": "true"
+   },
+   "gameOnly": {
+    "attach": {
+     "kind": "door+none",
+     "title": "Attach to",
+     "desc": "Attaches water to movable (read by the game, not shown by the map editor)",
+     "value": "-1"
+    }
+   }
+  },
+  "pushf": {
+   "uid": true,
+   "place": true,
+   "rect": true,
+   "defaults": {
+    "tox": "0",
+    "toy": "0",
+    "stab": "0",
+    "damage": "0",
+    "attach": "-1"
+   },
+   "gameOnly": {}
+  },
+  "player": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "tox": "0",
+    "toy": "0",
+    "hea": "130",
+    "hmax": "130",
+    "team": "0",
+    "side": "1",
+    "char": "1",
+    "incar": "-1",
+    "botaction": "0",
+    "ondeath": "-1"
+   },
+   "gameOnly": {}
+  },
+  "enemy": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "tox": "0",
+    "toy": "0",
+    "hea": "130",
+    "hmax": "130",
+    "team": "0",
+    "side": "1",
+    "char": "1",
+    "incar": "-1",
+    "botaction": "0",
+    "ondeath": "-1"
+   },
+   "gameOnly": {}
+  },
+  "vehicle": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "side": "1",
+    "model": "veh_jeep",
+    "tox": "0",
+    "toy": "0",
+    "hpp": "100"
+   },
+   "gameOnly": {}
+  },
+  "barrel": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "model": "bar_orange",
+    "tox": "0",
+    "toy": "0"
+   },
+   "gameOnly": {}
+  },
+  "gun": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "model": "gun_rifle",
+    "command": "-1",
+    "upg": "0"
+   },
+   "gameOnly": {}
+  },
+  "decor": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "model": "stone",
+    "attach": "-1",
+    "u": "0",
+    "v": "0",
+    "f": "0",
+    "r": "0",
+    "sx": "1",
+    "sy": "1"
+   },
+   "gameOnly": {
+    "text": {
+     "kind": "string",
+     "title": "Text",
+     "desc": "What a text decoration (models text, text2, text3) says (read by the game, not shown by the map editor)",
+     "value": ""
+    }
+   }
+  },
+  "lamp": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "power": "0.4",
+    "flare": "1"
+   },
+   "gameOnly": {}
+  },
+  "trigger": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "enabled": "true",
+    "maxcalls": "1"
+   },
+   "gameOnly": {
+    "execute": {
+     "kind": "bool",
+     "title": "Run at start",
+     "desc": "Runs when the level starts, and when a match starts a new round (read by the game, not shown by the map editor)",
+     "value": "false"
+    }
+   }
+  },
+  "timer": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "enabled": "true",
+    "maxcalls": "1",
+    "target": "-1",
+    "delay": "30"
+   },
+   "gameOnly": {}
+  },
+  "song": {
+   "uid": true,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "url": "",
+    "volume": "1",
+    "loop": "true",
+    "callback": "-1"
+   },
+   "gameOnly": {}
+  },
+  "inf": {
+   "uid": false,
+   "place": true,
+   "rect": false,
+   "defaults": {
+    "mark": "hero1_guns",
+    "forteam": "0"
+   },
+   "gameOnly": {}
+  },
+  "image": {
+   "uid": false,
+   "place": false,
+   "rect": false,
+   "defaults": {
+    "id": "0",
+    "width": "100",
+    "height": "100"
+   },
+   "gameOnly": {}
+  }
  }
 }

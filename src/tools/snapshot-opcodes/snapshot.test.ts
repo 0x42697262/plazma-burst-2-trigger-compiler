@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readOpcodeTable, toSnapshot } from './snapshot.ts';
+import type { EditorRules } from './snapshot.ts';
 
 const SAMPLE = `globalThis.PB2_OPCODES = {
   "source": "lib_params.js", "fetched": "2026-11-01",
@@ -35,6 +36,24 @@ describe('snapshot-opcodes', () => {
         363: { a: 'trigger', b: 'nochange', desc: 'Switch' },
       },
       values: {},
+    });
+  });
+
+  it('keeps the parameter table, the mark pairs and the editor rules of each map element', () => {
+    const table = readOpcodeTable(SAMPLE.replace('"actions": {', '"params": [{ "cls": "door", "name": "maxspeed", "kind": "value>=0", "title": "Speed", "desc": "Speed", "extra": 1 }],\n  "markPairs": { "sky": "sky_model" },\n  "actions": {'));
+    assert.ok(table);
+    const editor: EditorRules = {
+      tags: ['door', 'inf'], shapeOf: (tag) => (tag === 'door' ? 'rect' : 'point'),
+      defaults: { door: { maxspeed: '10' }, inf: { mark: 'hero1_guns', forteam: '0' } },
+      gameOnly: { door: { mute: { kind: 'bool', title: 'Mute', desc: 'No sound', value: 'false' } } },
+      noUid: new Set(['inf']), noPlace: new Set(),
+    };
+    const snapshot = toSnapshot(table, editor);
+    assert.deepEqual(snapshot.params, [{ cls: 'door', name: 'maxspeed', kind: 'value>=0', title: 'Speed', desc: 'Speed' }]);
+    assert.deepEqual(snapshot.markPairs, { sky: 'sky_model' });
+    assert.deepEqual(snapshot.tags, {
+      door: { uid: true, place: true, rect: true, defaults: { maxspeed: '10' }, gameOnly: { mute: { kind: 'bool', title: 'Mute', desc: 'No sound', value: 'false' } } },
+      inf: { uid: false, place: true, rect: false, defaults: { mark: 'hero1_guns', forteam: '0' }, gameOnly: {} },
     });
   });
 });
