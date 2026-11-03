@@ -4,6 +4,11 @@
 (XML from the website editor or `plazma-burst-2/data/maps/`) and writes `<dir>/<map>.ptc`
 (default `out/`). The notes it prints are also at the top of the file.
 
+In the web page: **Map ▾ › Convert a map XML to .ptc…** opens the converted source in a new
+file (`<map>.ptc`, or `<map>-2.ptc` when that name is taken). **Map ▾ › Add the program to a map
+XML…** is the other choice: Build then writes that map with the program in it, until **Close the
+map** (or the × on the map's name).
+
 ## What the source looks like
 
 - Every object is in one `map { }` block, in the map's order (the order of each kind is kept, so

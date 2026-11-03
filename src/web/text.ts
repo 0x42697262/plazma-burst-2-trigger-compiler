@@ -4,7 +4,11 @@ export const TEXT = Object.freeze({
   noProblems: 'No problems.',
   problem: (severity: string, file: string, line: number, message: string): string => `${severity} ${file}:${line}: ${message}`,
   compiled: (triggers: number, actions: number, timers: number): string => `${triggers} triggers, ${actions} actions, ${timers} timers`,
-  noMap: 'Choose a map XML (downloaded from the editor) to append the program to it.',
+  noMap: 'No map is open. Map ▾ › Add the program to a map XML… to build the program into a map.',
+  mapFailed: 'The map could not be built; see Problems.',
+  converted: (file: string, notes: number): string => `Converted to ${file}${notes > 0 ? ` (${notes} notes at the top)` : ''}`,
+  convertedName: (base: string, number: number): string => (number === 1 ? `${base}.ptc` : `${base}-${number}.ptc`),
+  mapClosed: 'Map closed',
   hostMapChosen: (name: string): string => name,
   ready: 'Ready',
   chips: Object.freeze({
@@ -20,7 +24,7 @@ export const TEXT = Object.freeze({
     `${build} build · ${run} run · ${palette} commands · ${files} files · ${settings} settings · ${reference} reference`,
   commands: Object.freeze({
     build: 'Build', run: 'Run in the simulator', settings: 'Open build settings', reference: 'Show or hide the reference', vim: 'Toggle Vim keys',
-    map: 'Choose a map XML…', clearMap: 'Forget the map', newFile: 'New file…', newSeed: 'New obfuscation seed', copy: 'Copy the output', download: 'Download the output',
+    map: 'Add the program to a map XML…', convertMap: 'Convert a map XML to .ptc…', clearMap: 'Close the map', newFile: 'New file…', newSeed: 'New obfuscation seed', copy: 'Copy the output', download: 'Download the output',
     guide: 'Open the language guide', searchReference: 'Search the reference', resetLayout: 'Reset the layout', blueprint: 'Show or hide the blueprint',
     openFile: (name: string): string => `Open file: ${name}`, deleteFile: (name: string): string => `Delete file: ${name}`, example: (name: string): string => `Open example: ${name}`, output: (name: string): string => `Show ${name}`,
     toggle: (name: string, on: boolean): string => `${on ? 'Turn off' : 'Turn on'}: ${name}`, target: (name: string): string => `Target: ${name}`,

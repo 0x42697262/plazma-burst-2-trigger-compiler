@@ -13,7 +13,7 @@ import { ReferencePanel } from './reference-panel.ts';
 import { Dock } from './dock.ts';
 import {
   ATTRIBUTE, CLASS, DARK_QUERY, DOCK, EMPTY_OBJECT, ESCAPE, FOLDER_POSITION, GUIDE_URL, KEY_NAME, KEYDOWN, LIBRARY_FOLDER, MAC_PLATFORM, OUTPUT_BUTTONS, ROW_SELECTOR, SCROLL_NEAREST,
-  SELECTOR, SHORTCUT, SHORTCUT_KEY, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT,
+  SELECTOR, SHORTCUT, SHORTCUT_KEY, CONVERTED_FALLBACK, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MAP_FILE_EXTENSION, MIME, OUTPUT, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT,
 } from './keys.ts';
 import { BLUEPRINT_REFRESH_DELAY, DEFAULT_FRAMES, DEFAULT_GUARD, FLASH_TIME, LAYOUT_SAVE_DELAY, STATUS_TIME } from './constants.ts';
 import { TEXT } from './text.ts';
@@ -21,6 +21,8 @@ import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { DEFAULT_TARGET, isTarget, TARGETS } from '../pcode/keys.ts';
 import { isStandardLibrary } from '../lang/file-paths.ts';
 import { randomSeed } from '../obfuscate/random.ts';
+import { convertMap } from '../convert/convert.ts';
+import { STYLE } from '../convert/keys.ts';
 
 type OutputName = (typeof OUTPUT)[keyof typeof OUTPUT];
 
@@ -70,6 +72,12 @@ const paletteInput = element<HTMLInputElement>(ELEMENT.paletteInput);
 const paletteList = element<HTMLUListElement>(ELEMENT.paletteList);
 const hostMapName = element<HTMLSpanElement>(ELEMENT.hostMapName);
 const hostMapClear = element<HTMLButtonElement>(ELEMENT.hostMapClear);
+const hostMapChip = element<HTMLSpanElement>(ELEMENT.hostMapChip);
+const hostMapButton = element<HTMLButtonElement>(ELEMENT.hostMapButton);
+const hostMapInput = element<HTMLInputElement>(ELEMENT.hostMap);
+const convertMapInput = element<HTMLInputElement>(ELEMENT.convertMap);
+const mapMenu = element<HTMLDivElement>(ELEMENT.mapMenu);
+const mapForget = element<HTMLButtonElement>(ELEMENT.mapForget);
 
 const savedOptions = readJson<Options>(STORAGE.options);
 prefixInput.value = savedOptions.prefix ?? '';
@@ -139,7 +147,7 @@ const outputText = (name: OutputName): string => {
     case OUTPUT.text:
       return last.text;
     case OUTPUT.map:
-      return hostMap === null ? TEXT.noMap : last.map;
+      return hostMap === null ? TEXT.noMap : last.map === '' ? TEXT.mapFailed : last.map;
     case OUTPUT.run:
       return runLines.join(TEXT.separator);
   }
@@ -416,15 +424,44 @@ const downloadOutput = (): void => {
   link.click();
   URL.revokeObjectURL(link.href);
 };
-const chooseMap = (): void => element<HTMLInputElement>(ELEMENT.hostMap).click();
+const setMapMenu = (open: boolean): void => {
+  mapMenu.hidden = !open;
+  hostMapButton.setAttribute(ATTRIBUTE.expanded, String(open));
+  if (open) mapMenu.querySelector<HTMLButtonElement>(SELECTOR.firstMenuItem)?.focus();
+};
+const chooseMap = (): void => {
+  setMapMenu(false);
+  hostMapInput.click();
+};
+const chooseConversion = (): void => {
+  setMapMenu(false);
+  convertMapInput.click();
+};
 const clearMap = (): void => {
+  setMapMenu(false);
   hostMap = null;
   hostMapName.textContent = '';
-  hostMapClear.hidden = true;
-  element<HTMLInputElement>(ELEMENT.hostMap).value = '';
+  hostMapChip.hidden = true;
+  mapForget.hidden = true;
+  hostMapInput.value = '';
   if (last) compile();
-  show(shown);
+  show(shown === OUTPUT.map ? (last?.result ? OUTPUT.xml : OUTPUT.problems) : shown);
   scheduleBlueprint();
+  say(TEXT.mapClosed);
+};
+const freeConvertedName = (base: string): string => {
+  for (let number = 1; ; number++) {
+    const file = workspace.workspacePath(TEXT.convertedName(base, number));
+    if (workspace.get(file) === null) return file;
+  }
+};
+const convertChosenMap = (name: string, xml: string): void => {
+  const conversion = convertMap(xml, { style: STYLE.functions, label: name });
+  const file = freeConvertedName(name.replace(MAP_FILE_EXTENSION, '') || CONVERTED_FALLBACK);
+  workspace.set(file, conversion.source);
+  openFile(file);
+  compile();
+  say(TEXT.converted(shortName(file), conversion.notes.length));
 };
 
 element(ELEMENT.compile).addEventListener(EVENT.click, buildAndShow);
@@ -434,19 +471,40 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(OUTPUT_BUTTONS
 }
 element(ELEMENT.copy).addEventListener(EVENT.click, copyOutput);
 element(ELEMENT.download).addEventListener(EVENT.click, downloadOutput);
-element(ELEMENT.hostMapButton).addEventListener(EVENT.click, chooseMap);
+hostMapButton.addEventListener(EVENT.click, () => setMapMenu(mapMenu.hidden === true));
+element(ELEMENT.mapImport).addEventListener(EVENT.click, chooseMap);
+element(ELEMENT.mapConvert).addEventListener(EVENT.click, chooseConversion);
+mapForget.addEventListener(EVENT.click, clearMap);
+document.addEventListener(EVENT.pointerDown, (event) => {
+  if (!mapMenu.hidden && !(event.target instanceof Node && (mapMenu.contains(event.target) || hostMapButton.contains(event.target)))) setMapMenu(false);
+});
+mapMenu.addEventListener(KEYDOWN, (event) => {
+  if (event.key === ESCAPE) {
+    event.stopPropagation();
+    setMapMenu(false);
+    hostMapButton.focus();
+  }
+});
 element(ELEMENT.settingsButton).addEventListener(EVENT.click, () => toggleSettings());
 element(ELEMENT.referenceButton).addEventListener(EVENT.click, () => panel.toggle());
 const toggleBlueprint = (): void => dock.show(DOCK.panel.blueprint, !dock.isOpen(DOCK.panel.blueprint));
 element(ELEMENT.blueprintButton).addEventListener(EVENT.click, toggleBlueprint);
 hostMapClear.addEventListener(EVENT.click, clearMap);
-element<HTMLInputElement>(ELEMENT.hostMap).addEventListener(EVENT.change, (event) => {
+convertMapInput.addEventListener(EVENT.change, () => {
+  const file = convertMapInput.files?.[0];
+  convertMapInput.value = '';
+  if (!file) return;
+  void file.text().then((text) => convertChosenMap(file.name, text));
+});
+hostMapInput.addEventListener(EVENT.change, (event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
   void file.text().then((text) => {
     hostMap = text;
     hostMapName.textContent = TEXT.hostMapChosen(file.name);
-    hostMapClear.hidden = false;
+    hostMapName.title = file.name;
+    hostMapChip.hidden = false;
+    mapForget.hidden = false;
     compile();
     show(OUTPUT.map);
     scheduleBlueprint();
@@ -469,6 +527,7 @@ const commands = (): Command[] => {
     { title: TEXT.commands.blueprint, detail: TEXT.commandDetail.action, shortcut: '', run: toggleBlueprint },
     ...Object.values(OUTPUT).map((name): Command => ({ title: TEXT.commands.output(TEXT.outputNames[name]), detail: TEXT.commandDetail.output, shortcut: '', run: () => show(name) })),
     { title: TEXT.commands.map, detail: TEXT.commandDetail.action, shortcut: '', run: chooseMap },
+    { title: TEXT.commands.convertMap, detail: TEXT.commandDetail.action, shortcut: '', run: chooseConversion },
     ...(hostMap === null ? [] : [{ title: TEXT.commands.clearMap, detail: TEXT.commandDetail.action, shortcut: '', run: clearMap }]),
     { title: TEXT.commands.copy, detail: TEXT.commandDetail.action, shortcut: '', run: copyOutput },
     { title: TEXT.commands.download, detail: TEXT.commandDetail.action, shortcut: '', run: downloadOutput },

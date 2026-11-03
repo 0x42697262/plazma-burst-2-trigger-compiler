@@ -17,6 +17,12 @@ export const ELEMENT = Object.freeze({
   hostMapName: 'host-map-name',
   hostMapButton: 'host-map-button',
   hostMapClear: 'host-map-clear',
+  hostMapChip: 'host-map-chip',
+  convertMap: 'convert-map',
+  mapMenu: 'map-menu',
+  mapImport: 'map-import',
+  mapConvert: 'map-convert',
+  mapForget: 'map-forget',
   replace: 'replace',
   nameSeed: 'name-seed',
   obfuscate: 'obfuscate',
@@ -58,7 +64,9 @@ export const CLASS = Object.freeze({
   groupActions: 'group-actions', watermark: 'watermark', quiet: 'quiet', mini: 'mini',
 });
 export const MIME = Object.freeze({ xml: 'application/xml', text: 'text/plain' });
-export const ATTRIBUTE = Object.freeze({ file: 'data-file', output: 'data-output' });
+export const ATTRIBUTE = Object.freeze({ file: 'data-file', output: 'data-output', expanded: 'aria-expanded' });
+export const MAP_FILE_EXTENSION = /\.(xml|txt)$/i;
+export const CONVERTED_FALLBACK = 'map';
 export const EVENT = Object.freeze({
   click: 'click', change: 'change', input: 'input', keydown: 'keydown', pointerDown: 'pointerdown', pointerMove: 'pointermove', pointerUp: 'pointerup', pointerLeave: 'pointerleave',
   wheel: 'wheel', doubleClick: 'dblclick',
@@ -132,7 +140,7 @@ export const PANEL = Object.freeze({
   signature: 'ref-signature', summary: 'ref-summary', insert: 'ref-insert', list: 'ref-list', linked: 'linked', dot: 'ref-dot', text: 'ref-text', line: 'ref-line',
   name: 'ref-name', detail: 'ref-detail', fieldSummary: 'ref-field-summary', add: 'ref-add', colored: 'colored', colorVariable: '--entry-color',
 });
-export const SELECTOR = Object.freeze({ active: '.active' });
+export const SELECTOR = Object.freeze({ active: '.active', firstMenuItem: 'button:not([hidden])' });
 export const ROW_SELECTOR = '.row, .stack';
 export const WORD_GAP = /\s+/;
 export const BLUEPRINT_VIEW = Object.freeze({

@@ -21,9 +21,16 @@
     </div>
     <div class="toolbar-side toolbar-end">
       <input id="host-map" type="file" accept=".xml,.txt" hidden>
-      <button id="host-map-button" class="quiet" title="A map XML downloaded from the editor: the program is added to it">Map…</button>
-      <span id="host-map-name" class="muted"></span>
-      <button id="host-map-clear" class="quiet icon" title="Forget the map" hidden>×</button>
+      <input id="convert-map" type="file" accept=".xml,.txt" hidden>
+      <div class="menu-anchor">
+        <button id="host-map-button" class="quiet" aria-haspopup="menu" aria-expanded="false" title="Use a map XML downloaded from the editor">Map ▾</button>
+        <div id="map-menu" class="menu" role="menu" hidden>
+          <button id="map-import" role="menuitem"><span>Add the program to a map XML…</span><small>Build writes the map with the program in it</small></button>
+          <button id="map-convert" role="menuitem"><span>Convert a map XML to .ptc…</span><small>Opens the map as source in a new file</small></button>
+          <button id="map-forget" role="menuitem" hidden><span>Close the map</span><small>Build writes only the program again</small></button>
+        </div>
+      </div>
+      <span id="host-map-chip" class="map-chip" hidden><span id="host-map-name"></span><button id="host-map-clear" class="quiet icon" title="Close the map">×</button></span>
       <button id="settings-button" class="quiet icon" title="Build settings">⚙︎</button>
       <button id="palette-button" class="quiet" title="Commands">⌘K</button>
       <button id="blueprint-button" class="quiet" title="A drawing of the map objects: select one to see its code; moves are a scratchpad, reset by every compile">Blueprint</button>
