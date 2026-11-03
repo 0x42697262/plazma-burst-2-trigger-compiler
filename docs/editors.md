@@ -13,7 +13,7 @@ elsewhere.
 - **Toolbar:** Examples and Files open searchable lists (Files is also ⌘P). Run (⌘⇧↩) runs the
   program in the simulator; Build (⌘↩) writes the XML and the trigger text. The field next to them
   shows the result (triggers, actions, timers) and a chip for every setting that is not the default
-  (`pcode`, `obfuscated`, `replace`, `env 2`...); a click on a chip opens Settings at that setting.
+  (`pcode`, `obfuscated`, `tamper report`, `replace`, `env 2`...); a click on a chip opens Settings at that setting.
 - **Panels:** every file, Output, Reference and Settings is a tab. Drag a tab to reorder it, onto
   the edge of another panel to split the view, or out to float it; drag the lines between panels to
   resize them. The layout is saved; "Reset the layout" in the command list puts it back. Closing a
@@ -54,7 +54,9 @@ elsewhere.
     from the site editor" (on by default) keeps text like `"007"` as text when the map is saved in
     the website editor (F36; off is `--no-number-text`); "Direct array index" (`--direct-index`).
   - Names: prefix, and name seed (`--name-seed`: reproducible, source-independent names).
-  - Protection: obfuscate and its seed (`--obfuscate`, `--obfuscate-seed`; New picks one).
+  - Protection: obfuscate and its seed (`--obfuscate`, `--obfuscate-seed`; New picks one); tamper
+    check `Off`, `Report` or `Enforce` and its seed (`--tamper-check`, `--tamper-seed`,
+    [tamper-check.md](tamper-check.md)). The command palette has `Tamper check: <mode>`.
   - Map: "Replace the previous build" (`--replace`): remove the program's old triggers, timers,
     walls and backgrounds from the chosen map first. The page remembers the uids and walls of the
     last map build (per file), so this works across renamed builds.

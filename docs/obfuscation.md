@@ -21,6 +21,9 @@ problems), and "new seed" puts a fresh random seed in the box.
 Unless `--prefix` or `--name-seed` is given, the prefix also comes from the seed (`z...`, like
 `--name-seed`). `--replace` with the `.build.json` record updates a map in place across seeds.
 
+To notice changes made while the map is played (a helper tool that runs triggers or sets
+variables), add `--tamper-check` ([tamper-check.md](tamper-check.md)); the two work together.
+
 ## What it does
 
 | Part | In the map | Run-time cost |

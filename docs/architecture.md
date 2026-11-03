@@ -27,6 +27,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Standard library | `std/` | `.ptc` files for `import "std/..."` (`hash.ptc`); read by `src/cli/sources.ts`, bundled into the web page |
 | P-code target | `src/pcode/` | `--target pcode`: instructions as text plus one trigger per kind of instruction ([pcode.md](pcode.md)) |
 | Obfuscation | `src/obfuscate/` | `--obfuscate`: encoded texts and a start routine with the integrity check, dispatched jumps, grouped actions and fixed-outcome checks around the layout ([obfuscation.md](obfuscation.md)) |
+| Tamper check | `src/tamper/` | `--tamper-check`: flow tokens on the program's own jumps (a layout control), entry checks after entry labels, `protected var` mirrors in the code generator, a watchdog timer, finding handlers and the delayed reaction as machine triggers ([tamper-check.md](tamper-check.md)) |
 | Web page | `src/web/`, `src/tools/build-web/` | CodeMirror editor (Vim mode), compiler and simulator in the browser; toolbar, dockable panels with window controls (`dock.ts`, on dockview), command palette and option chips (`commands.ts`), reference panel (`reference-panel.ts`), blueprint of the map (`blueprint-model.ts` geometry and hit testing, `blueprint.ts` drawing and scratch moves); built into `site/` |
 | Tools | `src/tools/` | `live-check`, `snapshot-opcodes`, `actions-doc` (writes `docs/actions.md`), `emit-sample` (the hand-built M1 sample), the repository's lint rules |
 
@@ -38,7 +39,8 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
    checks that `docs/tutorial.md` quotes the files exactly.
 4. `npm run live-check` runs `examples/live/*`, `examples/tutorial/*` and `examples/syntax/*` in the real game and compares every variable with
    the simulator (type and value); it must stay at all programs matching. Last run: 59 of 59
-   (2026-11-02), with the `map { }` objects placed in the map. Steps: [game-facts.md](game-facts.md#the-live-check).
+   (2026-11-02), with the `map { }` objects placed in the map; with `-- --tamper-check report` and
+   `-- --tamper-check enforce --obfuscate`: 60 of 60 (2026-11-03). Steps: [game-facts.md](game-facts.md#the-live-check).
 
 ## History
 

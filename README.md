@@ -101,6 +101,7 @@ simulator runs.
 | `--replace` | with `--into`: remove this program's old triggers, timers, walls and backgrounds from the map first, to update it in place |
 | `--name-seed <s>` | derive the name prefix from a seed: reproducible, source-independent names. Pair with `--replace` to update a map across renamed builds (a `.build.json` next to the output records the uids) |
 | `--obfuscate`, `--obfuscate-seed <s\|random>` | shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check that turns a changed copy of the map off; about 3× slower ([docs/obfuscation.md](docs/obfuscation.md)) |
+| `--tamper-check <off\|report\|enforce>`, `--tamper-seed <s>`, `--tamper-layers <list>` | build checks that notice triggers run outside the program and values it did not write (`protected var`); `report` counts findings, `enforce` turns the program off after firm evidence and a delay; about 1.5× slower ([docs/tamper-check.md](docs/tamper-check.md)) |
 | `--target <name>` | `triggers` (default) compiles to triggers; `pcode` compiles to p-code run by a fixed set of triggers: about 20× slower, experimental ([docs/pcode.md](docs/pcode.md)) |
 | `--direct-index` | build array element names from pieces instead of scanning every variable: 2 more actions per array access, faster in maps with many variables (F37) |
 | `--no-number-text` | write number-like text such as `"007"` as it is, for map editors other than the website one; by default it is kept safe from the website editor, which turns it into a number (F36) |
@@ -112,7 +113,7 @@ simulator runs.
 |---|---|
 | `npm run verify` | lint, type check, tests |
 | `npm run convert -- <map.xml>` | turns a saved map into `.ptc` source ([docs/convert.md](docs/convert.md)); `--check` compiles it again and compares with the map |
-| `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator (`-- --direct-index`, `-- --pcode` or `-- --obfuscate` compiles them that way; `-- --only <name>` picks some) |
+| `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator (`-- --direct-index`, `-- --pcode`, `-- --obfuscate` or `-- --tamper-check <mode>` compiles them that way; `-- --only <name>` picks some) |
 | `npm run web` | builds the web page into `site/` |
 | `npm run lsp` | starts the language server on stdio |
 | `npm run actions-doc` | rebuilds `docs/actions.md` from the action table |

@@ -276,7 +276,9 @@ never-changing `i` is as cheap as `list[2]`.
   - `export var score;` is listed after compiling (`score = ~<prefix>_score~`). With `--into`, the
     compiler warns when the host map uses one of the program's variables that is not exported:
     those names can change when the program changes.
-- There is no private/public/protected: the game could not enforce them.
+- There is no private or public: the game could not enforce them. `protected var` is not access
+  control either: with `--tamper-check`, it makes every read check that the program wrote the value
+  ([tamper-check.md](tamper-check.md)).
 - `import "std/name.ptc";` imports from the standard library that comes with the compiler
   (`std/` in this repository; the web page has it built in). `std/hash.ptc` gives `hash(text)`.
 
@@ -357,6 +359,7 @@ Collections:
 | `water pool = "#water*1";` | a map object the map already has (see Map objects) |
 | `map { gate = Door("#door*3", maxspeed: 50); }` | creates and sets map objects while compiling (see Map block) |
 | `region spawns[] = ["#S1", "#S2"];` / `decor grid[][] = [["#a", "#b"], ["#c", "#d"]];` | an array of map objects, nested to any depth |
+| `protected var gold = 100;` | with `--tamper-check`: every write also updates a mirror and a moving mask, every read checks them ([tamper-check.md](tamper-check.md)). Not with `export`, arrays, `sync`, `action(...)` or map block triggers |
 | `export var score = 0;` / `export var list[];` | a variable meant for the host map or other programs: listed after compiling; with `--into`, using a non-exported one from the host map is warned about |
 | `import "lib/tools.ptc";` | adds every declaration of that file (path relative to this file; each file once) |
 | `function f(a, b) { ... }` | function; builtin names cannot be used |
@@ -365,6 +368,7 @@ Collections:
 | `on join { ... }` | runs each time a player joins (action 228). One per program; the game keeps one join trigger for the whole map, so the host map's own, or a second compiled program's, replaces it |
 | `on chat { ... }` | runs for every chat line (action 156); `chatText()`, `talker()` and `talkerName()` tell what was said and by whom. One chat receiver per map (F31) |
 | `every 30 { ... }` | runs every 30 frames (a timer) |
+| `on tamper { ... }` | with `--tamper-check`: in report, runs after new findings; in enforce, runs once before the program turns itself off. No `wait` in it; without `--tamper-check` it is left out with a warning |
 
 ## Statements
 
@@ -427,6 +431,7 @@ Text escapes: `\" \\ \n \{ \}`.
 | `team(slot)` | the team number of the player in a slot |
 | `killer()`, `multiplayer()`, `mapId()` | the killer's slot in death events (-1 when none), 1 in a multiplayer match, the ID of the map being played |
 | `sin(x)`, `cos(x)`, `asin(x)`, `acos(x)`, `atan2(y, x)` | trigonometry in radians (actions 135, 136, 204–206); also while compiling |
+| `tamperFinding()`, `tamperCount()` | with `--tamper-check`: the kind of the last finding (1 flow, 2 value, 3 start, 4 timer, 5 wait, 6 stalled, 7 idle, 8 late) and the number of findings ([tamper-check.md](tamper-check.md)) |
 | `login(slot)`, `talkerLogin()` | the account login of the player in a slot (`Empty` when nobody is there), of the chat writer (F38) |
 | `env("NAME")` / `env("NAME", "fallback")` | in a `const` only: an environment variable while compiling, or the fallback when it is not set |
 | `action(op, a, b)` | any action, by number or alias. A name argument gives that variable's game name, `@f` gives function `f`'s uid, text gives itself; `{x}` inside text gives x's game name |
@@ -496,13 +501,13 @@ program        = { import | declaration } ;
 
 import         = "import" string ";" ;
 
-declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
+declaration    = [ "protected" ] [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
                | [ "secret" ] "const" identifier "=" expression ";"
                | "extern" identifier [ "=" string ] ";"
                | object-kind identifier "=" string ";"
                | object-kind identifier "[" "]" { "[" "]" } "=" uid-list ";"
                | [ "export" ] "function" identifier "(" [ identifier { "," identifier } ] ")" block
-               | "on" ( "start" | "join" | "chat" ) block
+               | "on" ( "start" | "join" | "chat" | "tamper" ) block
                | "every" number block
                | "map" block ;
 
@@ -582,7 +587,8 @@ Rules the grammar does not show:
   `let`; the `;` after its block is optional. Inside it, `action(...)` adds an action.
 - Binary operators of the same level group from the left: `a - b - c` is `(a - b) - c`.
 - `"@" identifier` (a function's trigger) is allowed only as an argument of `action(...)`.
-- `"secret"` is a word only right before `"const"`; elsewhere it is an identifier. `env(...)` is allowed
+- `"protected"` is a word only right before `"var"` or `"export"`, `"secret"` only right before `"const"`;
+  elsewhere they are identifiers. `env(...)` is allowed
   only inside a `const` expression, with one string in quotes.
 - A `const` expression must be computable while compiling: no actions on the game.
 - In `every`, `wait` and `drop`, the number must be a whole number above 0 (for `drop`: any whole
