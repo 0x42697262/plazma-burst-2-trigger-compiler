@@ -141,6 +141,21 @@ describe('simulator', () => {
     assert.equal(simulation.variables.hit, 1);
   });
 
+  it('reads a timer counter, which is 0 while its target runs, and sets timer calls and delay', () => {
+    const simulation = new Simulation({
+      triggers: [trigger('#a', [action(454, 'during', '#t'), action(101, 'runs', '0'), action(102, 'runs', '1')]), trigger('#b', [action(454, 'outside', '#t')]), trigger('#c', [action(46, '#t', '0'), action(27, '#t', '2')])],
+      timers: [{ uid: '#t', target: '#a', enabled: true, maxCalls: -1, delay: 3 }],
+    });
+    simulation.tick(4);
+    simulation.runUid('#b');
+    assert.equal(simulation.variables.during, 0);
+    assert.equal(simulation.variables.outside, 1);
+    simulation.runUid('#c');
+    simulation.tick(6);
+    assert.equal(simulation.variables.runs, 1);
+    assert.equal(simulation.timers[0]?.delay, 2);
+  });
+
   it('names players like the game: Empty for an inactive slot, and no active check by variable', () => {
     const players = [{ slot: 0, name: 'ann', active: true }, { slot: 1, name: 'old', active: false }];
     const simulation = new Simulation(program(trigger('#a', [

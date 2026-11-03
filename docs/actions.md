@@ -501,10 +501,10 @@ needs the Var Sync engine mark (F30).
 |---|---|---|---|---|---|
 | 25 | `TimerEnable` | timer | nochange | Activate Timer 'A' | sim |
 | 26 | `TimerDisable` | timer | nochange | Deactivate Timer 'A' | sim |
-| 27 | `TimerSetFrequency` | timer | int | Set the frequency of calls of Timer 'A' to value 'B' |  |
+| 27 | `TimerSetFrequency` | timer | int | Set the frequency of calls of Timer 'A' to value 'B' | sim |
 | 44 | `ResetTimerPhase` | timer | nochange | Reset current phase of between-call waiting of Timer 'A' | sim |
-| 46 | `SetTimerCalls` | timer | maxcalls | Set remain calls number of Timer 'A' to value 'B' |  |
-| 454 | `op454` | string | timer | Set variable 'A' to time elapsed of Timer 'B' |  |
+| 46 | `SetTimerCalls` | timer | maxcalls | Set remain calls number of Timer 'A' to value 'B' | sim |
+| 454 | `op454` | string | timer | Set variable 'A' to time elapsed of Timer 'B' | sim |
 
 ## Trigger (8)
 
@@ -512,7 +512,7 @@ needs the Var Sync engine mark (F30).
 |---|---|---|---|---|---|
 | 19 | `TriggerDisable` | trigger | nochange | Deactivate Trigger 'A' | sim |
 | 20 | `TriggerEnable` | trigger | nochange | Activate Trigger 'A' | sim |
-| 21 | `TriggerSetCalls0` | trigger | nochange | Set number of remain calls of Trigger 'A' to 0 |  |
+| 21 | `TriggerSetCalls0` | trigger | nochange | Set number of remain calls of Trigger 'A' to 0 | sim |
 | 22 | `TriggerSetCallsValue` | trigger | maxcalls | Set number of remain calls of Trigger 'A' to value 'B' | sim |
 | 156 | `SetChatInputCallback` | trigger | nochange | Set trigger 'A' as player chat message receiver | sim |
 | 228 | `op228` | trigger | nochange | Call trigger 'A' each time new player joins the match | sim |

@@ -301,8 +301,20 @@ export class Simulation {
       case OPCODE.enableTrigger:
         this.triggerAt(action.targetA).enabled = true;
         break;
+      case OPCODE.setTriggerCallsZero:
+        this.triggerAt(action.targetA).calls = 0;
+        break;
       case OPCODE.setTriggerCalls:
         this.triggerAt(action.targetA).calls = toIndex(valueB);
+        break;
+      case OPCODE.setTimerDelay:
+        this.timerAt(action.targetA).delay = toFloat(valueB);
+        break;
+      case OPCODE.setTimerCalls:
+        this.timerAt(action.targetA).calls = toIndex(valueB);
+        break;
+      case OPCODE.timerElapsed:
+        vars[nameA] = this.timerAt(valueB).counter;
         break;
       case OPCODE.enableTimer:
         this.timerAt(action.targetA).enabled = true;
