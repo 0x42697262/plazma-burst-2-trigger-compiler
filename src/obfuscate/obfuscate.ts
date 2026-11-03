@@ -1,7 +1,7 @@
 import type { Instruction } from '../compiler/ir.ts';
 import type { MachineItem } from '../compiler/lower.ts';
 import { layout } from '../compiler/layout.ts';
-import type { LayoutResult } from '../compiler/layout.ts';
+import type { LayoutControl, LayoutResult } from '../compiler/layout.ts';
 import type { Names } from '../compiler/names.ts';
 import type { Trigger } from '../program/types.ts';
 import type { PcodeObfuscation, PcodeResult } from '../pcode/pcode.ts';
@@ -18,6 +18,8 @@ export type Obfuscation = { seed: string };
 
 export type ObfuscatedLayout = LayoutResult & { machineUids: Set<string> };
 
+export type CheckedControl = (control: LayoutControl, check: { variable: string; value: number }) => LayoutControl;
+
 const PURPOSE = Object.freeze({ texts: 'texts', predicates: 'predicates', groups: 'groups', run: 'run', flow: 'flow', pcode: 'pcode' });
 
 export type Obfuscator = {
@@ -25,7 +27,7 @@ export type Obfuscator = {
   mapDependent: readonly string[];
   prepare: (instructions: readonly Instruction[], entries: ReadonlySet<string>, callInit: boolean) => Instruction[];
   texts: () => readonly EncodedText[];
-  layout: (items: readonly MachineItem[]) => ObfuscatedLayout;
+  layout: (items: readonly MachineItem[], wrap?: CheckedControl) => ObfuscatedLayout;
   pcode: () => PcodeObfuscation;
   finishPcode: (pcode: PcodeResult) => Trigger[];
 };
@@ -48,13 +50,14 @@ export function createObfuscator(names: Names, options: Obfuscation, hostNames: 
         (instruction.kind === 'label' && entries.has(instruction.label) ? [instruction, ...initCall(initUid, variables.failed)] : [instruction]));
     },
     texts: () => plan.texts,
-    layout: (items) => {
+    layout: (items, wrap) => {
       const dispatchUid = names.triggerUid(names.freshLabel(OBFUSCATION_LABEL.dispatch));
       const predicated = insertPredicates(items, context(PURPOSE.predicates, dispatchUid));
       const grouped = groupIntoSelectors(predicated, context(PURPOSE.groups, dispatchUid));
       const checked = insertRunChecks(grouped.items, grouped.groupLabels, context(PURPOSE.run, dispatchUid));
       const flowContext = context(PURPOSE.flow, dispatchUid);
-      const laid = layout(checked, names, flowControl(flowContext));
+      const control = flowControl(flowContext);
+      const laid = layout(checked, names, wrap === undefined ? control : wrap(control, { variable: variables.check, value: plan.expected }));
       const flow = finishFlow(laid, flowContext);
       const first = flow.region[0]?.uid ?? dispatchUid;
       const last = flow.region.at(-1)?.uid ?? dispatchUid;

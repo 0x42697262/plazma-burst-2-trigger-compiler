@@ -18,29 +18,43 @@ export type LayoutResult = { triggers: Trigger[]; warnings: string[]; sourceMap:
 
 export type LayoutControl = {
   jump: (label: string, location: SourceLocation | null) => PlacedAction[];
+  call?: (label: string, location: SourceLocation | null) => PlacedAction[];
+  enter?: (label: string, entry: boolean) => PlacedAction[];
   bindsNext: (action: PlacedAction, next: PlacedAction | undefined) => boolean;
 };
 
-const PLAIN_CONTROL: LayoutControl = {
+export const PLAIN_CONTROL: LayoutControl = {
   jump: (label, location) => [{ ...jumpAction(label), location }],
   bindsNext: (action) => SKIPS_NEXT.has(action.opcode),
 };
 
-const isLabelJump = (action: PlacedAction): action is PlacedAction & { targetA: { kind: 'label'; label: string } } =>
+type LabelAction = PlacedAction & { targetA: { kind: 'label'; label: string } };
+
+const isLabelJump = (action: PlacedAction): action is LabelAction =>
   action.opcode === OPCODE.switchToTrigger && action.targetA.kind === 'label';
+
+const isLabelCall = (action: PlacedAction): action is LabelAction =>
+  action.opcode === OPCODE.executeTrigger && action.targetA.kind === 'label';
+
+const replacementOf = (action: PlacedAction, control: LayoutControl): PlacedAction[] | null => {
+  if (isLabelJump(action)) return control.jump(action.targetA.label, action.location);
+  if (isLabelCall(action) && control.call !== undefined) return control.call(action.targetA.label, action.location);
+  return null;
+};
 
 const rewriteJumps = (actions: readonly PlacedAction[], control: LayoutControl): PlacedAction[] => {
   const rewritten: PlacedAction[] = [];
   for (const action of actions) {
-    if (!isLabelJump(action)) {
+    const replacement = replacementOf(action, control);
+    if (replacement === null) {
       rewritten.push(action);
       continue;
     }
     let skips = rewritten.length;
     while (skips > 0 && SKIPS_NEXT.has(rewritten[skips - 1]?.opcode ?? 0)) skips -= 1;
-    const [first, ...rest] = control.jump(action.targetA.label, action.location);
-    if (first !== undefined) rewritten.splice(skips, 0, first);
-    rewritten.push(...rest);
+    const last = replacement.at(-1);
+    rewritten.splice(skips, 0, ...replacement.slice(0, -1));
+    if (last !== undefined) rewritten.push(last);
   }
   return rewritten;
 };
@@ -116,10 +130,11 @@ type Chunk = { label: string; actions: PlacedAction[]; continued: boolean };
 
 const splitBlock = (block: Block, names: Names, control: LayoutControl): Chunk[] => {
   const groups = groupActions(block.actions, control);
-  const jumpLength = control.jump(block.label, null).length;
+  const jumpLength = (part: number): number => control.jump(names.continuationLabel(block.label, part), null).length;
+  const enter = (label: string, entry: boolean): PlacedAction[] => control.enter?.(label, entry) ?? [];
   const chunks: Chunk[] = [];
   let label = block.label;
-  let current: PlacedAction[] = [];
+  let current: PlacedAction[] = enter(block.label, block.entry);
   let part = FIRST_CONTINUATION;
   let remaining = block.actions.length;
   for (const group of groups) {
@@ -128,13 +143,13 @@ const splitBlock = (block: Block, names: Names, control: LayoutControl): Chunk[]
       remaining -= group.length;
       continue;
     }
-    if (current.length + group.length > EDITOR_SAVED_ACTIONS - jumpLength) {
+    if (current.length + group.length > EDITOR_SAVED_ACTIONS - jumpLength(part)) {
       const next = names.continuationLabel(block.label, part);
       part += 1;
       current.push(...control.jump(next, null));
       chunks.push({ label, actions: current, continued: label !== block.label });
       label = next;
-      current = [];
+      current = enter(next, false);
     }
     current.push(...group);
     remaining -= group.length;
