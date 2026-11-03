@@ -58,12 +58,18 @@ export const TEXT = Object.freeze({
     import: 'import "file.ptc"; adds the declarations of another file.',
     true: 'The value 1.',
     false: 'The value 0.',
+    map: 'map { ... } creates and sets map objects while compiling: gate = Door("#door*1", maxspeed: 50); gate.x ?= 0; (?= only when the object is created).',
   } as Record<string, string>),
   actionHover: (number: number, name: string, description: string, kindA: string, kindB: string): string =>
     `**action ${number}** \`${name}\`\n\n${description}\n\nA: \`${kindA}\` · B: \`${kindB}\``,
   valueHover: (group: string, member: string, value: string, label: string): string => `**${group}.${member}** = \`${value}\`\n\n${label}`,
   groupHover: (group: string, kind: string, count: number): string => `**${group}**: ${count} named values for parameters of kind \`${kind}\``,
   objectKindHover: (kind: string): string => `Map object kind: \`${kind} name = "#uid";\` or an array \`${kind} names[] = ["#a", "#b"];\``,
+  constructorDetail: (tag: string): string => `map object <${tag}>`,
+  constructorHover: (name: string, tag: string, positional: readonly string[], properties: readonly string[]): string =>
+    `**${name}(${positional.join(', ')}, ...)** creates a \`<${tag}>\` in a map block.\n\nProperties: ${properties.join(', ')}`,
+  propertyHover: (name: string, title: string, description: string, kind: string, fallback: string | null): string =>
+    `**${name}** (${title}): ${kind}${fallback === null ? '' : `, editor default \`${fallback}\``}${description === '' ? '' : `\n\n${description}`}`,
   declarationHover: (code: string): string => `\`\`\`ptc\n${code}\n\`\`\``,
   builtinHover: (signature: string, description: string): string => `\`${signature}\`\n\n${description}`,
   importLine: (file: string, line: number, message: string): string => `${file} line ${line}: ${message}`,

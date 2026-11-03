@@ -3,15 +3,20 @@ import { compileAssembly } from '../compiler/assemble.ts';
 import type { CompileOptions } from '../compiler/compile.ts';
 import { tokenize } from '../lang/lexer.ts';
 import type { Token } from '../lang/lexer.ts';
-import { BUILTIN, COMPILE_TIME_BUILTIN, CONTEXTUAL, KEYWORD, KEYWORDS, PUNCTUATOR } from '../lang/keys.ts';
+import { BUILTIN, COMPILE_TIME_BUILTIN, CONTEXTUAL, KEYWORD, KEYWORDS, MARK_KIND, PUNCTUATOR } from '../lang/keys.ts';
 import { directoryOf, importTarget, isStandardLibrary } from '../lang/file-paths.ts';
 import { OPCODES, opcodeByName, opcodeByNumber, textName } from '../opcodes/table.ts';
 import { VALUE_GROUP_LIST, valueGroup } from '../opcodes/values.ts';
-import { OBJECT_KINDS } from '../objects/keys.ts';
+import { valueList } from '../opcodes/values.ts';
+import { CONSTRUCTORS, MARK_ARGUMENT, MARK_VALUE, OBJECT_KINDS } from '../objects/keys.ts';
 import { isObjectKeyword } from '../objects/objects.ts';
+import { constructorOf, markValueKinds, propertiesOf, propertyOf } from '../objects/properties.ts';
+import type { Property } from '../objects/properties.ts';
+import { describeKind } from '../objects/value-check.ts';
 import {
-  ACTION_BEFORE_CURSOR, COMPLETION_KIND, DECLARING_KEYWORDS, DIAGNOSTIC_LINE, DOT, MEMBER_BEFORE_CURSOR, NEWLINE, OPEN_BRACKET, SERVICE_PREFIX, SEVERITY,
-  SYMBOL_KIND, WORD_CHARACTER, DIGITS,
+  ACTION_BEFORE_CURSOR, ARGUMENT_NAME_AFTER, ARGUMENT_NAME_BEFORE_CURSOR, ARGUMENT_VALUE_BEFORE_CURSOR, ASSIGNMENT, COMPLETION_KIND, CONSTRUCTOR_BEFORE_CURSOR,
+  DECLARING_KEYWORDS, DIAGNOSTIC_LINE, DOT, MEMBER_BEFORE_CURSOR, NAMED_ARGUMENT, NEWLINE, OPEN_BRACKET, PROPERTY_VALUE_BEFORE_CURSOR, SERVICE_PREFIX, SEVERITY,
+  SYMBOL_KIND, WORD_CHARACTER, DIGITS, constructorAssignment,
 } from './keys.ts';
 import { AFTER_NEXT, FIRST_LINE, FIRST_PARAMETER, MAX_ACTION_COMPLETIONS } from './constants.ts';
 import { TEXT } from './text.ts';
@@ -41,7 +46,9 @@ const lineText = (source: string, line: number): string => source.split(NEWLINE)
 function declarationsOf(source: string): Declaration[] {
   const tokens = tokensOf(source);
   const found: Declaration[] = [];
+  const mapNames = new Set<string>();
   let depth = 0;
+  let mapDepth: number | null = null;
   const add = (token: Token, kind: SymbolKind): void => {
     found.push({ name: token.text, kind, line: token.line - FIRST_LINE, column: token.column, code: lineText(source, token.line - FIRST_LINE).trim(), topLevel: depth === 0 });
   };
@@ -49,8 +56,19 @@ function declarationsOf(source: string): Declaration[] {
     const next = tokens[index + 1];
     const after = tokens[index + AFTER_NEXT];
     if (token.kind === 'punctuator' && token.text === PUNCTUATOR.openBrace) depth += 1;
-    if (token.kind === 'punctuator' && token.text === PUNCTUATOR.closeBrace) depth -= 1;
+    if (token.kind === 'punctuator' && token.text === PUNCTUATOR.closeBrace) {
+      depth -= 1;
+      if (mapDepth !== null && depth < mapDepth) mapDepth = null;
+    }
     if (!next) return;
+    if (token.kind === 'identifier' && token.text === CONTEXTUAL.map && depth === 0 && next.kind === 'punctuator' && next.text === PUNCTUATOR.openBrace) mapDepth = 1;
+    const previous = tokens[index - 1];
+    const assigned = next.kind === 'punctuator' && next.text === ASSIGNMENT && !(previous?.kind === 'keyword' && previous.text === KEYWORD.let) && !(previous?.text === DOT);
+    if (mapDepth !== null && depth >= mapDepth && token.kind === 'identifier' && assigned && !mapNames.has(token.text)) {
+      mapNames.add(token.text);
+      found.push({ ...declarationAt(source, token, SYMBOL_KIND.object), topLevel: true });
+      return;
+    }
     if (token.kind === 'keyword' && DECLARING_KEYWORDS.has(token.text) && next.kind === 'identifier') {
       if (token.text === KEYWORD.function) {
         add(next, SYMBOL_KIND.function);
@@ -165,6 +183,46 @@ const precedingWord = (text: string, before: number): string | null => {
 
 const BUILTIN_NAMES: readonly string[] = [...Object.values(BUILTIN), ...Object.values(COMPILE_TIME_BUILTIN)];
 
+const tagOfName = (source: string, name: string): string | null => {
+  const constructorName = constructorAssignment(name).exec(source)?.[1];
+  return constructorName === undefined ? null : constructorOf(constructorName)?.tag ?? null;
+};
+
+const valueKindOf = (tag: string, attribute: string): string | null => {
+  if (attribute === MARK_VALUE && tag === CONSTRUCTORS.EngineMark?.tag) return markValueKinds()[0] ?? null;
+  if (attribute === MARK_ARGUMENT) return MARK_KIND;
+  return propertyOf(tag, attribute)?.kind ?? null;
+};
+
+const propertyItem = (property: Property, insertText: string): ServiceCompletion => ({
+  label: property.name, kind: COMPLETION_KIND.property, detail: describeKind(property.kind), documentation: TEXT.propertyHover(property.name, property.title, property.desc, describeKind(property.kind), property.fallback), insertText,
+});
+
+const valueItems = (kind: string | null): ServiceCompletion[] => (kind === null ? [] : valueList(kind).entries.flatMap((entry) => entry.names.map((name) => ({
+  label: name, kind: COMPLETION_KIND.value, detail: entry.value, documentation: entry.label, insertText: name,
+}))));
+
+function mapCompletions(source: string, before: string): ServiceCompletion[] | null {
+  const property = PROPERTY_VALUE_BEFORE_CURSOR.exec(before);
+  if (property) {
+    const tag = tagOfName(source, property[1] ?? '');
+    return tag === null ? null : valueItems(valueKindOf(tag, property[2] ?? ''));
+  }
+  const member = MEMBER_BEFORE_CURSOR.exec(before);
+  if (member && valueGroup(member[1] ?? '') === null) {
+    const tag = tagOfName(source, member[1] ?? '');
+    return tag === null ? null : propertiesOf(tag).map((entry) => propertyItem(entry, entry.name));
+  }
+  const call = CONSTRUCTOR_BEFORE_CURSOR.exec(before);
+  const info = call ? constructorOf(call[1] ?? '') : null;
+  if (!call || !info) return null;
+  const argumentsText = call[2] ?? '';
+  const value = ARGUMENT_VALUE_BEFORE_CURSOR.exec(argumentsText);
+  if (value) return valueItems(valueKindOf(info.tag, value[1] ?? ''));
+  if (!ARGUMENT_NAME_BEFORE_CURSOR.test(argumentsText) || !argumentsText.includes(PUNCTUATOR.comma)) return null;
+  return propertiesOf(info.tag).map((entry) => propertyItem(entry, entry.name + NAMED_ARGUMENT));
+}
+
 export function complete(source: string, position: Position, file: string, read: SourceReader): ServiceCompletion[] {
   const before = lineText(source, position.line).slice(0, position.column);
   const member = MEMBER_BEFORE_CURSOR.exec(before);
@@ -174,6 +232,8 @@ export function complete(source: string, position: Position, file: string, read:
       label: name, kind: COMPLETION_KIND.value, detail: entry.value, documentation: entry.label, insertText: name,
     })));
   }
+  const forMap = mapCompletions(source, before);
+  if (forMap !== null) return forMap;
   if (ACTION_BEFORE_CURSOR.test(before)) {
     return [...OPCODES.values()].slice(0, MAX_ACTION_COMPLETIONS).map((opcode) => {
       const name = opcode.alias ?? String(opcode.number);
@@ -188,6 +248,9 @@ export function complete(source: string, position: Position, file: string, read:
   }
   for (const entry of VALUE_GROUP_LIST) items.push({ label: entry.name, kind: COMPLETION_KIND.group, detail: entry.paramKind, documentation: '', insertText: entry.name });
   for (const kind of Object.keys(OBJECT_KINDS)) items.push({ label: kind, kind: COMPLETION_KIND.kind, detail: '', documentation: TEXT.objectKindHover(kind), insertText: kind });
+  for (const [name, info] of Object.entries(CONSTRUCTORS)) {
+    items.push({ label: name, kind: COMPLETION_KIND.kind, detail: TEXT.constructorDetail(info.tag), documentation: constructorHover(name), insertText: name });
+  }
   const declared = [...declarationsOf(source), ...importedSources(source, file, read).flatMap((imported) => declarationsOf(imported.source).filter((entry) => entry.topLevel))];
   const seen = new Set(items.map((item) => item.label));
   for (const entry of declared) {
@@ -230,6 +293,8 @@ export function hover(source: string, position: Position, file: string, read: So
     const named = valueGroup(word);
     if (named) return TEXT.groupHover(named.name, named.paramKind, named.entries.length);
   }
+  const forMap = mapHover(source, word, text, start, end);
+  if (forMap !== null) return forMap;
   const builtin = TEXT.builtins[word];
   if (builtin) return TEXT.builtinHover(builtin[0], builtin[1]);
   const keyword = TEXT.keywords[word];
@@ -241,6 +306,23 @@ export function hover(source: string, position: Position, file: string, read: So
   if (!location) return null;
   const code = location.file === file ? lineText(source, location.line) : lineText(read(location.file) ?? '', location.line);
   return TEXT.declarationHover(code.trim());
+}
+
+function constructorHover(name: string): string {
+  const info = constructorOf(name);
+  if (!info) return '';
+  return TEXT.constructorHover(name, info.tag, info.positional, propertiesOf(info.tag).map((entry) => entry.name));
+}
+
+function mapHover(source: string, word: string, text: string, start: number, end: number): string | null {
+  const objectName = precedingWord(text, start);
+  const ownerTag = objectName === null || valueGroup(objectName) !== null ? null : tagOfName(source, objectName);
+  const call = ARGUMENT_NAME_AFTER.test(text.slice(end)) ? CONSTRUCTOR_BEFORE_CURSOR.exec(text.slice(0, start)) : null;
+  const tag = ownerTag ?? (call ? constructorOf(call[1] ?? '')?.tag ?? null : null);
+  const property = tag === null ? null : propertyOf(tag, word);
+  if (property) return TEXT.propertyHover(property.name, property.title, property.desc, describeKind(property.kind), property.fallback);
+  if (constructorOf(word) !== null && text.slice(end).trimStart().startsWith(PUNCTUATOR.openParen)) return constructorHover(word);
+  return null;
 }
 
 export const symbols = (source: string): ServiceSymbol[] =>

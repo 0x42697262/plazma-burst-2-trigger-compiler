@@ -62,4 +62,22 @@ describe('language service', () => {
       ['score', 'variable', 1], ['spawn', 'object', 2], ['add', 'function', 3], ['on start', 'event', 6],
     ]);
   });
+
+  it('knows map blocks: symbols, constructors, properties and their values', () => {
+    const source = ['map {', '  gate = Door("#d", maxspeed: 5);', '  let local = 1;', '  gate.', '  Actor("#e", botaction: Do', '  gate.vis = ', '}'].join('\n');
+    assert.deepEqual(symbols(source).map((entry) => [entry.name, entry.kind]), [['gate', 'object']]);
+    const properties = complete(source, { line: 3, column: 7 }, MAIN, read);
+    assert.ok(properties.some((item) => item.label === 'maxspeed' && item.kind === 'property'));
+    const values = complete(source, { line: 4, column: 28 }, MAIN, read).map((item) => item.label);
+    assert.ok(values.includes('DoNothing'));
+    const bools = complete(source, { line: 5, column: 13 }, MAIN, read).map((item) => item.label);
+    assert.ok(bools.includes('true'));
+    const named = complete('map { Door("#d", ', { line: 0, column: 17 }, MAIN, read);
+    assert.ok(named.some((item) => item.insertText === 'maxspeed: '));
+    assert.ok(complete('', { line: 0, column: 0 }, MAIN, read).some((item) => item.label === 'EngineMark'));
+    assert.match(hover(source, { line: 1, column: 10 }, MAIN, read) ?? '', /Door\(uid, \.\.\.\)\*\* creates a `<door>`/);
+    assert.match(hover(source, { line: 1, column: 22 }, MAIN, read) ?? '', /\*\*maxspeed\*\* \(Speed\): a number of 0 or more, editor default `10`/);
+    assert.match(hover(source, { line: 5, column: 8 }, MAIN, read) ?? '', /\*\*vis\*\* \(Visible\)/);
+  });
 });
+

@@ -1,7 +1,8 @@
 import { StreamLanguage } from '@codemirror/language';
 import type { StringStream } from '@codemirror/language';
-import { BUILTIN, KEYWORDS } from '../lang/keys.ts';
+import { BUILTIN, CONTEXTUAL, KEYWORDS } from '../lang/keys.ts';
 import { isObjectKeyword } from '../objects/objects.ts';
+import { constructorOf } from '../objects/properties.ts';
 import { ASSEMBLY_INSTRUCTIONS, BOOLEANS, HIGHLIGHT, TOKEN } from './keys.ts';
 
 type State = { inComment: boolean };
@@ -50,6 +51,8 @@ export const ptcLanguage = StreamLanguage.define<State>({
       if (BOOLEANS.has(text)) return TOKEN.atom;
       if (KEYWORDS.has(text)) return TOKEN.keyword;
       if (isObjectKeyword(text)) return TOKEN.type;
+      if (text === CONTEXTUAL.map && stream.match(HIGHLIGHT.blockAhead, false)) return TOKEN.keyword;
+      if (constructorOf(text) !== null && stream.match(HIGHLIGHT.callAhead, false)) return TOKEN.type;
       if (BUILTINS.has(text) && stream.match(HIGHLIGHT.callAhead, false)) return TOKEN.builtin;
       return TOKEN.variable;
     }

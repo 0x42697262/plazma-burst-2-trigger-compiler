@@ -34,6 +34,7 @@ const COMPLETION_KINDS: Record<CompletionKind, CompletionItemKind> = {
   action: CompletionItemKind.Method,
   group: CompletionItemKind.Enum,
   kind: CompletionItemKind.Class,
+  property: CompletionItemKind.Property,
 };
 
 const SYMBOL_KINDS: Record<ServiceSymbolKind, SymbolKind> = {
