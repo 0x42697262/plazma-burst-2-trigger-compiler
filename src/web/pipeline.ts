@@ -102,7 +102,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   notes.push(...placement.notes);
   const blocking = [...objectProblems, ...placement.problems];
   const program = placement.declaresVarSync ? { ...result.program, varSyncMark: false } : result.program;
-  const xml = emitXml(program) + placement.xml;
+  const xml = placement.xml + emitXml(program);
   let text = '';
   try {
     const textProgram = withMapTriggers(result.program, result.mapObjects);

@@ -1,0 +1,57 @@
+// convert-map.xml, converted to source by npm run convert.
+// Map objects are in the map { } block, in the map's order. Triggers became functions where that keeps their meaning;
+// the others stay raw Trigger blocks. Quoted values are written exactly as the map had them.
+// 4 trigger(s) became functions.
+// 1 trigger(s) stay raw: disabled, switched on or off by other triggers, with unusual call counts or actions, or picked by position.
+// 2 start timer(s) became on start (wait(n) resumes n or n - 1 frames later).
+
+var countCalls;
+var beginDone;
+var text2Done;
+
+map {
+  triggerOff = Trigger("#trigger*off", x: 120, y: 0, enabled: false) {
+    action(VarSetValue, "~convertmap_start~", 99);
+  }
+  Timer("#timer*three", x: 60, y: 60, maxcalls: 3, target: @three, delay: 2);
+}
+
+on start {
+  wait(1);
+  text2();
+  wait(2);
+  begin();
+}
+
+// #trigger*count, run by #trigger*begin
+function count() {
+  if (countCalls == 2) { return; }
+  if (countCalls > 0) { countCalls += 1; } else { countCalls = 1; }
+  action(VarSetValueIfUndefined, "~convertmap_calls~", 0);
+  action(VarAddValue, "~convertmap_calls~", 1);
+}
+
+// #trigger*begin, run by #timer*begin
+function begin() {
+  if (beginDone == 1) { return; }
+  beginDone = 1;
+  action(VarSetValue, "~convertmap_start~", 7);
+  action(ExecTrigger, @count, 0);
+  action(ExecTrigger, @count, 0);
+  action(ExecTrigger, @count, 0);
+  action(ExecTrigger, @begin, 0);
+}
+
+// #trigger*three, run by #timer*three
+function three() {
+  action(VarSetValueIfUndefined, "~convertmap_three~", 0);
+  action(VarAddValue, "~convertmap_three~", 1);
+  action(ExecTrigger, triggerOff, 0);
+}
+
+// #trigger*text, run by #timer*text
+function text2() {
+  if (text2Done == 1) { return; }
+  text2Done = 1;
+  action(VarSetValue, "~convertmap_text~", "a <b> \"c\" & d");
+}

@@ -18,7 +18,7 @@ import { constructorForTag, constructorOf, markValueKind, markValueKinds, proper
 import { checkValue } from '../objects/value-check.ts';
 import type { BuildValue } from '../objects/value-check.ts';
 import { ACTION_ARGUMENTS, COMPILE_TIME_MAX_STEPS } from './constants.ts';
-import { escapeXml } from '../emit/xml-emitter.ts';
+import { escapeXml, unescapeXml } from '../emit/xml-emitter.ts';
 import { editorTurnsIntoNumber } from '../program/editor-text.ts';
 import { callGraph, reachable } from './calls.ts';
 import {
@@ -411,6 +411,10 @@ class MapTransformer {
         return text(marker(MARK_TYPE.name, [expression.name]), location);
       case 'named':
         return text(marker(MARK_TYPE.named, [expression.group, expression.text]), location);
+      case 'string':
+        if (!expression.parts.every((part) => part.kind === 'text')) return this.expression(expression);
+        if (RESERVED_CHARACTERS.some((character) => plainText(expression).includes(character))) fail(location, TEXT.reservedCharacter);
+        return text(marker(MARK_TYPE.raw, [plainText(expression)]), location);
       case 'reference':
         if (!this.globals.has(expression.name) || this.globals.get(expression.name)?.kind !== 'function') fail(location, TEXT.unknownFunction(expression.name));
         this.references.add(expression.name);
@@ -621,6 +625,8 @@ function parseValue(raw: string, objects: readonly RawObject[], location: Locati
       return { kind: 'named', group: first, text: second };
     case MARK_TYPE.function:
       return { kind: 'function', name: first };
+    case MARK_TYPE.raw:
+      return { kind: 'raw', text: fields.join(MAP_MARK.field) };
     default:
       return fail(location, TEXT.markerInText);
   }
@@ -629,7 +635,7 @@ function parseValue(raw: string, objects: readonly RawObject[], location: Locati
 function uidOf(object: RawObject): string | null {
   const position = object.site.attributes.indexOf(UID_ARGUMENT);
   const value = object.values[position];
-  return value?.kind === 'text' ? value.text : null;
+  return value?.kind === 'text' || value?.kind === 'raw' ? value.text : null;
 }
 
 function objectIndex(raw: string): number | null {
@@ -637,7 +643,7 @@ function objectIndex(raw: string): number | null {
   return raw.startsWith(prefix) ? Number(raw.slice(prefix.length)) : null;
 }
 
-function resolveObject(object: RawObject): BuiltObject {
+function resolveObject(object: RawObject, warnings: string[]): BuiltObject {
   const { site } = object;
   const { info, constructorName, location } = site;
   const take = (attribute: string): BuildValue | null => {
@@ -647,8 +653,9 @@ function resolveObject(object: RawObject): BuiltObject {
   let uid: string | null = null;
   if (info.positional.includes(UID_ARGUMENT)) {
     const value = take(UID_ARGUMENT);
-    if (value?.kind !== 'text' || !value.text.startsWith(UID_MARK) || value.text.length === UID_MARK.length) fail(location, TEXT.badUid(constructorName));
-    uid = value?.kind === 'text' ? value.text : null;
+    const uidText = value?.kind === 'text' || value?.kind === 'raw' ? value.text : '';
+    if (!uidText.startsWith(UID_MARK) || uidText.length === UID_MARK.length) fail(location, TEXT.badUid(constructorName));
+    uid = uidText;
   }
   let mark: string | null = null;
   if (info.positional.includes(MARK_ARGUMENT)) {
@@ -658,7 +665,7 @@ function resolveObject(object: RawObject): BuiltObject {
   }
   const resolve = (attribute: string, value: BuildValue, at: Location): AttributeValue => {
     const kind = attribute === MARK_VALUE && mark !== null ? markValueKind(mark) : propertyOf(info.tag, attribute)?.kind ?? '';
-    if (attribute === MARK_VALUE && mark !== null && kind === NO_VALUE_KIND) fail(at, TEXT.markTakesNoValue(mark));
+    if (attribute === MARK_VALUE && mark !== null && kind === NO_VALUE_KIND && value.kind !== 'raw') fail(at, TEXT.markTakesNoValue(mark));
     const checked = checkValue(kind, value);
     if (checked.kind === 'error') return fail(at, TEXT.badValue(constructorName, attribute, checked.message));
     return checked.kind === 'text' ? { kind: 'text', text: checked.text } : { kind: 'function', name: checked.name };
@@ -676,16 +683,22 @@ function resolveObject(object: RawObject): BuiltObject {
     }
     (propertySite.initial ? initial : set).push([propertySite.property, resolve(propertySite.property, value, propertySite.location)]);
   }
-  const actions = site.actions ? object.actions.map((action) => resolveAction(action)) : null;
+  const actions = site.actions ? object.actions.map((action) => resolveAction(action, warnings)) : null;
   if (actions !== null && actions.length > MAX_ACTIONS_PER_TRIGGER) fail(location, TEXT.tooManyActions(uid ?? constructorName, actions.length, MAX_ACTIONS_PER_TRIGGER));
   return { constructorName, tag: info.tag, keyword: info.keyword, uid, mark, set, initial, actions, location };
 }
 
-function resolveAction(action: RawAction): BuiltAction {
+function resolveAction(action: RawAction, warnings: string[]): BuiltAction {
   const { location } = action.site;
   const [which, targetA, targetB] = action.values;
-  const name = which?.kind === 'text' || which?.kind === 'named' ? which.text : '';
-  const opcode = (WHOLE_NUMBER.test(name) ? opcodeByNumber(Number(name)) : opcodeByName(name)) ?? fail(location, LANG_TEXT.unknownAction(name));
+  const name = which?.kind === 'text' || which?.kind === 'named' || which?.kind === 'raw' ? which.text : '';
+  const known = WHOLE_NUMBER.test(name) ? opcodeByNumber(Number(name)) : opcodeByName(name);
+  if (known === null && WHOLE_NUMBER.test(name) && Number(name) >= 0) {
+    warnings.push(WHERE(location, TEXT.unlistedAction(name)));
+    const plain = (value: BuildValue | undefined): AttributeValue => ({ kind: 'text', text: value?.kind === 'text' || value?.kind === 'raw' || value?.kind === 'named' ? value.text : NO_TARGET });
+    return { opcode: Number(name), targetA: plain(targetA), targetB: plain(targetB) };
+  }
+  const opcode = known ?? fail(location, LANG_TEXT.unknownAction(name));
   const target = (value: BuildValue | undefined, kind: string, side: string): AttributeValue => {
     const given = value ?? { kind: 'text', text: NO_TARGET };
     const expectsObject = OBJECT_PARAM_KINDS.has(kind);
@@ -827,7 +840,7 @@ export function buildMaps(file: SourceFile, gameNames: Names): MapBuild {
   if (problem !== undefined) fail(location, TEXT.buildFailed(problem));
   const logValue = simulation.variables[compileNames.variable(names.log)];
   const log = typeof logValue === 'string' ? logValue : '';
-  const records = log.split(MAP_MARK.record).slice(1).map((record) => record.split(MAP_MARK.unit));
+  const records = log.split(MAP_MARK.record).slice(1).map((record) => record.split(MAP_MARK.unit).map(unescapeXml));
   const objects: RawObject[] = [];
   for (const fields of records) {
     const [type, siteText = '', ...rest] = fields;
@@ -849,7 +862,8 @@ export function buildMaps(file: SourceFile, gameNames: Names): MapBuild {
       object.actions.push({ site, values: values.map((raw) => parseValue(raw, objects, site.location)) });
     }
   }
-  const built = objects.map(resolveObject);
+  const resolveWarnings: string[] = [];
+  const built = objects.map((object) => resolveObject(object, resolveWarnings));
   const seenUids = new Map<string, Location>();
   const seenMarks = new Map<string, Location>();
   for (const object of built) {
@@ -870,7 +884,7 @@ export function buildMaps(file: SourceFile, gameNames: Names): MapBuild {
     references: transformer.references,
     functions: needed,
     variables: transformer.variables,
-    warnings: built.flatMap(textWarnings),
+    warnings: [...resolveWarnings, ...built.flatMap(textWarnings)],
   };
 }
 

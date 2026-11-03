@@ -1,0 +1,8 @@
+<trigger uid="#trigger*count" x="0" y="0" enabled="true" maxcalls="2" actions_1_type="101" actions_1_targetA="~convertmap_calls~" actions_1_targetB="0" actions_2_type="102" actions_2_targetA="~convertmap_calls~" actions_2_targetB="1" />
+<trigger uid="#trigger*begin" x="60" y="0" enabled="true" maxcalls="1" actions_1_type="100" actions_1_targetA="~convertmap_start~" actions_1_targetB="7" actions_2_type="99" actions_2_targetA="#trigger*count" actions_2_targetB="0" actions_3_type="99" actions_3_targetA="#trigger*count" actions_3_targetB="0" actions_4_type="99" actions_4_targetA="#trigger*count" actions_4_targetB="0" actions_5_type="99" actions_5_targetA="#trigger*begin" actions_5_targetB="0" />
+<trigger uid="#trigger*off" x="120" y="0" enabled="false" maxcalls="1" actions_1_type="100" actions_1_targetA="~convertmap_start~" actions_1_targetB="99" />
+<trigger uid="#trigger*three" x="180" y="0" enabled="true" maxcalls="-1" actions_1_type="101" actions_1_targetA="~convertmap_three~" actions_1_targetB="0" actions_2_type="102" actions_2_targetA="~convertmap_three~" actions_2_targetB="1" actions_3_type="99" actions_3_targetA="#trigger*off" actions_3_targetB="0" />
+<trigger uid="#trigger*text" x="240" y="0" enabled="true" maxcalls="1" actions_1_type="100" actions_1_targetA="~convertmap_text~" actions_1_targetB="a &lt;b&gt; &quot;c&quot; &amp; d" />
+<timer uid="#timer*begin" x="0" y="60" enabled="true" maxcalls="1" target="#trigger*begin" delay="3" />
+<timer uid="#timer*three" x="60" y="60" enabled="true" maxcalls="3" target="#trigger*three" delay="2" />
+<timer uid="#timer*text" x="120" y="60" enabled="true" maxcalls="1" target="#trigger*text" delay="1" />

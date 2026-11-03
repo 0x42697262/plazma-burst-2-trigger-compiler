@@ -44,7 +44,9 @@ describe('map blocks', () => {
     assert.deepEqual(attributes(decor), { model: 'c12345', f: '2', text: 'hi' });
     fails('map { Actor("#e", botaction: 7); }', /line 1: Actor botaction takes a Behavior value .*got "7"/);
     fails('map { Actor("#e", char: hero); }', /Actor char takes a Skin value .*or a custom one such as c12345, got "hero"/);
-    fails('map { Decor("#d", model: "c1x"); }', /Decor model takes a DecorModel value/);
+    fails('map { Decor("#d", model: c1x); }', /Decor model takes a DecorModel value/);
+    assert.deepEqual(attributes(objects('map { Door("#d", w: "0", h: "-20", maxspeed: "fast"); Gun("#g", upg: "10"); }')[0]), { w: '0', h: '-20', maxspeed: 'fast' });
+    assert.equal(attributes(objects('map { Region("#r", use_target: "3"); }')[0]).use_target, '3');
     assert.equal(attributes(objects('map { Background(0, 0, 10, 10, m: c77); }')[0]).m, 'c77');
     fails('map { Actor("#e", botaction: Team.RedTeam); }', /not a Team value/);
     fails('var DoNothing = 1;\nmap { Actor("#e", botaction: DoNothing); }', /"DoNothing" is a value of this property and also a name in the program/);
@@ -118,6 +120,9 @@ describe('map blocks', () => {
   it('warns about text the game or the editor would change, and finds secrets', () => {
     const result = compileSource('map { Decor("#d", text: "a<b"); Song("#s", url: "007"); }', 't');
     assert.ok(result.warnings.some((warning) => warning.includes('#d text') && warning.includes('XML entities')));
+    assert.equal(attributes(result.mapObjects[0]).text, 'a<b');
+    const quoted = compileSource('map { Trigger("#t") { action(42, "say \\"hi\\" & <go>", 0); } }', 't').mapObjects[0]?.actions?.[0];
+    assert.equal(quoted?.targetA, 'say "hi" & <go>');
     assert.ok(result.warnings.some((warning) => warning.includes('#s url') && warning.includes('into the number 7')));
     fails('secret const KEY = "abcdef";\nmap { Decor("#d", text: KEY); }', /the secret KEY would be written into the map \(the text of the map object #d/);
   });
@@ -176,6 +181,13 @@ describe('map blocks', () => {
   it('warns about map trigger actions like compiled ones', () => {
     const result = compileSource('map { Trigger("#t") { for (let i = 0; i < 99; i += 1) { action(VarAddValue, "x", i); } action(MovableTo, "#nowhere", "#r"); } }', 't');
     assert.ok(result.warnings.some((warning) => warning.includes('Trigger #t has an action 100')));
+  });
+
+  it('keeps actions the editor does not list in map triggers, and makes images', () => {
+    const result = compileSource('map { Trigger("#t") { action(424, "a", 5); } Image(id: 7, width: "0"); }', 't');
+    assert.deepEqual(result.mapObjects[0]?.actions, [{ opcode: 424, targetA: 'a', targetB: '5' }]);
+    assert.ok(result.warnings.some((warning) => warning.includes("action 424 is not in the editor's action list")));
+    assert.deepEqual(attributes(result.mapObjects[1]), { id: '7', width: '0' });
   });
 });
 

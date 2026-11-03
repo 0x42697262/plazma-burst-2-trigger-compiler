@@ -8,6 +8,7 @@ export type BuildValue =
   | { kind: 'text'; text: string }
   | { kind: 'object'; tag: string; uid: string | null }
   | { kind: 'name'; name: string }
+  | { kind: 'raw'; text: string }
   | { kind: 'named'; group: string; text: string }
   | { kind: 'function'; name: string };
 
@@ -102,6 +103,7 @@ function checkReference(kind: string, value: BuildValue): Checked {
 }
 
 export function checkValue(kind: string, value: BuildValue): Checked {
+  if (value.kind === 'raw') return ok(value.text);
   if (Object.hasOwn(REFERENCE_KINDS, kind)) return checkReference(kind, value);
   if (value.kind === 'object') return error(TEXT.notInList(TEXT.mapObject, describeKind(kind)));
   if (value.kind === 'function') return error(TEXT.notInList(TEXT.functionReference(value.name), describeKind(kind)));

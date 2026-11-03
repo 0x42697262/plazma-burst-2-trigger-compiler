@@ -45,6 +45,14 @@ records the uids and walls it added; `--replace` reads the previous one, so the 
 the names changed between builds (for example with a different `--name-seed`). The map's own timers come first in the file,
 so a host timer with delay 0 runs before the program's start code in the first frame.
 
+## Turning a map into source
+
+`npm run convert -- downloaded-map.xml --check` writes `out/downloaded-map.ptc`: the map's objects
+in a `map { }` block, its triggers as functions where that keeps their meaning (raw `Trigger`
+blocks otherwise), and its start timers as `on start`. `--check` compiles the source again and
+lists every difference from the map; it fails on any it cannot explain. Rules and limits:
+[docs/convert.md](docs/convert.md).
+
 The `.txt` output (for "Edit trigger as text") holds triggers only, not timers: add the listed
 timers in the editor yourself (the CLI prints them). If one value cannot be written as text, no
 `.txt` is written; use the XML.
@@ -103,6 +111,7 @@ simulator runs.
 | Command | What it does |
 |---|---|
 | `npm run verify` | lint, type check, tests |
+| `npm run convert -- <map.xml>` | turns a saved map into `.ptc` source ([docs/convert.md](docs/convert.md)); `--check` compiles it again and compares with the map |
 | `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator (`-- --direct-index`, `-- --pcode` or `-- --obfuscate` compiles them that way; `-- --only <name>` picks some) |
 | `npm run web` | builds the web page into `site/` |
 | `npm run lsp` | starts the language server on stdio |

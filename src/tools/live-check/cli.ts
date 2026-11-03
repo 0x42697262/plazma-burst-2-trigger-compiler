@@ -112,7 +112,7 @@ async function main(): Promise<number> {
   prepareSandbox(flags.includes(REBUILD_FLAG), print);
   const map = cases.reduce((combined, entry) => {
     const placement = placeObjects(entry.objects, { host: combined, staging: () => STAGING, previousWalls: [], replacing: true });
-    return appendToMap(placement.host ?? combined, entry.xml + placement.xml);
+    return appendToMap(placement.host ?? combined, placement.xml + entry.xml);
   }, BASE_MAP);
   fs.writeFileSync(MAP_FILE, map);
   print(TEXT.wroteMap(MAP_FILE, cases.length));

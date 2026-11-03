@@ -41,6 +41,7 @@ export const CONSTRUCTORS: Readonly<Record<string, ConstructorInfo>> = Object.fr
   Wall: { tag: 'box', keyword: null, positional: AREA_ARGUMENTS },
   Background: { tag: 'bg', keyword: null, positional: AREA_ARGUMENTS },
   EngineMark: { tag: 'inf', keyword: null, positional: [MARK_ARGUMENT] },
+  Image: { tag: 'image', keyword: null, positional: [] },
 });
 
 export const OBJECT_PARAM_KINDS: ReadonlySet<string> = new Set(Object.values(OBJECT_KINDS).map((info) => info.paramKind));

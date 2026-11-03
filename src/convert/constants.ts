@@ -1,0 +1,9 @@
+export const NO_ACTION = -1;
+export const SWITCH_BY_INDEX = 362;
+export const SWITCH_TO_TRIGGER = 363;
+export const SHOW_TEXT = 42;
+export const TRIGGER_STATE_ACTIONS: ReadonlySet<number> = new Set([19, 20, 21, 22]);
+export const FIRST_COPY = 2;
+export const FIRST_USER_ARGUMENT = 2;
+export const SHOWN_DIFFERENCES = 40;
+export const EXIT_FAILURE = 1;

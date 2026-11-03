@@ -137,6 +137,7 @@ export const MAP_TEXT = Object.freeze({
     `${object} ${attribute}: "${value}" starts with "#"; the game replaces it with an object index if a uid matches`,
   triggerBodyPlace: 'a Trigger(...) { } with actions must stand alone or be assigned to a name, like open = Trigger("#open") { ... }',
   tooManyActions: (uid: string, count: number, limit: number): string => `trigger ${uid} has ${count} actions; the game loads at most ${limit}`,
+  unlistedAction: (number: string): string => `action ${number} is not in the editor's action list; it is written as it is`,
   actionTarget: (uid: string, message: string): string => `trigger ${uid}: ${message}`,
   actionObject: (action: number, side: string, expected: string, given: string): string => `action ${action} takes ${expected} as ${side}, not a ${given}`,
   actionNoUid: (action: number, side: string, constructorName: string): string => `action ${action}: a ${constructorName} has no uid to pass as ${side}`,

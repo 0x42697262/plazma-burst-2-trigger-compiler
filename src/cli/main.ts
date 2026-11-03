@@ -144,7 +144,7 @@ export function main(argumentsList: readonly string[], output: Output): number {
     if (placement.problems.length > 0) throw new UsageError(TEXT.objectProblems(placement.problems));
     for (const note of placement.notes) output.out(note);
     const program = placement.declaresVarSync ? { ...result.program, varSyncMark: false } : result.program;
-    const xml = emitXml(program, layout) + placement.xml;
+    const xml = placement.xml + emitXml(program, layout);
     writeFile(base + OUTPUT.xml, xml, output);
     try {
       const textProgram = withMapTriggers(result.program, result.mapObjects);

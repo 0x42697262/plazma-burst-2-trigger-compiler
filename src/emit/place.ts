@@ -200,7 +200,7 @@ export function mapTriggers(objects: readonly MapObject[]): Program {
 
 export function withMapTriggers(program: Program, objects: readonly MapObject[]): Program {
   const extra = mapTriggers(objects);
-  return { ...program, triggers: [...program.triggers, ...extra.triggers], timers: [...program.timers, ...extra.timers] };
+  return { ...program, triggers: [...extra.triggers, ...program.triggers], timers: [...extra.timers, ...program.timers] };
 }
 
 export function regionsOf(objects: readonly MapObject[]): Record<string, Region> {

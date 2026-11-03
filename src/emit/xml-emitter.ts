@@ -10,6 +10,8 @@ export type Position = { x: number; y: number };
 
 export const escapeXml = (value: string): string => XML_ESCAPES.reduce((text, [raw, escaped]) => text.split(raw).join(escaped), value);
 
+export const unescapeXml = (value: string): string => XML_ESCAPES.toReversed().reduce((text, [raw, escaped]) => text.split(escaped).join(raw), value);
+
 const attribute = (name: string, value: string | number | boolean): string => TEXT.xmlAttribute(name, escapeXml(String(value)));
 
 const positionOf = (index: number, layout: Layout): Position => ({
