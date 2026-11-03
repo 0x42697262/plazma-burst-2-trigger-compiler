@@ -26,6 +26,7 @@ F-numbers such as (F52) point to [game-facts.md](game-facts.md).
 |---|---|
 | `--tamper-check <mode>` | `off` (default): nothing is added, the build is the same as without the option. `report`: findings are counted, `on tamper { }` runs after each new one, nothing stops. `enforce`: on firm evidence, a delay, then `on tamper { }`, then the program turns itself off |
 | `--tamper-seed <s>` | seed for the token, mask and delay values. Default: the obfuscation seed with `--obfuscate`, else a new random seed, printed at each build (`random` asks for one too). The web page uses the obfuscation seed, the name seed or the prefix |
+| `--tamper-announce` | with `enforce`: in a multiplayer match, every player's game shows that the scripts were turned off on a game (below). Refused with other modes |
 | `--tamper-layers <list>` | the checks to add, comma separated: `flow,entry,value,watchdog` (default: all). For finding a false alarm: turn layers off one at a time |
 
 It works with or without `--obfuscate`, and is stronger with it: names and texts then do not show in
@@ -111,6 +112,26 @@ Then:
    touched: the host map and other programs keep working. Array elements with a changing index are
    not reset (their names are computed while the map runs).
 
+### Announcing it in the match
+
+With `--tamper-announce`, when the reaction comes from a firm finding, the game that turned itself
+off also adds 1 to a counter and sends it to every player with sync (223; the XML gets the Var Sync
+mark, F30). Every other game checks the counter at each heartbeat and, when it went up, shows in its
+own chat: "The tamper check turned the scripts off on a game in this match." The game itself runs
+on.
+
+- No name: a sync message carries no sender (`libs/flash.js`, the `RELIABLE_VAR_SYNC` handler keeps
+  only the mode, the name and the value), and a changed client can write any variable on the other
+  games or run their triggers (F53). A named message could be faked to accuse an honest player, or
+  a changed client could make an honest player's own check fire. Without a name, a fake only says
+  "a game".
+- It comes after the delay, with the rest of the reaction, so the message is not next to its cause.
+- Soft proof (three soft findings) turns the program off without the message.
+- There is no action that sends chat to other players (42 shows text on one game only), so the
+  message goes through a variable.
+- A changed client can block the message, as it can block anything on its own game.
+- Not yet checked in a multiplayer match (needs two players).
+
 Restarting the match is not possible in multiplayer (307 is single player only), so the program
 turns off only itself. `wait()` is refused in `on tamper { }`: in enforce, the program is off right
 after the block.
@@ -167,7 +188,8 @@ The rules the checks were built to:
 seed gives the same build; each layer adds its actions only when asked; the refused combinations; a
 helper tool that runs an internal trigger, sets a protected value, turns off the check timer or the
 partner timer, runs a timer target, a second start or a `wait` continuation directly; `enforce`
-reaching the reset after the delay and `report` never resetting; the CLI help. The web page tests
+reaching the reset after the delay and `report` never resetting; the announcement reaching a second
+simulated game without a name, and no announcement after soft proof; the CLI help. The web page tests
 cover the setting and its chip.
 
 Code: `src/tamper/` (`tamper.ts` the passes and the machine triggers, `protect.ts` the protected value

@@ -55,7 +55,8 @@ elsewhere.
     the website editor (F36; off is `--no-number-text`); "Direct array index" (`--direct-index`).
   - Names: prefix, and name seed (`--name-seed`: reproducible, source-independent names).
   - Protection: obfuscate and its seed (`--obfuscate`, `--obfuscate-seed`; New picks one); tamper
-    check `Off`, `Report` or `Enforce` and its seed (`--tamper-check`, `--tamper-seed`,
+    check `Off`, `Report` or `Enforce`, "Announce in the match" and its seed (`--tamper-check`,
+    `--tamper-announce`, `--tamper-seed`,
     [tamper-check.md](tamper-check.md)). The command palette has `Tamper check: <mode>`.
   - Map: "Replace the previous build" (`--replace`): remove the program's old triggers, timers,
     walls and backgrounds from the chosen map first. The page remembers the uids and walls of the
