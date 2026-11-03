@@ -14,6 +14,7 @@ export type DockHooks = {
   changed: (layout: SerializedDockview) => void;
   newFile: () => void;
   titleOf: (file: string) => string;
+  mounted: (panel: FixedPanel) => void;
 };
 
 type FileParameters = { file: string };
@@ -109,6 +110,12 @@ export class Dock {
       this.api.addPanel({ id: panel, component: panel, title: TEXT.dock.settings, floating: { width, height: Math.min(DOCK_SIZE.settingsHeight, this.api.height - DOCK_SIZE.margin), x: Math.max(0, this.api.width - width - DOCK_SIZE.margin), y: DOCK_SIZE.margin } });
       return;
     }
+    if (panel === DOCK.panel.blueprint) {
+      const width = Math.min(DOCK_SIZE.blueprintWidth, this.api.width - DOCK_SIZE.margin * DOCK_SIZE.sides);
+      const height = Math.min(DOCK_SIZE.blueprintHeight, this.api.height - DOCK_SIZE.margin * DOCK_SIZE.sides);
+      this.api.addPanel({ id: panel, component: panel, title: TEXT.dock.blueprint, floating: { width, height, x: this.api.width - width - DOCK_SIZE.margin, y: this.api.height - height - DOCK_SIZE.margin } });
+      return;
+    }
     if (panel === DOCK.panel.reference) {
       this.api.addPanel({ id: panel, component: panel, title: TEXT.dock.reference, position: { direction: DOCK.direction.right }, initialWidth: DOCK_SIZE.referenceWidth });
       return;
@@ -152,7 +159,9 @@ export class Dock {
     return {
       element,
       init: () => {
-        if (isFixed(id)) element.append(this.hooks.fixed[id]);
+        if (!isFixed(id)) return;
+        element.append(this.hooks.fixed[id]);
+        this.hooks.mounted(id);
       },
     };
   }

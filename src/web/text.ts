@@ -21,7 +21,7 @@ export const TEXT = Object.freeze({
   commands: Object.freeze({
     build: 'Build', run: 'Run in the simulator', settings: 'Open build settings', reference: 'Show or hide the reference', vim: 'Toggle Vim keys',
     map: 'Choose a map XML…', clearMap: 'Forget the map', newFile: 'New file…', newSeed: 'New obfuscation seed', copy: 'Copy the output', download: 'Download the output',
-    guide: 'Open the language guide', searchReference: 'Search the reference', resetLayout: 'Reset the layout',
+    guide: 'Open the language guide', searchReference: 'Search the reference', resetLayout: 'Reset the layout', blueprint: 'Show or hide the blueprint',
     openFile: (name: string): string => `Open file: ${name}`, deleteFile: (name: string): string => `Delete file: ${name}`, example: (name: string): string => `Open example: ${name}`, output: (name: string): string => `Show ${name}`,
     toggle: (name: string, on: boolean): string => `${on ? 'Turn off' : 'Turn on'}: ${name}`, target: (name: string): string => `Target: ${name}`,
   }),
@@ -29,6 +29,14 @@ export const TEXT = Object.freeze({
   optionNames: Object.freeze({ obfuscate: 'obfuscate', directIndex: 'direct array index', numberText: 'protect text from the site editor', replace: 'replace the previous build' }),
   noCommands: 'No matching command',
   nullJson: 'null',
+  pixels: (value: number): string => `${value}px`,
+  blueprintView: Object.freeze({
+    fit: 'Fit', fitTitle: 'Show the whole map (F)', resetTitle: 'Put every moved object back where the code has it', moved: (count: number): string => `${count} moved · Reset`,
+    copy: 'Copy', insert: 'Insert at cursor', reset: 'Reset', from: (values: string): string => `code: ${values}`,
+    meta: (title: string, line: number | null, host: boolean): string => (host ? `${title} · host map` : line === null ? title : `${title} · line ${line}`),
+    tip: (label: string, title: string, values: string, line: number | null, host: boolean): string => `${label} (${title}${host ? ', host map' : line === null ? '' : `, line ${line}`})\n${values}`,
+    coordinates: (left: number, top: number): string => `x ${left}   y ${top}`,
+  }),
   blueprint: Object.freeze({
     siteKey: (tag: string, line: number): string => `${tag}@${line}`, siteId: (key: string, occurrence: number): string => `${key}#${occurrence}`,
     hostId: (index: number): string => `host:${index}`, markLabel: (mark: string): string => `engine mark ${mark}`,
@@ -36,7 +44,7 @@ export const TEXT = Object.freeze({
     area: (left: number, top: number, width: number, height: number): string => `x: ${left}, y: ${top}, w: ${width}, h: ${height}`,
   }),
   chipTitle: 'Show this setting',
-  dock: Object.freeze({ settings: 'Settings', reference: 'Reference', output: 'Output', empty: 'No open files. Press ⌘P / Ctrl+P to open one, or pick an example.' }),
+  dock: Object.freeze({ settings: 'Settings', reference: 'Reference', output: 'Output', blueprint: 'Blueprint', empty: 'No open files. Press ⌘P / Ctrl+P to open one, or pick an example.' }),
   reference: Object.freeze({
     follow: 'Follow', followTitle: 'Show the page of the word at the cursor', back: '‹', backTitle: 'Back', close: 'Close the reference',
     searchPlaceholder: 'Search actions, objects, values…', results: 'Search', nothing: 'Nothing found.', separator: '›', insert: 'Insert at cursor',

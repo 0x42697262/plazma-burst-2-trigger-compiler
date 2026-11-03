@@ -2,7 +2,10 @@ import examples from 'virtual:examples';
 import type { SerializedDockview } from 'dockview-core';
 import { CodeEditor } from './editor.ts';
 import { Workspace } from './workspace.ts';
-import { build, checkOptions, parseEnvironment, simulate } from './pipeline.ts';
+import { build, checkOptions, parseEnvironment, preview, simulate } from './pipeline.ts';
+import { BlueprintView } from './blueprint.ts';
+import { sceneOf } from './blueprint-model.ts';
+import { directoryOf, resolvePath } from '../lang/file-paths.ts';
 import type { Build, BuildRecord, Options } from './pipeline.ts';
 import { filterCommands, optionChips, shortcutLabel } from './commands.ts';
 import type { Command } from './commands.ts';
@@ -12,7 +15,7 @@ import {
   ATTRIBUTE, CLASS, DARK_QUERY, DOCK, EMPTY_OBJECT, ESCAPE, FOLDER_POSITION, GUIDE_URL, KEY_NAME, KEYDOWN, LIBRARY_FOLDER, MAC_PLATFORM, OUTPUT_BUTTONS, ROW_SELECTOR, SCROLL_NEAREST,
   SELECTOR, SHORTCUT, SHORTCUT_KEY, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT,
 } from './keys.ts';
-import { DEFAULT_FRAMES, DEFAULT_GUARD, FLASH_TIME, LAYOUT_SAVE_DELAY, STATUS_TIME } from './constants.ts';
+import { BLUEPRINT_REFRESH_DELAY, DEFAULT_FRAMES, DEFAULT_GUARD, FLASH_TIME, LAYOUT_SAVE_DELAY, STATUS_TIME } from './constants.ts';
 import { TEXT } from './text.ts';
 import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { DEFAULT_TARGET, isTarget, TARGETS } from '../pcode/keys.ts';
@@ -183,6 +186,7 @@ const compile = (): Build => {
     storage?.setItem(STORAGE.build, JSON.stringify({ ...buildStore(), [file]: { uids: last.uids, walls: last.walls } }));
   }
   status.textContent = idleStatus();
+  scheduleBlueprint();
   return last;
 };
 
@@ -201,11 +205,14 @@ const editorHooks = {
   onChange: (file: string, text: string): void => {
     workspace.set(file, text);
     panel.refresh();
+    scheduleBlueprint();
   },
   onJump: (location: { file: string; line: number; column: number }): void => jumpTo(location),
   checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target, environment()),
   onCursor: (file: string): void => {
     if (file === activeFile) panel.cursorMoved();
+    const line = editors.get(file)?.cursorLine();
+    if (line !== undefined) blueprint.highlightLine(file, line, activeFile);
   },
   onFocus: (file: string): void => setActiveFile(file),
 };
@@ -215,6 +222,24 @@ const setActiveFile = (file: string): void => {
   activeFile = file;
   workspace.activate(file);
   panel.refresh();
+  scheduleBlueprint();
+};
+
+const sourceFile = (label: string | null): string => (label === null ? activeFile : isStandardLibrary(label) ? label : resolvePath(directoryOf(activeFile), label));
+
+let blueprintTimer = 0;
+const refreshBlueprint = (): void => {
+  if (!dock.isOpen(DOCK.panel.blueprint)) return;
+  const found = preview(workspace, activeFile, options(), environment());
+  if (found === null) return;
+  const scene = sceneOf(found.objects, found.staging, hostMap);
+  blueprint.setScene({ ...scene, items: scene.items.map((item) => ({ ...item, file: item.line === null ? null : sourceFile(item.file) })) });
+  const line = currentEditor()?.cursorLine();
+  if (line !== undefined) blueprint.highlightLine(activeFile, line, activeFile);
+};
+const scheduleBlueprint = (): void => {
+  window.clearTimeout(blueprintTimer);
+  blueprintTimer = window.setTimeout(refreshBlueprint, BLUEPRINT_REFRESH_DELAY);
 };
 
 const saveLayout = (layout: SerializedDockview): void => {
@@ -233,12 +258,26 @@ const dock = new Dock(element(ELEMENT.dock), {
       },
     };
   },
-  fixed: { output: element(ELEMENT.outputPanel), reference: element(ELEMENT.reference), settings },
+  fixed: { output: element(ELEMENT.outputPanel), reference: element(ELEMENT.reference), settings, blueprint: element(ELEMENT.blueprint) },
+  mounted: (mountedPanel) => {
+    if (mountedPanel !== DOCK.panel.blueprint) return;
+    blueprint.attach();
+    scheduleBlueprint();
+  },
   activeFile: (file) => setActiveFile(file),
   changed: saveLayout,
   newFile: () => newFile(),
   titleOf: shortName,
 }, darkQuery.matches);
+
+const blueprint = new BlueprintView(element(ELEMENT.blueprint), {
+  jump: (file, line) => jumpTo({ file: file ?? activeFile, line: line - 1, column: 0 }, false),
+  insert: (text) => currentEditor()?.insert(text),
+  copy: (text) => {
+    void navigator.clipboard.writeText(text).then(() => say(TEXT.copied));
+  },
+  expand: () => dock.show(DOCK.panel.blueprint, true),
+});
 
 const savedPanel = readJson<{ open: boolean; follow: boolean }>(STORAGE.reference);
 const panel = new ReferencePanel(element(ELEMENT.reference), {
@@ -257,10 +296,13 @@ const openFile = (file: string): void => {
   editors.get(file)?.view.focus();
 };
 
-const jumpTo = (location: { file: string; line: number; column: number }): void => {
+const jumpTo = (location: { file: string; line: number; column: number }, focus = true): void => {
   if (workspace.get(location.file) === null) return;
-  if (location.file !== activeFile && !isStandardLibrary(location.file)) openFile(location.file);
-  editors.get(location.file)?.select(location.line, location.column);
+  if (location.file !== activeFile && !isStandardLibrary(location.file)) {
+    dock.openFile(location.file);
+    setActiveFile(location.file);
+  }
+  editors.get(location.file)?.select(location.line, location.column, focus);
 };
 
 const newFile = (): void => {
@@ -308,6 +350,7 @@ const openExample = (file: string): void => {
 const optionChanged = (): void => {
   options();
   for (const editor of editors.values()) editor.relint();
+  scheduleBlueprint();
 };
 environmentInput.addEventListener(EVENT.input, optionChanged);
 for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput]) input.addEventListener(EVENT.change, optionChanged);
@@ -372,6 +415,7 @@ const clearMap = (): void => {
   element<HTMLInputElement>(ELEMENT.hostMap).value = '';
   if (last) compile();
   show(shown);
+  scheduleBlueprint();
 };
 
 element(ELEMENT.compile).addEventListener(EVENT.click, buildAndShow);
@@ -384,6 +428,8 @@ element(ELEMENT.download).addEventListener(EVENT.click, downloadOutput);
 element(ELEMENT.hostMapButton).addEventListener(EVENT.click, chooseMap);
 element(ELEMENT.settingsButton).addEventListener(EVENT.click, () => toggleSettings());
 element(ELEMENT.referenceButton).addEventListener(EVENT.click, () => panel.toggle());
+const toggleBlueprint = (): void => dock.show(DOCK.panel.blueprint, !dock.isOpen(DOCK.panel.blueprint));
+element(ELEMENT.blueprintButton).addEventListener(EVENT.click, toggleBlueprint);
 hostMapClear.addEventListener(EVENT.click, clearMap);
 element<HTMLInputElement>(ELEMENT.hostMap).addEventListener(EVENT.change, (event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
@@ -394,6 +440,7 @@ element<HTMLInputElement>(ELEMENT.hostMap).addEventListener(EVENT.change, (event
     hostMapClear.hidden = false;
     compile();
     show(OUTPUT.map);
+    scheduleBlueprint();
   });
 });
 
@@ -410,6 +457,7 @@ const commands = (): Command[] => {
     { title: TEXT.commands.settings, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.settings), run: () => toggleSettings(true) },
     { title: TEXT.commands.reference, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.reference), run: () => panel.toggle() },
     { title: TEXT.commands.searchReference, detail: TEXT.commandDetail.action, shortcut: '', run: () => panel.focusSearch() },
+    { title: TEXT.commands.blueprint, detail: TEXT.commandDetail.action, shortcut: '', run: toggleBlueprint },
     ...Object.values(OUTPUT).map((name): Command => ({ title: TEXT.commands.output(TEXT.outputNames[name]), detail: TEXT.commandDetail.output, shortcut: '', run: () => show(name) })),
     { title: TEXT.commands.map, detail: TEXT.commandDetail.action, shortcut: '', run: chooseMap },
     ...(hostMap === null ? [] : [{ title: TEXT.commands.clearMap, detail: TEXT.commandDetail.action, shortcut: '', run: clearMap }]),

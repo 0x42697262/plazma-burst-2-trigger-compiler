@@ -131,6 +131,19 @@ export function build(workspace: Workspace, file: string, options: Options, host
   return { result, problems, xml, text, map, notes, uids, walls: placement.walls };
 }
 
+export type Preview = { objects: CompileResult['mapObjects']; staging: (index: number) => { x: number; y: number } };
+
+export function preview(workspace: Workspace, file: string, options: Options, environment: Environment = {}): Preview | null {
+  if (file.endsWith(ASSEMBLY_EXTENSION)) return { objects: [], staging: () => ({ x: 0, y: 0 }) };
+  const prefix = options.prefix === '' ? prefixFor(file) : options.prefix;
+  try {
+    const result = compileSource(workspace.get(file) ?? '', prefix, checkOptions(options.numberText, options.directIndex, options.target, environment), { file, read: (name) => workspace.get(name) ?? '' });
+    return { objects: result.mapObjects, staging: (index) => stagingPosition(index, result.program) };
+  } catch {
+    return null;
+  }
+}
+
 export function simulate(result: CompileResult, frames: number): string[] {
   const simulation = new Simulation(withMapTriggers(result.program, result.mapObjects), { regions: regionsOf(result.mapObjects) });
   simulation.tick(frames);

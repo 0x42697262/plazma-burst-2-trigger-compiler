@@ -36,6 +36,8 @@ export const ELEMENT = Object.freeze({
   shortcutHelp: 'shortcut-help',
   referenceButton: 'reference-button',
   reference: 'reference',
+  blueprint: 'blueprint',
+  blueprintButton: 'blueprint-button',
 });
 export const OUTPUT = Object.freeze({ problems: 'problems', xml: 'xml', text: 'text', map: 'map', run: 'run' } as const);
 export const STORAGE = Object.freeze({
@@ -52,12 +54,16 @@ export const WORD_AFTER = /^[A-Za-z0-9_]*/;
 export const DOT = '.';
 export const CLASS = Object.freeze({
   active: 'active', error: 'error', warning: 'warning', hover: 'hover-doc', chip: 'chip', muted: 'muted', shortcut: 'shortcut', flash: 'flash', panelFill: 'panel-fill',
-  groupActions: 'group-actions', watermark: 'watermark',
+  groupActions: 'group-actions', watermark: 'watermark', quiet: 'quiet',
 });
 export const MIME = Object.freeze({ xml: 'application/xml', text: 'text/plain' });
 export const ATTRIBUTE = Object.freeze({ file: 'data-file', output: 'data-output' });
-export const EVENT = Object.freeze({ click: 'click', change: 'change', input: 'input', keydown: 'keydown', pointerDown: 'pointerdown', pointerMove: 'pointermove', pointerUp: 'pointerup' });
+export const EVENT = Object.freeze({
+  click: 'click', change: 'change', input: 'input', keydown: 'keydown', pointerDown: 'pointerdown', pointerMove: 'pointermove', pointerUp: 'pointerup', pointerLeave: 'pointerleave',
+  wheel: 'wheel', doubleClick: 'dblclick',
+});
 export const TAG = Object.freeze({
+  canvas: 'canvas',
   button: 'button', option: 'option', span: 'span', div: 'div', link: 'a', optionGroup: 'optgroup', listItem: 'li', section: 'section', nav: 'nav', input: 'input', ul: 'ul', li: 'li',
   h2: 'h2', h3: 'h3', p: 'p', code: 'code',
 });
@@ -128,12 +134,20 @@ export const PANEL = Object.freeze({
 export const SELECTOR = Object.freeze({ active: '.active' });
 export const ROW_SELECTOR = '.row, .stack';
 export const WORD_GAP = /\s+/;
+export const BLUEPRINT_VIEW = Object.freeze({
+  bar: 'bp-bar', coordinates: 'bp-coordinates', moved: 'bp-moved', spacer: 'spacer', canvas: 'bp-canvas', card: 'bp-card', tip: 'bp-tip', stage: 'bp-stage', miniClass: 'mini',
+  cardTitle: 'bp-card-title', cardValues: 'bp-card-values', cardButtons: 'bp-card-buttons',
+  handles: ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'] as const, west: 'w', east: 'e', north: 'n', south: 's',
+  fitKey: 'f', escapeKey: 'Escape', context: '2d', baseline: 'top',
+  nudge: Object.freeze({ ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] } as const),
+  colors: Object.freeze({ background: '--bg', line: '--line', accent: '--accent', text: '--text' }),
+});
 export const BLUEPRINT = Object.freeze({
   leftSide: -1, vehicleTag: 'vehicle', fallbackColor: '#9aa0a6',
   attribute: Object.freeze({ x: 'x', y: 'y', w: 'w', h: 'h', side: 'side', model: 'model', uid: 'uid' }),
 });
 export const DOCK = Object.freeze({
-  panel: Object.freeze({ output: 'output', reference: 'reference', settings: 'settings' } as const),
+  panel: Object.freeze({ output: 'output', reference: 'reference', settings: 'settings', blueprint: 'blueprint' } as const),
   filePrefix: 'file:', fileComponent: 'file', dragHandle: 'tabbar',
   direction: Object.freeze({ above: 'above', below: 'below', right: 'right' } as const),
 });

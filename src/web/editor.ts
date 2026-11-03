@@ -64,11 +64,11 @@ export class CodeEditor {
     this.view.dispatch({ changes: { from: 0, to: this.view.state.doc.length, insert: text } });
   }
 
-  select(line: number, column: number): void {
+  select(line: number, column: number, focus = true): void {
     const target = this.view.state.doc.line(Math.min(line + 1, this.view.state.doc.lines));
     const offset = Math.min(target.from + column, target.to);
     this.view.dispatch({ selection: { anchor: offset }, scrollIntoView: true });
-    this.view.focus();
+    if (focus) this.view.focus();
   }
 
   relint(): void {
@@ -93,6 +93,10 @@ export class CodeEditor {
     const start = offset - line.from - before.length;
     const group = line.text.charAt(start - 1) === DOT ? WORD_BEFORE.exec(line.text.slice(0, start - 1))?.[0] ?? null : null;
     return { word: before + after, group };
+  }
+
+  cursorLine(): number {
+    return this.view.state.doc.lineAt(this.view.state.selection.main.head).number;
   }
 
   insert(text: string): void {

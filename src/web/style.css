@@ -160,3 +160,20 @@ nav .spacer { flex: 1; }
   .toolbar { grid-template-columns: 1fr; }
   .activity { min-width: 0; }
 }
+
+.blueprint { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--bg); }
+.bp-bar { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--line); background: var(--sidebar); font-size: 12px; }
+.bp-bar .spacer { flex: 1; }
+.bp-coordinates { color: var(--muted); font: 11px var(--mono); white-space: pre; }
+.bp-moved { border-radius: 10px; padding: 1px 9px; background: var(--selected); color: var(--accent); font-size: 11px; font-weight: 600; }
+.bp-moved:hover { background: var(--accent); color: var(--accent-text); }
+.bp-stage { position: relative; flex: 1; min-height: 0; }
+.bp-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; cursor: default; touch-action: none; }
+.bp-card { position: absolute; left: 10px; bottom: 10px; max-width: calc(100% - 20px); padding: 8px 10px; border-radius: 10px; background: var(--bar); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: var(--shadow); font-size: 12px; display: flex; flex-direction: column; gap: 3px; }
+.bp-card-title { font-weight: 600; font-family: var(--mono); }
+.bp-card-values { font-size: 12px; user-select: all; }
+.bp-card-buttons { display: flex; gap: 4px; margin-top: 4px; }
+.bp-card-buttons button { padding: 2px 8px; }
+.bp-tip { position: absolute; pointer-events: none; padding: 4px 8px; border-radius: 6px; background: var(--bar); box-shadow: var(--shadow); font: 11px var(--mono); white-space: pre; z-index: 2; }
+.blueprint.mini .bp-bar { display: none; }
+.blueprint.mini .bp-canvas { cursor: zoom-in; }
