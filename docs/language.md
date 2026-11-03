@@ -25,48 +25,130 @@ on start {
 
 ## Map objects
 
-Declare each map object the program uses with its kind and uid:
+A program uses map objects in two ways:
 
-| Kind | Map element | Actions that take it (parameter kind in [actions.md](actions.md)) |
-|---|---|---|
-| `region` | region | region |
-| `door` | movable (door) | door |
-| `player` | player slot (`<player>`, `#player*1`) | character |
-| `actor` | any other character (`<enemy>`) | character |
-| `gun` | gun | gun |
-| `barrel` | barrel | barrel |
-| `vehicle` | vehicle | vehicle |
-| `decor` | decoration | decor |
-| `pusher` | pusher | pushf |
-| `light` | light | lamp |
-| `water` | water | water |
-| `timer` | timer | timer |
-| `trigger` | a trigger of the host map | trigger (also `@function`) |
+- A `map { }` block **creates** objects while compiling and sets their properties (below).
+- A declaration outside one names an object **the map already has**: `door gate = "#door*1";`.
+  The compiler never creates or changes it.
+
+Both give the same kind of name, used as an argument of `action(...)`:
+
+| Kind | Map element | Constructor in `map { }` | Actions that take it (parameter kind in [actions.md](actions.md)) |
+|---|---|---|---|
+| `region` | region | `Region` | region |
+| `door` | movable (door) | `Door` | door |
+| `player` | player slot (`<player>`, `#player*1`) | `Player` | character |
+| `actor` | any other character (`<enemy>`) | `Actor` | character |
+| `gun` | gun | `Gun` | gun |
+| `barrel` | barrel | `Barrel` | barrel |
+| `vehicle` | vehicle | `Vehicle` | vehicle |
+| `decor` | decoration | `Decor` | decor |
+| `pusher` | pusher | `Pusher` | pushf |
+| `light` | light | `Light` | lamp |
+| `water` | water | `Water` | water |
+| `song` | song | `Song` | song+none |
+| `timer` | timer | none | timer |
+| `trigger` | a trigger of the host map | none | trigger (also `@function`) |
+| none | wall (`<box>`) | `Wall(x, y, w, h)` | none: it has no uid |
+| none | background (`<bg>`) | `Background(x, y, w, h)` | none |
+| none | engine mark (`<inf>`) | `EngineMark(mark)` | none |
 
 - An object can only be an argument of `action(...)`, and only where that action takes its kind:
   anything else is a compile error. Where an action takes an object, a variable is an error too;
   uid text (`"#door*1"`) is still accepted, without the check.
-- `at x, y` is the position used if the compiler adds the object (below).
-- With `--into map.xml`, each declared object is looked up in the map: a missing one is added with
-  the editor's default settings (at `at x, y`, or in a row below the program's triggers), a uid
-  used by another kind is an error. Objects the map has are never changed. `--no-create` warns
-  instead of adding.
-- Without a map, `--objects` (web page: "objects") adds every declared object to the XML, for
-  starting a new map: `player slots[] = "#player*{1..16}";` gives 16 player slots. Nothing is
-  checked, so the compiler lists the uids; delete any the map already has. Off by default.
-- `--replace` (with `--into`) removes the program's own triggers and timers from the map before
-  adding the new ones, so a map that already holds an older build is updated in place. Declared
-  objects and everything else in the map stay. Without it, a uid already in the map is an error.
-  Each `--into` build writes a `.build.json` next to the output listing the uids it added; `--replace`
-  reads the previous one, so the update is exact even when the names changed between builds.
+- With `--into map.xml`, each object declared outside a `map { }` block is looked up in the map: a
+  missing one is an error that shows the `map { }` line to write, a uid used by another kind is an
+  error.
+- `--replace` (with `--into`) removes the program's own triggers, timers, walls and backgrounds
+  from the map before adding the new ones, so a map that already holds an older build is updated
+  in place. Other elements stay. Without it, a uid already in the map is an error.
+  Each `--into` build writes a `.build.json` next to the output listing the uids and walls it
+  added; `--replace` reads the previous one, so the update is exact even when the names changed
+  between builds.
 - `--name-seed <s>` derives the name prefix from a seed instead of the file name, so the triggers
   and variables get reproducible, source-independent names (`#z…`); the same seed always gives the
   same names, a different seed different ones. It cannot be combined with `--prefix`.
 - The kind words are not reserved: `var water = 1;` still works. `player` is the exception: it is
   also the keyword of `for player p`, so it cannot name a variable.
-- `player` and `actor` take the same actions but are different map elements: a missing
-  `player` is added as a player slot, a missing `actor` as an enemy, and declaring one where the
-  map has the other is an error that names the right kind.
+- `player` and `actor` take the same actions but are different map elements; declaring one where
+  the map has the other is an error that names the right kind.
+
+### Map block
+
+```
+map {
+  gate = Door("#door*1", maxspeed: 9999);
+  gate.x ?= 0;                                     // only when created; drag freely after
+  gate.y ?= 10;
+  guard = Actor("#enemy*1", botaction: DoNothing, char: c53013);
+  guard.hmax = 500;
+  slots = [];
+  for (let i = 1; i <= 16; i += 1) {
+    push(slots, Player("#player*{i}", x: i * 40, y: 0, team: Team.RedTeam));
+  }
+  Wall(0, 300, 2000, 30, m: DarkPlate);
+  EngineMark(var_sync);                            // a mark with no value
+  EngineMark(he_nades_count, forteam: 3);          // a mark with a value
+}
+
+region exit = "#exit";                             // the map already has it
+
+on start {
+  action(MovableTo, gate, exit);
+  action(SetCharHP, slots[3], 50);
+}
+```
+
+- A `map { }` block runs **while compiling**, like a `const` (it uses the same simulator): `let`,
+  assignments, `if`, `while`, `for`, `match`, `push`, `len`, arithmetic, text, constants and the
+  program's own functions work. Nothing that acts on the game does: `say`, `action`, `wait`,
+  `random`, `time`, players, chat. A program may have several blocks, also in imported files; they
+  run in import order, then the main file.
+- A constructor (`Door(...)`, `Region(...)`...) creates one object. Its first argument is the uid
+  (for `Wall` and `Background`: `x, y, w, h`; for `EngineMark`: the mark); everything else is named
+  (`maxspeed: 50`), with the raw attribute name of the map file. Constructors work only in a
+  `map { }` block.
+- `gate.x = 0;` sets a property; `gate.x ?= 0;` sets it **only when the object is created** (as in
+  GNU Make), so it can be moved in the editor afterwards. `?=` is a statement, not an expression.
+- **The code wins for what it writes.** With `--into`, an object the map already has (same uid,
+  same kind) gets every `=` and named-argument property rewritten in place, and keeps all other
+  attributes and their order; `?=` is ignored there. Each change is printed:
+  `#door*1: x 500 → 0, maxspeed 10 → 9999`. A missing object is added with the editor's defaults.
+  Without `--into`, every object is written with its defaults, and the uids are printed (a map
+  that already has one would get it twice).
+- A name assigned an object or an array of objects (without `let`) becomes a global map object
+  name, used in `action(...)` like a declared one. Other names stay inside the block. An array holds
+  one kind: `[Door(...), Region(...)]` is an error, because an index that changes while the map
+  runs could otherwise pick the wrong kind. Array literals (`slots = [];`) work only here, and only
+  one-dimensional. `Wall`, `Background` and `EngineMark` have no uid, so they cannot be named.
+- Properties are set while compiling: `gate.x` outside a block is an error that names the action
+  that changes it while the map runs (`MovableTo`). Objects declared outside a block have no
+  properties to set.
+- Objects without `x`/`y` are placed in a row below the program's triggers.
+- Walls and backgrounds have no identity: each build adds them. With `--into --replace`, the ones
+  the previous build added (recorded in `.build.json`) are removed first.
+- Engine marks are found by their mark name: `EngineMark(sky, forteam: Space)` rewrites the map's
+  `sky` mark, or adds one. A map with two marks of the same name is an error that lists them. The
+  compiler's own Var Sync mark (for `sync`) merges with a declared `EngineMark(var_sync)`.
+
+Values of properties:
+
+- A property whose editor field is a list takes the **short name** of an entry
+  (`botaction: DoNothing`, `m: DarkPlate`, `side: Left`), its qualified form
+  (`Behavior.DoNothing`), or the raw value (`botaction: 4`). A raw value outside the list is an
+  error, except where the game takes custom content: `char` (`c53013`, a whole number), decoration
+  `model` and background `m` (`c12345`), gun `model` (any name) (F47). A bare short name that is also
+  a name in the program is an error asking for the qualified form.
+- `attach` takes a `Door` (or its uid, or `None`); `use_target`, `ondeath`, `callback` take
+  `@function` (or `NoTrigger`); `incar` takes a `Vehicle` (or `No`, `DetectAutomaticly`).
+- Numbers are checked against the field: `maxspeed` ≥ 0, `w` and `h` > 0, `hea` a whole number.
+  Positions are not rounded. Bool fields take `true`/`false` (or `1`/`0`).
+- `EngineMark(mark, forteam: value)`: the value's type depends on the mark (`sky` takes a `Sky`,
+  `gamescale` a number, `watercolor` text); a mark that ignores `forteam` refuses one (F46).
+- Text (`text`, `url`, `c`) is checked like action values: the compiler warns about `& < > "`
+  (F26), number-like text (F36) and a leading `#` (F18).
+- Every property of every constructor, with its type and the editor default: completion and hover
+  in the language server, and the editor's parameter table (F43).
 
 ### Object arrays
 
@@ -87,8 +169,8 @@ action(299, board[row][column], 1);
   key, so each copy is checked once. Cost: 2 actions per element, no extra triggers; keep arrays
   small where an index changes.
 - An index outside the array does nothing; a fixed one outside is a compile error.
-- The element kind is checked like a single object, and create-if-missing adds each missing
-  element (named `spawns[0]`, `board[1][0]`...).
+- The element kind is checked like a single object, and `--into` looks each element up in the map
+  (named `spawns[0]`, `board[1][0]`... in errors).
 - Object arrays work only as `action(...)` arguments and in `len`.
 - A range `{a..b}` in a uid makes one uid per whole number from `a` to `b`, both included (also
   counting down, `{5..1}`). Ranges can be mixed with other uids, so names can change part way:
@@ -110,8 +192,11 @@ The editor's value lists are named values, written `Group.Name`: `Color.NoirLime
 name, that is the name: `GunModel.gun_rifle`, `Sound.hp_warn`, `Voice.marine`, `DecorModel.stone`,
 `Bool.true`; the label form (`GunModel.AssaultRifleC01r`) works too. Plain numbers such as a call
 count of 1 have no name: write `1`. Groups: `Color`, `Team`, `Behavior`, `Bool`, `Toggle`, `Calls`, `PusherDamage`,
-`GunModel`, `Sound`, `Sky`, `Voice`, `CharacterModel`, `DecorModel`, `Song`; all names and values
-are in [actions.md](actions.md#named-values).
+`GunModel`, `Sound`, `Sky`, `Voice`, `Skin` (also `CharacterModel`), `DecorModel`, `Song`,
+`Direction`, `Material`, `DrawInFront`, `Upgrade`, `Activation`, `BarrelModel`, `VehicleModel`,
+`BackgroundModel`, `EngineMark`, `InVehicle`; all names and values are in
+[actions.md](actions.md#named-values). A label with a part in brackets also has a short name
+without it: `Behavior.DoNothing` is `Behavior.DoNothingControllableWithTriggers`.
 
 - A named value is a fixed value: it works in `say`, `match` patterns, comparisons and any action.
 - Like object kinds, it is checked: a `Team` value where an action takes a color is a compile error.
@@ -227,7 +312,8 @@ Collections:
 | `const NAME = 5;` / `const AREA = square(7);` | constant, worked out while compiling and written into the actions (see Compile-time constants) |
 | `secret const PASSWORD = env("MAP_PASSWORD");` | a constant that may only feed other constants: compiling fails if its text would be written into the map |
 | `extern score;` / `extern s = "host name";` | a variable of the host map, used by its own name |
-| `water pool = "#water*1";` / `door gate = "#door*3" at 400, -120;` | a map object (see below) |
+| `water pool = "#water*1";` | a map object the map already has (see Map objects) |
+| `map { gate = Door("#door*3", maxspeed: 50); }` | creates and sets map objects while compiling (see Map block) |
 | `region spawns[] = ["#S1", "#S2"];` / `decor grid[][] = [["#a", "#b"], ["#c", "#d"]];` | an array of map objects, nested to any depth |
 | `export var score = 0;` / `export var list[];` | a variable meant for the host map or other programs: listed after compiling; with `--into`, using a non-exported one from the host map is warned about |
 | `import "lib/tools.ptc";` | adds every declaration of that file (path relative to this file; each file once) |
@@ -371,15 +457,15 @@ import         = "import" string ";" ;
 declaration    = [ "export" ] "var" identifier ( "[" "]" | [ "=" expression ] ) ";"
                | [ "secret" ] "const" identifier "=" expression ";"
                | "extern" identifier [ "=" string ] ";"
-               | object-kind identifier "=" string [ "at" signed "," signed ] ";"
+               | object-kind identifier "=" string ";"
                | object-kind identifier "[" "]" { "[" "]" } "=" uid-list ";"
                | [ "export" ] "function" identifier "(" [ identifier { "," identifier } ] ")" block
                | "on" ( "start" | "join" | "chat" ) block
-               | "every" number block ;
+               | "every" number block
+               | "map" block ;
 
 object-kind    = "region" | "door" | "player" | "actor" | "gun" | "barrel" | "vehicle" | "decor"
-               | "pusher" | "light" | "water" | "timer" | "trigger" ;
-signed         = [ "-" ] number ;
+               | "pusher" | "light" | "water" | "song" | "timer" | "trigger" ;
 uid-list       = string | "[" [ ( string | uid-list ) { "," ( string | uid-list ) } ] "]" ;
 
 block          = "{" { statement } "}" ;
@@ -395,6 +481,7 @@ statement      = block
                | "return" [ expression ] ";"
                | "wait" "(" expression ")" ";"
                | "match" "(" expression ")" "{" { match-arm } "}"
+               | identifier "." identifier ( "=" | "?=" ) expression ";"
                | simple ";" ;
 
 match-arm      = ( "_" | expression { "," expression } ) "=>" statement ;
@@ -419,7 +506,14 @@ primary        = number
                | identifier "(" [ expression { "," expression } ] ")"
                | identifier "[" expression "]" { "[" expression "]" }
                | identifier "." identifier
+               | constructor
+               | "[" [ expression { "," expression } ] "]"
                | identifier ;
+
+constructor    = constructor-name "(" [ argument { "," argument } ] ")" ;
+argument       = expression | identifier ":" expression ;
+constructor-name = "Door" | "Region" | "Player" | "Actor" | "Gun" | "Barrel" | "Vehicle" | "Decor"
+               | "Pusher" | "Light" | "Water" | "Song" | "Wall" | "Background" | "EngineMark" ;
 
 identifier     = letter { letter | digit } ;
 letter         = "A" … "Z" | "a" … "z" | "_" ;
@@ -438,7 +532,9 @@ Rules the grammar does not show:
 
 - The left side of an `assign-op` must be an `identifier` or `identifier "[" expression "]"`.
 - `object-kind` words are keywords only at the start of a declaration followed by a name; elsewhere
-  they are ordinary identifiers.
+  they are ordinary identifiers. `"map"` is a keyword only at the top level before `{`.
+- `constructor`, array literals and property statements (`gate.x = 0;`) work only inside a
+  `map` block; named arguments come after the positional ones. `?=` works only on a property.
 - Binary operators of the same level group from the left: `a - b - c` is `(a - b) - c`.
 - `"@" identifier` (a function's trigger) is allowed only as an argument of `action(...)`.
 - `"secret"` is a word only right before `"const"`; elsewhere it is an identifier. `env(...)` is allowed

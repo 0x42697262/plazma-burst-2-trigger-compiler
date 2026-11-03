@@ -6,7 +6,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 
 | Stage | Code | Job |
 |---|---|---|
-| Opcode table | `src/opcodes/` | Snapshot of the editor's `lib_params.js` (531 actions: number, alias, param kinds) plus compiler flags: template-replaced params (F9, F15), how skips compare (F8, F19), avoided actions (F6) |
+| Opcode table | `src/opcodes/` | Snapshot of the editor's `lib_params.js` (531 actions: number, alias, param kinds; map element parameters, value lists, engine mark types and the editor's per-element rules) plus compiler flags: template-replaced params (F9, F15), how skips compare (F8, F19), avoided actions (F6) |
 | Front end: language | `src/lang/` | `.ptc`: lexer, parser (AST in `ast.ts`), code generator (`codegen.ts`) with frames for locals and temporaries (`symbols.ts`) and a call graph for recursion (`calls.ts`) |
 | Front end: assembler | `src/asm/` | `.pasm`: one line, one instruction or directive |
 | IR | `src/compiler/ir.ts` | Labels, actions, jumps, conditional branches, calls, returns, timers |
@@ -21,6 +21,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Language service | `src/service/` | Diagnostics, completion, hover, definitions, symbols; shared by the language server and the web page |
 | Language server | `src/lsp/`, `bin/ptc-lsp.js` | LSP over stdio for any editor; Neovim files in `editors/nvim/` |
 | Compile-time constants | `src/lang/comptime.ts` | `const` values worked out in the simulator, `secret` checks, `env()` |
+| Map blocks | `src/lang/mapblock.ts`, `src/objects/`, `src/emit/place.ts` | `map { }` runs in the simulator while compiling (constructors log the objects they create); properties are checked against the editor's tables (`properties.ts`, `value-check.ts`); `place.ts` writes new objects and rewrites existing ones in the host map |
 | Standard library | `std/` | `.ptc` files for `import "std/..."` (`hash.ptc`); read by `src/cli/sources.ts`, bundled into the web page |
 | P-code target | `src/pcode/` | `--target pcode`: instructions as text plus one trigger per kind of instruction ([pcode.md](pcode.md)) |
 | Obfuscation | `src/obfuscate/` | `--obfuscate`: encoded texts and a start routine with the integrity check, dispatched jumps, grouped actions and fixed-outcome checks around the layout ([obfuscation.md](obfuscation.md)) |
@@ -34,8 +35,8 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 3. The tutorial and syntax tests run every program in `examples/tutorial/` and `examples/syntax/` and checks its chat output, and
    checks that `docs/tutorial.md` quotes the files exactly.
 4. `npm run live-check` runs `examples/live/*`, `examples/tutorial/*` and `examples/syntax/*` in the real game and compares every variable with
-   the simulator (type and value); it must stay at all programs matching. Last run: 51 of 51
-   (2026-11-02). Steps: [game-facts.md](game-facts.md#the-live-check).
+   the simulator (type and value); it must stay at all programs matching. Last run: 58 of 58
+   (2026-11-02), with the `map { }` objects placed in the map. Steps: [game-facts.md](game-facts.md#the-live-check).
 
 ## History
 

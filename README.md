@@ -21,8 +21,8 @@ That writes, in `out/`:
 | `hello.xml` | `<trigger>` and `<timer>` elements to append to a map |
 | `hello.txt` | the same triggers in the editor's "Edit as text" format, one block per trigger |
 | `hello.map.json` | source lines of every action, per trigger uid |
-| `hello-map.xml` | with `--into <map.xml>`: the map with the elements appended |
-| `hello.build.json` | with `--into`: the uids this build added, read back by `--replace` |
+| `hello-map.xml` | with `--into <map.xml>`: the map with the elements appended and the `map { }` objects added or updated |
+| `hello.build.json` | with `--into`: the uids and walls this build added, read back by `--replace` |
 | `hello.names.json` | with `--obfuscate`: every generated name and the source name it stands for (keep it private) |
 
 `--run` also runs the program in the simulator and prints its variables and chat.
@@ -35,12 +35,13 @@ The website editor cannot import XML into an open map; it can only replace the w
 2. `npm run compile -- game.ptc --into downloaded-map.xml`
 3. Replace the map with `out/game-map.xml`.
 
-The compiler refuses uids that the map already uses, adds declared map objects the map lacks,
-and warns when the map uses one of the program's variables that is not `export var`. To update a
+The compiler refuses uids that the map already uses, adds or updates the objects of `map { }`
+blocks, refuses declared objects the map lacks, and warns when the map uses one of the program's
+variables that is not `export var`. To update a
 map that already holds an older build of the program, add `--replace`: it removes the program's
-own triggers and timers before adding the new ones, and leaves everything else (your objects and
-other triggers) in place. Each `--into` build also writes a `.build.json` next to the output that
-records the uids it added; `--replace` reads the previous one, so the update is exact even when
+own triggers, timers, walls and backgrounds before adding the new ones, and leaves everything else
+(your objects and other triggers) in place. Each `--into` build also writes a `.build.json` next to the output that
+records the uids and walls it added; `--replace` reads the previous one, so the update is exact even when
 the names changed between builds (for example with a different `--name-seed`). The map's own timers come first in the file,
 so a host timer with delay 0 runs before the program's start code in the first frame.
 
@@ -89,9 +90,7 @@ simulator runs.
 | `--at <x>,<y>` | where the first trigger goes in the map (default 0,0; then a grid of 10 per row, 60 apart) |
 | `--run`, `--frames <n>` | simulate the program for n frames and print variables, chat and errors |
 | `--no-sync-mark` | do not add the Var Sync engine mark that a program with sync actions needs (with `--into`, a map that has one keeps it and gets no second one) |
-| `--no-create` | with `--into`: do not add declared map objects the map lacks; warn instead |
-| `--objects` | without `--into`: add every declared map object to the XML, for a new map (the web page's "objects" box). A map that already has one would get it twice, so the uids are listed |
-| `--replace` | with `--into`: remove this program's old triggers and timers from the map first, to update it in place |
+| `--replace` | with `--into`: remove this program's old triggers, timers, walls and backgrounds from the map first, to update it in place |
 | `--name-seed <s>` | derive the name prefix from a seed: reproducible, source-independent names. Pair with `--replace` to update a map across renamed builds (a `.build.json` next to the output records the uids) |
 | `--obfuscate`, `--obfuscate-seed <s\|random>` | shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check that turns a changed copy of the map off; about 3× slower ([docs/obfuscation.md](docs/obfuscation.md)) |
 | `--target <name>` | `triggers` (default) compiles to triggers; `pcode` compiles to p-code run by a fixed set of triggers: about 20× slower, experimental ([docs/pcode.md](docs/pcode.md)) |

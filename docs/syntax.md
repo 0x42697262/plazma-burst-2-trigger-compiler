@@ -291,11 +291,16 @@ on start {
 3 exits
 ```
 
-- Declare each map object with its kind and uid: `region`, `door`, `player` (a player slot),
-  `actor` (any other character), `gun`, `barrel`, `vehicle`, `decor`, `pusher`, `light`, `water`, `timer`, `trigger`. `at x, y` is where the
-  compiler puts it if the map lacks it (with `--into`).
-- `exits[]` is an object array; `exits[which]` picks one, even with a changing index.
-  A range writes many uids at once: `door doors[] = ["#door*{0..9}", "#Bullet*{1..6}"];` is 16
+- `map { }` creates objects while compiling: `Region(...)`, `Actor(...)`, `Wall(...)` and the other
+  constructors take the uid first and named properties (`x: 200`, `botaction: DoNothing`).
+  `guard.x ?= 0;` sets a property only when the object is created; `=` sets it on every build,
+  also in a map that already has the object. Names assigned there (`exits`, `guard`) are map
+  objects for the rest of the program.
+- A declaration outside `map { }` names an object the map already has: `region`, `door`, `player`
+  (a player slot), `actor` (any other character), `gun`, `barrel`, `vehicle`, `decor`, `pusher`,
+  `light`, `water`, `song`, `timer`, `trigger`. The compiler never creates or changes it.
+- `exits` is an object array; `exits[which]` picks one, even with a changing index.
+  Outside a map block, a range writes many uids at once: `door doors[] = ["#door*{0..9}", "#Bullet*{1..6}"];` is 16
   doors, and `doors[10]` is `#Bullet*1`.
 - `action(name or number, a, b)` runs any game action; [actions.md](actions.md) lists all 531 and
   what each parameter takes. Passing the wrong kind is a compile error, like a strict cast.

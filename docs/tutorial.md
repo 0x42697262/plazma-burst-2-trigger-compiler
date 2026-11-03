@@ -79,11 +79,16 @@ done!
 
 Objects of the map (regions, doors, characters, guns) are named by their uid, such as `#SPAWN1`.
 The game turns uids into objects when the map loads, so an object is fixed in the program. Declare
-each one with its kind:
+each one the map already has with its kind; create new ones in a `map { }` block, which runs while
+compiling:
 
 ```
 region spawn1 = "#SPAWN1";
-door gate = "#door*3" at 400, -120;
+map {
+  gate = Door("#door*3", maxspeed: 20);
+  gate.x ?= 400;
+  gate.y ?= -120;
+}
 ```
 
 Any of the game's actions runs with `action(name or number, a, b)`. The compiler checks every object
@@ -96,11 +101,11 @@ player uses the region: that is a button.
 
 With `--into map.xml`, the compiler also looks the objects up in the map:
 
-- An object the map lacks is added, with the editor's default settings, at its `at x, y` or in a
-  row below the program's triggers. Drag it into place in the editor. Compiling again never moves
-  or changes an object the map already has.
+- A declared object the map lacks is an error, which shows the `map { }` line that creates it.
+- An object of a `map { }` block that the map lacks is added with the editor's default settings.
+  One the map has gets the properties the code sets with `=` (each change is printed); `?=` only
+  sets a property when the object is created, so you can drag it into place in the editor.
 - A uid that the map uses for another kind of object is an error.
-- `--no-create` only warns about missing objects.
 
 ### A random respawn
 
