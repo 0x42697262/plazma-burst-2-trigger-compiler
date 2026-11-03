@@ -13,12 +13,15 @@ describe('web commands', () => {
     assert.deepEqual(filterCommands(commands, 'rits').map((entry) => entry.title), ['Run in the simulator']);
     assert.equal(filterCommands(commands, '').length, 4);
     assert.deepEqual(filterCommands(commands, 'zz'), []);
+    const examples = ['Open example: live/lang-math.ptc', 'Open example: syntax/07-map-objects.ptc'].map(command);
+    assert.deepEqual(filterCommands(examples, 'Open example: map').map((entry) => entry.title), ['Open example: syntax/07-map-objects.ptc']);
   });
 
   it('shows a chip for every setting that is not the default', () => {
     assert.deepEqual(optionChips(DEFAULTS, 0), []);
-    assert.deepEqual(optionChips({ ...DEFAULTS, target: 'pcode', obfuscate: true, numberText: false, guard: 0, prefix: 'mine' }, 2),
-      ['pcode', 'obfuscated', 'raw number text', 'prefix mine', 'no guard', 'env 2']);
+    const chips = optionChips({ ...DEFAULTS, target: 'pcode', obfuscate: true, numberText: false, guard: 0, prefix: 'mine' }, 2);
+    assert.deepEqual(chips.map((chip) => chip.label), ['pcode', 'obfuscated', 'raw number text', 'prefix mine', 'no guard', 'env 2']);
+    assert.deepEqual(chips.map((chip) => chip.setting), ['target', 'obfuscate', 'number-text', 'prefix', 'guard', 'environment']);
   });
 
   it('writes shortcuts the way the system does', () => {

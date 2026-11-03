@@ -23,7 +23,10 @@ import type { Workspace } from './workspace.ts';
 import { ASSEMBLY_EXTENSION, CLASS, DOT, KEY, PLAIN_EDITOR_THEME, TAG, WORD_AFTER, WORD_BEFORE } from './keys.ts';
 import { HOVER_DELAY, LINT_DELAY } from './constants.ts';
 
-export type EditorHooks = { onChange: (file: string, text: string) => void; onJump: (location: ServiceLocation) => void; checkOptions: () => Partial<CompileOptions> };
+export type EditorHooks = {
+  onChange: (file: string, text: string) => void; onJump: (location: ServiceLocation) => void; checkOptions: () => Partial<CompileOptions>;
+  onCursor: (file: string) => void; onFocus: (file: string) => void;
+};
 
 const LIGHT_THEME = EditorView.theme(PLAIN_EDITOR_THEME, { dark: false });
 const DARK_THEME = [EditorView.theme(PLAIN_EDITOR_THEME, { dark: true }), oneDark];
@@ -35,44 +38,30 @@ const positionOf = (state: EditorState, offset: number): { line: number; column:
 
 export class CodeEditor {
   readonly view: EditorView;
+  readonly file: string;
   private readonly workspace: Workspace;
   private readonly hooks: EditorHooks;
-  private readonly states = new Map<string, EditorState>();
   private readonly vimMode = new Compartment();
   private readonly theme = new Compartment();
-  private vimOn: boolean;
-  private dark: boolean;
-  private file: string;
-  private readonly cursorListeners: (() => void)[] = [];
+  private readonly vimOn: boolean;
+  private readonly dark: boolean;
 
-  constructor(parent: HTMLElement, workspace: Workspace, hooks: EditorHooks, vimOn: boolean, dark: boolean) {
+  constructor(parent: HTMLElement, file: string, workspace: Workspace, hooks: EditorHooks, vimOn: boolean, dark: boolean) {
     this.workspace = workspace;
     this.hooks = hooks;
+    this.file = file;
     this.vimOn = vimOn;
     this.dark = dark;
-    this.file = workspace.active;
-    this.view = new EditorView({ parent, state: this.stateFor(this.file) });
+    this.view = new EditorView({ parent, state: EditorState.create({ doc: workspace.get(file) ?? '', extensions: this.extensions(file) }) });
   }
 
-  get activeFile(): string {
-    return this.file;
+  destroy(): void {
+    this.view.destroy();
   }
 
-  open(file: string): void {
-    this.states.set(this.file, this.view.state);
-    this.file = file;
-    this.view.setState(this.stateFor(file));
-    this.view.focus();
-  }
-
-  reload(): void {
-    this.states.clear();
-    this.file = this.workspace.active;
-    this.view.setState(this.stateFor(this.file));
-  }
-
-  forget(file: string): void {
-    this.states.delete(file);
+  replaceText(text: string): void {
+    if (text === this.view.state.doc.toString()) return;
+    this.view.dispatch({ changes: { from: 0, to: this.view.state.doc.length, insert: text } });
   }
 
   select(line: number, column: number): void {
@@ -88,16 +77,11 @@ export class CodeEditor {
   }
 
   setVim(on: boolean): void {
-    this.vimOn = on;
     this.view.dispatch({ effects: this.vimMode.reconfigure(on ? vim() : []) });
-    for (const [file, state] of this.states) this.states.set(file, state.update({ effects: this.vimMode.reconfigure(on ? vim() : []) }).state);
   }
 
   setDark(on: boolean): void {
-    this.dark = on;
-    const effects = this.theme.reconfigure(on ? DARK_THEME : LIGHT_THEME);
-    this.view.dispatch({ effects });
-    for (const [file, state] of this.states) this.states.set(file, state.update({ effects }).state);
+    this.view.dispatch({ effects: this.theme.reconfigure(on ? DARK_THEME : LIGHT_THEME) });
   }
 
   wordAtCursor(): { word: string; group: string | null } {
@@ -115,16 +99,6 @@ export class CodeEditor {
     const { from, to } = this.view.state.selection.main;
     this.view.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length }, scrollIntoView: true });
     this.view.focus();
-  }
-
-  onCursor(listener: () => void): void {
-    this.cursorListeners.push(listener);
-  }
-
-  private stateFor(file: string): EditorState {
-    const saved = this.states.get(file);
-    if (saved) return saved;
-    return EditorState.create({ doc: this.workspace.get(file) ?? '', extensions: this.extensions(file) });
   }
 
   private extensions(file: string): Extension[] {
@@ -183,7 +157,8 @@ export class CodeEditor {
       ]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) this.hooks.onChange(file, update.state.doc.toString());
-        if (update.selectionSet || update.docChanged) for (const listener of this.cursorListeners) listener();
+        if (update.selectionSet || update.docChanged) this.hooks.onCursor(file);
+        if (update.focusChanged && update.view.hasFocus) this.hooks.onFocus(file);
       }),
     ];
   }

@@ -1,4 +1,5 @@
 import examples from 'virtual:examples';
+import type { SerializedDockview } from 'dockview-core';
 import { CodeEditor } from './editor.ts';
 import { Workspace } from './workspace.ts';
 import { build, checkOptions, parseEnvironment, simulate } from './pipeline.ts';
@@ -6,11 +7,12 @@ import type { Build, BuildRecord, Options } from './pipeline.ts';
 import { filterCommands, optionChips, shortcutLabel } from './commands.ts';
 import type { Command } from './commands.ts';
 import { ReferencePanel } from './reference-panel.ts';
+import { Dock } from './dock.ts';
 import {
-  ATTRIBUTE, CLASS, SELECTOR, CSS_VARIABLE, DARK_QUERY, EMPTY_OBJECT, ESCAPE, FOLDER_POSITION, GUIDE_URL, KEY_NAME, KEYDOWN, LIBRARY_FOLDER, MAC_PLATFORM, OUTPUT_BUTTONS, SCROLL_NEAREST, SHORTCUT, SHORTCUT_KEY,
-  TAB_ACTIVE, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, PIXELS, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT,
+  ATTRIBUTE, CLASS, DARK_QUERY, DOCK, EMPTY_OBJECT, ESCAPE, FOLDER_POSITION, GUIDE_URL, KEY_NAME, KEYDOWN, LIBRARY_FOLDER, MAC_PLATFORM, OUTPUT_BUTTONS, ROW_SELECTOR, SCROLL_NEAREST,
+  SELECTOR, SHORTCUT, SHORTCUT_KEY, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT,
 } from './keys.ts';
-import { DEFAULT_FRAMES, DEFAULT_GUARD, MIN_EDITOR_HEIGHT, MIN_OUTPUT_HEIGHT, STATUS_TIME } from './constants.ts';
+import { DEFAULT_FRAMES, DEFAULT_GUARD, FLASH_TIME, LAYOUT_SAVE_DELAY, STATUS_TIME } from './constants.ts';
 import { TEXT } from './text.ts';
 import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { DEFAULT_TARGET, isTarget, TARGETS } from '../pcode/keys.ts';
@@ -27,6 +29,13 @@ const storage = ((): Storage | null => {
     return null;
   }
 })();
+const readJson = <Type>(key: string): Partial<Type> => {
+  try {
+    return JSON.parse(storage?.getItem(key) ?? EMPTY_OBJECT) as Partial<Type>;
+  } catch {
+    return {};
+  }
+};
 const mac = MAC_PLATFORM.test(navigator.platform);
 const shortcut = (keys: readonly string[]): string => shortcutLabel(keys, mac);
 
@@ -52,18 +61,14 @@ const environment = () => parseEnvironment(environmentInput.value);
 const output = element<HTMLPreElement>(ELEMENT.output);
 const status = element<HTMLSpanElement>(ELEMENT.status);
 const chips = element<HTMLSpanElement>(ELEMENT.chips);
-const tabs = element<HTMLElement>(ELEMENT.tabs);
 const settings = element<HTMLDivElement>(ELEMENT.settings);
-const settingsButton = element<HTMLButtonElement>(ELEMENT.settingsButton);
 const palette = element<HTMLDivElement>(ELEMENT.palette);
 const paletteInput = element<HTMLInputElement>(ELEMENT.paletteInput);
 const paletteList = element<HTMLUListElement>(ELEMENT.paletteList);
 const hostMapName = element<HTMLSpanElement>(ELEMENT.hostMapName);
 const hostMapClear = element<HTMLButtonElement>(ELEMENT.hostMapClear);
-const workbench = element<HTMLElement>(ELEMENT.main).querySelector<HTMLElement>(TAG.section) as HTMLElement;
-const splitter = element<HTMLDivElement>(ELEMENT.splitter);
 
-const savedOptions = JSON.parse(storage?.getItem(STORAGE.options) ?? EMPTY_OBJECT) as Partial<Options>;
+const savedOptions = readJson<Options>(STORAGE.options);
 prefixInput.value = savedOptions.prefix ?? '';
 guardInput.value = String(savedOptions.guard ?? DEFAULT_GUARD);
 framesInput.value = String(savedOptions.frames ?? DEFAULT_FRAMES);
@@ -75,12 +80,11 @@ nameSeedInput.value = savedOptions.nameSeed ?? '';
 obfuscateInput.checked = savedOptions.obfuscate ?? false;
 obfuscateSeedInput.value = savedOptions.obfuscateSeed ?? '';
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
-const savedHeight = storage?.getItem(STORAGE.outputHeight);
-if (savedHeight) workbench.style.setProperty(CSS_VARIABLE.outputHeight, savedHeight);
-element(ELEMENT.shortcutHelp).textContent = TEXT.shortcutHelp(shortcut(SHORTCUT.build), shortcut(SHORTCUT.run), shortcut(SHORTCUT.palette), shortcut(SHORTCUT.settings), shortcut(SHORTCUT.reference));
-element(ELEMENT.referenceButton).title = TEXT.withShortcut(element(ELEMENT.referenceButton).title, shortcut(SHORTCUT.reference));
+element(ELEMENT.shortcutHelp).textContent = TEXT.shortcutHelp(shortcut(SHORTCUT.build), shortcut(SHORTCUT.run), shortcut(SHORTCUT.palette), shortcut(SHORTCUT.files), shortcut(SHORTCUT.settings), shortcut(SHORTCUT.reference));
 element(ELEMENT.compile).title = TEXT.withShortcut(element(ELEMENT.compile).title, shortcut(SHORTCUT.build));
 element(ELEMENT.run).title = TEXT.withShortcut(element(ELEMENT.run).title, shortcut(SHORTCUT.run));
+element(ELEMENT.referenceButton).title = TEXT.withShortcut(element(ELEMENT.referenceButton).title, shortcut(SHORTCUT.reference));
+element(ELEMENT.filesButton).title = TEXT.withShortcut(element(ELEMENT.filesButton).title, shortcut(SHORTCUT.files));
 element(ELEMENT.paletteButton).textContent = shortcut(SHORTCUT.palette);
 
 let hostMap: string | null = null;
@@ -88,16 +92,11 @@ let last: Build | null = null;
 let runLines: string[] = [];
 let shown: OutputName = OUTPUT.problems;
 let statusTimer = 0;
-
-const renderChips = (current: Options): void => {
-  chips.replaceChildren(...optionChips(current, Object.keys(environment()).length).map((label) => {
-    const chip = document.createElement(TAG.span);
-    chip.className = CLASS.chip;
-    chip.textContent = label;
-    chip.addEventListener(EVENT.click, () => toggleSettings(true));
-    return chip;
-  }));
-};
+let layoutTimer = 0;
+let activeFile = workspace.active;
+const editors = new Map<string, CodeEditor>();
+const currentEditor = (): CodeEditor | null => editors.get(activeFile) ?? null;
+const darkQuery = window.matchMedia(DARK_QUERY);
 
 const options = (): Options => {
   const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked, nameSeed: nameSeedInput.value,
@@ -124,7 +123,8 @@ const say = (text: string): void => {
   }, STATUS_TIME);
 };
 
-const baseName = (): string => (editor.activeFile.split(PATH_SEPARATOR).pop() ?? DEFAULT_FILE).replace(EXTENSION, '');
+const baseName = (file = activeFile): string => (file.split(PATH_SEPARATOR).pop() ?? DEFAULT_FILE).replace(EXTENSION, '');
+const shortName = (file: string): string => (file.startsWith(WORKSPACE_ROOT) ? file.slice(WORKSPACE_ROOT.length) : file);
 
 const outputText = (name: OutputName): string => {
   if (!last) return TEXT.compileFirst;
@@ -144,6 +144,7 @@ const outputText = (name: OutputName): string => {
 
 const show = (name: OutputName): void => {
   shown = name;
+  if (!dock.isOpen(DOCK.panel.output)) dock.show(DOCK.panel.output, true);
   for (const button of document.querySelectorAll<HTMLButtonElement>(OUTPUT_BUTTONS)) {
     button.classList.toggle(CLASS.active, button.getAttribute(ATTRIBUTE.output) === name);
   }
@@ -167,7 +168,7 @@ const show = (name: OutputName): void => {
   }
 };
 
-const buildStore = (): Record<string, unknown> => JSON.parse(storage?.getItem(STORAGE.build) ?? EMPTY_OBJECT) as Record<string, unknown>;
+const buildStore = (): Record<string, unknown> => readJson<Record<string, unknown>>(STORAGE.build);
 
 const recordOf = (stored: unknown): BuildRecord => {
   if (Array.isArray(stored)) return { uids: stored.filter((uid): uid is string => typeof uid === 'string'), walls: [] };
@@ -176,7 +177,7 @@ const recordOf = (stored: unknown): BuildRecord => {
 };
 
 const compile = (): Build => {
-  const file = editor.activeFile;
+  const file = activeFile;
   last = build(workspace, file, options(), hostMap, environment(), recordOf(buildStore()[file]));
   if (hostMap !== null && last.map !== '') {
     storage?.setItem(STORAGE.build, JSON.stringify({ ...buildStore(), [file]: { uids: last.uids, walls: last.walls } }));
@@ -196,10 +197,70 @@ const run = (): void => {
   show(current.result ? OUTPUT.run : OUTPUT.problems);
 };
 
-const openFile = (file: string): void => {
+const editorHooks = {
+  onChange: (file: string, text: string): void => {
+    workspace.set(file, text);
+    panel.refresh();
+  },
+  onJump: (location: { file: string; line: number; column: number }): void => jumpTo(location),
+  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target, environment()),
+  onCursor: (file: string): void => {
+    if (file === activeFile) panel.cursorMoved();
+  },
+  onFocus: (file: string): void => setActiveFile(file),
+};
+
+const setActiveFile = (file: string): void => {
+  if (file === activeFile) return;
+  activeFile = file;
   workspace.activate(file);
-  editor.open(file);
-  renderTabs();
+  panel.refresh();
+};
+
+const saveLayout = (layout: SerializedDockview): void => {
+  window.clearTimeout(layoutTimer);
+  layoutTimer = window.setTimeout(() => storage?.setItem(STORAGE.layout, JSON.stringify(layout)), LAYOUT_SAVE_DELAY);
+};
+
+const dock = new Dock(element(ELEMENT.dock), {
+  createFile: (file, parent) => {
+    const editor = new CodeEditor(parent, file, workspace, editorHooks, vimInput.checked, darkQuery.matches);
+    editors.set(file, editor);
+    return {
+      dispose: () => {
+        editor.destroy();
+        if (editors.get(file) === editor) editors.delete(file);
+      },
+    };
+  },
+  fixed: { output: element(ELEMENT.outputPanel), reference: element(ELEMENT.reference), settings },
+  activeFile: (file) => setActiveFile(file),
+  changed: saveLayout,
+  newFile: () => newFile(),
+  titleOf: shortName,
+}, darkQuery.matches);
+
+const savedPanel = readJson<{ open: boolean; follow: boolean }>(STORAGE.reference);
+const panel = new ReferencePanel(element(ELEMENT.reference), {
+  insert: (text) => currentEditor()?.insert(text),
+  jump: (location) => jumpTo(location),
+  source: () => ({ file: activeFile, text: workspace.get(activeFile) ?? '', read: (file) => workspace.get(file) }),
+  cursorWord: () => currentEditor()?.wordAtCursor() ?? { word: '', group: null },
+  followChanged: (follow) => storage?.setItem(STORAGE.reference, JSON.stringify({ follow })),
+  isOpen: () => dock.isOpen(DOCK.panel.reference),
+  setOpen: (open) => dock.show(DOCK.panel.reference, open),
+}, savedPanel.follow ?? true);
+
+const openFile = (file: string): void => {
+  dock.openFile(file);
+  setActiveFile(file);
+  editors.get(file)?.view.focus();
+};
+
+const jumpTo = (location: { file: string; line: number; column: number }): void => {
+  if (workspace.get(location.file) === null) return;
+  if (location.file !== activeFile && !isStandardLibrary(location.file)) openFile(location.file);
+  editors.get(location.file)?.select(location.line, location.column);
 };
 
 const newFile = (): void => {
@@ -210,108 +271,43 @@ const newFile = (): void => {
   openFile(file);
 };
 
-const renderTabs = (): void => {
-  tabs.replaceChildren();
-  for (const file of workspace.list()) {
-    const tab = document.createElement(TAG.span);
-    tab.className = file === editor.activeFile ? TAB_ACTIVE : CLASS.tab;
-    tab.textContent = file.slice(WORKSPACE_ROOT.length);
-    tab.addEventListener(EVENT.click, () => openFile(file));
-    if (workspace.list().length > 1) {
-      const close = document.createElement(TAG.span);
-      close.className = CLASS.close;
-      close.textContent = TEXT.closeMark;
-      close.addEventListener(EVENT.click, (event) => {
-        event.stopPropagation();
-        if (!window.confirm(TEXT.removeFile(file.slice(WORKSPACE_ROOT.length)))) return;
-        workspace.remove(file);
-        editor.forget(file);
-        editor.open(workspace.active);
-        renderTabs();
-      });
-      tab.append(close);
-    }
-    tabs.append(tab);
-  }
-  const add = document.createElement(TAG.button);
-  add.id = ELEMENT.newFile;
-  add.textContent = TEXT.addFile;
-  add.title = TEXT.commands.newFile;
-  add.addEventListener(EVENT.click, newFile);
-  tabs.append(add);
+const deleteFile = (file: string): void => {
+  if (!window.confirm(TEXT.removeFile(shortName(file)))) return;
+  dock.closeFile(file);
+  workspace.remove(file);
 };
 
-const darkQuery = window.matchMedia(DARK_QUERY);
-const editor = new CodeEditor(element(ELEMENT.editor), workspace, {
-  onChange: (file, text) => {
-    workspace.set(file, text);
-    panel?.refresh();
-  },
-  onJump: (location) => {
-    if (location.file !== editor.activeFile && workspace.get(location.file) !== null) openFile(location.file);
-    editor.select(location.line, location.column);
-  },
-  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target, environment()),
-}, vimInput.checked, darkQuery.matches);
-darkQuery.addEventListener(EVENT.change, () => editor.setDark(darkQuery.matches));
-
-const savedPanel = JSON.parse(storage?.getItem(STORAGE.reference) ?? EMPTY_OBJECT) as Partial<{ open: boolean; follow: boolean }>;
-const panel: ReferencePanel | null = new ReferencePanel(element(ELEMENT.reference), {
-  insert: (text) => editor.insert(text),
-  jump: (location) => {
-    if (location.file !== editor.activeFile && workspace.get(location.file) !== null) openFile(location.file);
-    editor.select(location.line, location.column);
-  },
-  source: () => ({ file: editor.activeFile, text: workspace.get(editor.activeFile) ?? '', read: (file) => workspace.get(file) }),
-  cursorWord: () => editor.wordAtCursor(),
-  changed: (state) => storage?.setItem(STORAGE.reference, JSON.stringify(state)),
-}, { open: savedPanel.open ?? false, follow: savedPanel.follow ?? true });
-editor.onCursor(() => panel?.cursorMoved());
-element(ELEMENT.referenceButton).addEventListener(EVENT.click, () => panel?.toggle());
+const savedLayout = ((): SerializedDockview | null => {
+  try {
+    return JSON.parse(storage?.getItem(STORAGE.layout) ?? TEXT.nullJson) as SerializedDockview | null;
+  } catch {
+    return null;
+  }
+})();
+dock.restore(savedLayout, workspace.list(), workspace.active, savedPanel.open ?? false);
+darkQuery.addEventListener(EVENT.change, () => {
+  dock.setDark(darkQuery.matches);
+  for (const editor of editors.values()) editor.setDark(darkQuery.matches);
+});
 
 const exampleFiles = Object.keys(examples).filter((name) => !isStandardLibrary(name) && !name.split(PATH_SEPARATOR).includes(LIBRARY_FOLDER)).sort();
 const exampleName = (file: string): string => {
   const parts = file.split(PATH_SEPARATOR);
   return TEXT.exampleName(parts.at(FOLDER_POSITION) ?? '', parts[parts.length - 1] ?? file);
 };
-const examplesSelect = element<HTMLSelectElement>(ELEMENT.examples);
-const placeholder = document.createElement(TAG.option);
-placeholder.textContent = TEXT.examplesPlaceholder;
-placeholder.value = '';
-examplesSelect.append(placeholder);
-const groups = new Map<string, HTMLOptGroupElement>();
-for (const file of exampleFiles) {
-  const folder = file.split(PATH_SEPARATOR).at(FOLDER_POSITION) ?? '';
-  let group = groups.get(folder);
-  if (!group) {
-    group = document.createElement(TAG.optionGroup);
-    group.label = TEXT.exampleGroup(folder);
-    groups.set(folder, group);
-    examplesSelect.append(group);
-  }
-  const option = document.createElement(TAG.option);
-  option.value = file;
-  option.textContent = exampleName(file);
-  group.append(option);
-}
-examplesSelect.value = storage?.getItem(STORAGE.example) ?? '';
 const openExample = (file: string): void => {
   workspace.loadExample(examples, file);
   storage?.setItem(STORAGE.example, file);
-  examplesSelect.value = file;
-  editor.open(workspace.active);
-  renderTabs();
+  for (const [name, editor] of editors) editor.replaceText(workspace.get(name) ?? '');
+  openFile(workspace.active);
   last = null;
   status.textContent = idleStatus();
   show(OUTPUT.problems);
 };
-examplesSelect.addEventListener(EVENT.change, () => {
-  if (examplesSelect.value !== '') openExample(examplesSelect.value);
-});
 
 const optionChanged = (): void => {
   options();
-  editor.relint();
+  for (const editor of editors.values()) editor.relint();
 };
 environmentInput.addEventListener(EVENT.input, optionChanged);
 for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput]) input.addEventListener(EVENT.change, optionChanged);
@@ -325,20 +321,35 @@ element(ELEMENT.newSeed).addEventListener(EVENT.click, newSeed);
 const setVim = (on: boolean): void => {
   vimInput.checked = on;
   storage?.setItem(STORAGE.vim, String(on));
-  editor.setVim(on);
+  for (const editor of editors.values()) editor.setVim(on);
 };
 vimInput.addEventListener(EVENT.change, () => setVim(vimInput.checked));
 
-const toggleSettings = (open = settings.hidden): void => {
-  settings.hidden = !open;
+const toggleSettings = (open = !dock.isOpen(DOCK.panel.settings)): void => {
+  dock.show(DOCK.panel.settings, open);
   palette.hidden = true;
 };
-settingsButton.addEventListener(EVENT.click, () => toggleSettings());
-document.addEventListener(EVENT.pointerDown, (event) => {
-  const target = event.target as Node;
-  if (!settings.hidden && !settings.contains(target) && !settingsButton.contains(target) && !chips.contains(target)) settings.hidden = true;
-  if (!palette.hidden && !palette.contains(target)) palette.hidden = true;
-});
+
+const revealSetting = (id: string): void => {
+  dock.show(DOCK.panel.settings, true);
+  const input = element<HTMLElement>(id);
+  const row = input.closest<HTMLElement>(ROW_SELECTOR) ?? input;
+  row.scrollIntoView({ block: SCROLL_NEAREST });
+  row.classList.add(CLASS.flash);
+  window.setTimeout(() => row.classList.remove(CLASS.flash), FLASH_TIME);
+  input.focus();
+};
+
+function renderChips(current: Options): void {
+  chips.replaceChildren(...optionChips(current, Object.keys(environment()).length).map((chip) => {
+    const node = document.createElement(TAG.button);
+    node.className = CLASS.chip;
+    node.textContent = chip.label;
+    node.title = TEXT.chipTitle;
+    node.addEventListener(EVENT.click, () => revealSetting(chip.setting));
+    return node;
+  }));
+}
 
 const copyOutput = (): void => {
   void navigator.clipboard.writeText(shown === OUTPUT.problems ? output.textContent ?? '' : outputText(shown)).then(() => say(TEXT.copied));
@@ -371,6 +382,8 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(OUTPUT_BUTTONS
 element(ELEMENT.copy).addEventListener(EVENT.click, copyOutput);
 element(ELEMENT.download).addEventListener(EVENT.click, downloadOutput);
 element(ELEMENT.hostMapButton).addEventListener(EVENT.click, chooseMap);
+element(ELEMENT.settingsButton).addEventListener(EVENT.click, () => toggleSettings());
+element(ELEMENT.referenceButton).addEventListener(EVENT.click, () => panel.toggle());
 hostMapClear.addEventListener(EVENT.click, clearMap);
 element<HTMLInputElement>(ELEMENT.hostMap).addEventListener(EVENT.change, (event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
@@ -395,14 +408,15 @@ const commands = (): Command[] => {
     { title: TEXT.commands.build, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.build), run: buildAndShow },
     { title: TEXT.commands.run, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.run), run },
     { title: TEXT.commands.settings, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.settings), run: () => toggleSettings(true) },
-    { title: TEXT.commands.reference, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.reference), run: () => panel?.toggle() },
-    { title: TEXT.commands.searchReference, detail: TEXT.commandDetail.action, shortcut: '', run: () => panel?.focusSearch() },
+    { title: TEXT.commands.reference, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.reference), run: () => panel.toggle() },
+    { title: TEXT.commands.searchReference, detail: TEXT.commandDetail.action, shortcut: '', run: () => panel.focusSearch() },
     ...Object.values(OUTPUT).map((name): Command => ({ title: TEXT.commands.output(TEXT.outputNames[name]), detail: TEXT.commandDetail.output, shortcut: '', run: () => show(name) })),
     { title: TEXT.commands.map, detail: TEXT.commandDetail.action, shortcut: '', run: chooseMap },
     ...(hostMap === null ? [] : [{ title: TEXT.commands.clearMap, detail: TEXT.commandDetail.action, shortcut: '', run: clearMap }]),
     { title: TEXT.commands.copy, detail: TEXT.commandDetail.action, shortcut: '', run: copyOutput },
     { title: TEXT.commands.download, detail: TEXT.commandDetail.action, shortcut: '', run: downloadOutput },
     { title: TEXT.commands.newFile, detail: TEXT.commandDetail.action, shortcut: '', run: newFile },
+    { title: TEXT.commands.resetLayout, detail: TEXT.commandDetail.action, shortcut: '', run: () => dock.restore(null, workspace.list(), activeFile, dock.isOpen(DOCK.panel.reference)) },
     ...TARGETS.map((target): Command => ({ title: TEXT.commands.target(target), detail: TEXT.commandDetail.option, shortcut: '', run: () => {
       targetSelect.value = target;
       optionChanged();
@@ -414,12 +428,15 @@ const commands = (): Command[] => {
     { title: TEXT.commands.newSeed, detail: TEXT.commandDetail.option, shortcut: '', run: newSeed },
     { title: TEXT.commands.vim, detail: TEXT.commandDetail.option, shortcut: '', run: () => setVim(!vimInput.checked) },
     { title: TEXT.commands.guide, detail: TEXT.commandDetail.action, shortcut: '', run: () => window.open(GUIDE_URL) },
+    ...workspace.list().map((file): Command => ({ title: TEXT.commands.openFile(shortName(file)), detail: TEXT.commandDetail.file, shortcut: '', run: () => openFile(file) })),
+    ...workspace.list().map((file): Command => ({ title: TEXT.commands.deleteFile(shortName(file)), detail: TEXT.commandDetail.file, shortcut: '', run: () => deleteFile(file) })),
     ...exampleFiles.map((file): Command => ({ title: TEXT.commands.example(exampleName(file)), detail: TEXT.commandDetail.example, shortcut: '', run: () => openExample(file) })),
   ];
 };
 
 let shownCommands: Command[] = [];
 let activeCommand = 0;
+let returnFocus: HTMLElement | null = null;
 const renderPalette = (): void => {
   shownCommands = filterCommands(commands(), paletteInput.value);
   activeCommand = Math.min(activeCommand, Math.max(0, shownCommands.length - 1));
@@ -440,17 +457,17 @@ const renderPalette = (): void => {
   })));
   paletteList.querySelector(SELECTOR.active)?.scrollIntoView({ block: SCROLL_NEAREST });
 };
-const openPalette = (): void => {
-  settings.hidden = true;
+const openPalette = (query = ''): void => {
+  returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   palette.hidden = false;
-  paletteInput.value = '';
+  paletteInput.value = query;
   activeCommand = 0;
   renderPalette();
   paletteInput.focus();
 };
 const closePalette = (): void => {
   palette.hidden = true;
-  editor.view.focus();
+  (returnFocus ?? currentEditor()?.view.contentDOM)?.focus();
 };
 const runCommand = (command: Command): void => {
   closePalette();
@@ -472,13 +489,17 @@ paletteInput.addEventListener(KEYDOWN, (event) => {
     if (command) runCommand(command);
   }
 });
-element(ELEMENT.paletteButton).addEventListener(EVENT.click, openPalette);
+document.addEventListener(EVENT.pointerDown, (event) => {
+  if (!palette.hidden && !palette.contains(event.target as Node)) palette.hidden = true;
+});
+element(ELEMENT.paletteButton).addEventListener(EVENT.click, () => openPalette());
+element(ELEMENT.examplesButton).addEventListener(EVENT.click, () => openPalette(TEXT.commands.example('')));
+element(ELEMENT.filesButton).addEventListener(EVENT.click, () => openPalette(TEXT.commands.openFile('')));
 
 window.addEventListener(KEYDOWN, (event) => {
   const modifier = event.ctrlKey || event.metaKey;
-  if (event.key === ESCAPE && (!palette.hidden || !settings.hidden)) {
+  if (event.key === ESCAPE && !palette.hidden) {
     event.preventDefault();
-    settings.hidden = true;
     closePalette();
     return;
   }
@@ -492,33 +513,18 @@ window.addEventListener(KEYDOWN, (event) => {
     event.preventDefault();
     if (palette.hidden) openPalette();
     else closePalette();
+  } else if (key === SHORTCUT_KEY.files) {
+    event.preventDefault();
+    openPalette(TEXT.commands.openFile(''));
   } else if (key === SHORTCUT_KEY.settings) {
     event.preventDefault();
     toggleSettings();
   } else if (key === SHORTCUT_KEY.reference) {
     event.preventDefault();
-    panel?.toggle();
+    panel.toggle();
   }
 }, true);
 
-let dragTop = 0;
-splitter.addEventListener(EVENT.pointerDown, (event) => {
-  splitter.setPointerCapture(event.pointerId);
-  splitter.classList.add(CLASS.dragging);
-  dragTop = workbench.getBoundingClientRect().bottom;
-});
-splitter.addEventListener(EVENT.pointerMove, (event) => {
-  if (!splitter.hasPointerCapture(event.pointerId)) return;
-  const height = Math.max(MIN_OUTPUT_HEIGHT, Math.min(dragTop - event.clientY, workbench.getBoundingClientRect().height - MIN_EDITOR_HEIGHT));
-  workbench.style.setProperty(CSS_VARIABLE.outputHeight, height + PIXELS);
-});
-splitter.addEventListener(EVENT.pointerUp, (event) => {
-  splitter.releasePointerCapture(event.pointerId);
-  splitter.classList.remove(CLASS.dragging);
-  storage?.setItem(STORAGE.outputHeight, workbench.style.getPropertyValue(CSS_VARIABLE.outputHeight));
-});
-
-renderTabs();
 options();
 status.textContent = idleStatus();
 show(OUTPUT.problems);

@@ -1,8 +1,8 @@
 export const ELEMENT = Object.freeze({
-  editor: 'editor',
-  tabs: 'tabs',
-  newFile: 'new-file',
-  examples: 'examples',
+  dock: 'dock',
+  outputPanel: 'output-panel',
+  examplesButton: 'examples-button',
+  filesButton: 'files-button',
   vim: 'vim',
   prefix: 'prefix',
   guard: 'guard',
@@ -16,12 +16,12 @@ export const ELEMENT = Object.freeze({
   hostMap: 'host-map',
   hostMapName: 'host-map-name',
   hostMapButton: 'host-map-button',
+  hostMapClear: 'host-map-clear',
   replace: 'replace',
   nameSeed: 'name-seed',
   obfuscate: 'obfuscate',
   obfuscateSeed: 'obfuscate-seed',
   newSeed: 'new-seed',
-  outputTabs: 'output-tabs',
   output: 'output',
   copy: 'copy',
   download: 'download',
@@ -33,16 +33,13 @@ export const ELEMENT = Object.freeze({
   paletteInput: 'palette-input',
   paletteList: 'palette-list',
   paletteButton: 'palette-button',
-  hostMapClear: 'host-map-clear',
-  main: 'main',
-  splitter: 'splitter',
   shortcutHelp: 'shortcut-help',
   referenceButton: 'reference-button',
   reference: 'reference',
 });
 export const OUTPUT = Object.freeze({ problems: 'problems', xml: 'xml', text: 'text', map: 'map', run: 'run' } as const);
 export const STORAGE = Object.freeze({
-  files: 'ptc.files', active: 'ptc.active', vim: 'ptc.vim', options: 'ptc.options', example: 'ptc.example', build: 'ptc.build', outputHeight: 'ptc.outputHeight', reference: 'ptc.reference',
+  files: 'ptc.files', active: 'ptc.active', vim: 'ptc.vim', options: 'ptc.options', example: 'ptc.example', build: 'ptc.build', layout: 'ptc.layout', reference: 'ptc.reference',
 });
 export const WORKSPACE_ROOT = '/work/';
 export const DEFAULT_FILE = '/work/main.ptc';
@@ -54,7 +51,8 @@ export const WORD_BEFORE = /[A-Za-z0-9_]*$/;
 export const WORD_AFTER = /^[A-Za-z0-9_]*/;
 export const DOT = '.';
 export const CLASS = Object.freeze({
-  active: 'active', error: 'error', warning: 'warning', hover: 'hover-doc', tab: 'tab', close: 'close', chip: 'chip', muted: 'muted', shortcut: 'shortcut', dragging: 'dragging',
+  active: 'active', error: 'error', warning: 'warning', hover: 'hover-doc', chip: 'chip', muted: 'muted', shortcut: 'shortcut', flash: 'flash', panelFill: 'panel-fill',
+  groupActions: 'group-actions', watermark: 'watermark',
 });
 export const MIME = Object.freeze({ xml: 'application/xml', text: 'text/plain' });
 export const ATTRIBUTE = Object.freeze({ file: 'data-file', output: 'data-output' });
@@ -108,20 +106,17 @@ export const STARTER_EXAMPLE = '/examples/tutorial/01-hello.ptc';
 export const EXTENSION = /\.[^./]+$/;
 export const EMPTY_OBJECT = '{}';
 export const OUTPUT_BUTTONS = '[data-output]';
-export const TAB_ACTIVE = 'tab active';
 export const LIBRARY_FOLDER = 'lib';
 export const FOLDER_POSITION = -2;
 export const KEYDOWN = 'keydown';
 export const ESCAPE = 'Escape';
 export const KEY_NAME = Object.freeze({ enter: 'Enter', up: 'ArrowUp', down: 'ArrowDown' });
-export const SHORTCUT_KEY = Object.freeze({ palette: 'k', settings: ',', reference: '\\' });
-export const SHORTCUT: Readonly<Record<'build' | 'run' | 'palette' | 'settings' | 'reference', readonly string[]>> = Object.freeze({
-  build: ['mod', 'enter'], run: ['mod', 'shift', 'enter'], palette: ['mod', 'K'], settings: ['mod', ','], reference: ['mod', '\\'],
+export const SHORTCUT_KEY = Object.freeze({ palette: 'k', files: 'p', settings: ',', reference: '\\' });
+export const SHORTCUT: Readonly<Record<'build' | 'run' | 'palette' | 'files' | 'settings' | 'reference', readonly string[]>> = Object.freeze({
+  build: ['mod', 'enter'], run: ['mod', 'shift', 'enter'], palette: ['mod', 'K'], files: ['mod', 'P'], settings: ['mod', ','], reference: ['mod', '\\'],
 });
 export const MAC_PLATFORM = /Mac|iPhone|iPad/;
 export const DARK_QUERY = '(prefers-color-scheme: dark)';
-export const CSS_VARIABLE = Object.freeze({ outputHeight: '--output-height' });
-export const PIXELS = 'px';
 export const ROOT_ID = 'root';
 export const PROGRAM_PREFIX = 'program:';
 export const EVENT_SYMBOL = 'event';
@@ -131,6 +126,13 @@ export const PANEL = Object.freeze({
   name: 'ref-name', detail: 'ref-detail', fieldSummary: 'ref-field-summary', add: 'ref-add', colored: 'colored', colorVariable: '--entry-color',
 });
 export const SELECTOR = Object.freeze({ active: '.active' });
+export const ROW_SELECTOR = '.row, .stack';
+export const WORD_GAP = /\s+/;
+export const DOCK = Object.freeze({
+  panel: Object.freeze({ output: 'output', reference: 'reference', settings: 'settings' } as const),
+  filePrefix: 'file:', fileComponent: 'file', dragHandle: 'tabbar',
+  direction: Object.freeze({ above: 'above', below: 'below', right: 'right' } as const),
+});
 export const SCROLL_NEAREST = 'nearest';
 export const GUIDE_URL = 'https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md';
 export const PLAIN_EDITOR_THEME = Object.freeze({

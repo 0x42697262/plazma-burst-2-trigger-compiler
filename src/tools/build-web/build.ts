@@ -5,7 +5,7 @@ import type { Plugin } from 'esbuild';
 import { BUNDLE, ENTRY, EXAMPLES, NO_JEKYLL, SITE, STATIC_FILES, STD, WEB_SOURCE } from './paths.ts';
 import { STD_SCHEME } from '../../lang/keys.ts';
 import {
-  BROWSER, EXAMPLE_FILE, EXAMPLES_PREFIX, FILE_ENCODING, JSON_LOADER, MODULE_FORMAT, SEPARATOR, SLASH, TARGET, VIRTUAL_FILTER, VIRTUAL_NAMESPACE,
+  BROWSER, BUNDLE_ALIASES, EXAMPLE_FILE, EXAMPLES_PREFIX, FILE_ENCODING, JSON_LOADER, MODULE_FORMAT, SEPARATOR, SLASH, TARGET, VIRTUAL_FILTER, VIRTUAL_NAMESPACE,
 } from './keys.ts';
 import { TEXT } from './text.ts';
 import { KILOBYTE } from './constants.ts';
@@ -41,7 +41,7 @@ export async function buildSite(): Promise<string> {
   fs.mkdirSync(SITE, { recursive: true });
   await build({
     entryPoints: [ENTRY], bundle: true, format: MODULE_FORMAT, platform: BROWSER, target: TARGET, minify: true, outfile: BUNDLE,
-    plugins: [examplesPlugin(examples)], logLevel: 'warning',
+    plugins: [examplesPlugin(examples)], logLevel: 'warning', alias: BUNDLE_ALIASES,
   });
   for (const file of STATIC_FILES) fs.copyFileSync(path.join(WEB_SOURCE, file), path.join(SITE, file));
   fs.writeFileSync(NO_JEKYLL, TEXT.empty);

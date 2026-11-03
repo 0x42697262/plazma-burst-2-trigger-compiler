@@ -10,3 +10,4 @@ export const MODULE_FORMAT = 'esm';
 export const TARGET = 'es2022';
 export const SEPARATOR = /\\/g;
 export const SLASH = '/';
+export const BUNDLE_ALIASES: Readonly<Record<string, string>> = Object.freeze({ 'dockview-core': 'dockview-core/dist/dockview-core.js' });

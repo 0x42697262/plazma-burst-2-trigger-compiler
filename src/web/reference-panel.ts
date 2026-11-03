@@ -12,7 +12,9 @@ export type PanelHooks = {
   jump: (location: ServiceLocation) => void;
   source: () => { file: string; text: string; read: (file: string) => string | null };
   cursorWord: () => { word: string; group: string | null };
-  changed: (state: { open: boolean; follow: boolean }) => void;
+  followChanged: (follow: boolean) => void;
+  isOpen: () => boolean;
+  setOpen: (open: boolean) => void;
 };
 
 const create = <Name extends keyof HTMLElementTagNameMap>(tag: Name, className = '', text = ''): HTMLElementTagNameMap[Name] => {
@@ -35,11 +37,10 @@ export class ReferencePanel {
   private follow: boolean;
   private followTimer = 0;
 
-  constructor(container: HTMLElement, hooks: PanelHooks, state: { open: boolean; follow: boolean }) {
+  constructor(container: HTMLElement, hooks: PanelHooks, follow: boolean) {
     this.container = container;
     this.hooks = hooks;
-    this.follow = state.follow;
-    this.container.hidden = !state.open;
+    this.follow = follow;
     const top = create(TAG.div, PANEL.top);
     const close = create(TAG.button, PANEL.close, TEXT.closeMark);
     close.title = TEXT.reference.close;
@@ -50,7 +51,7 @@ export class ReferencePanel {
     this.followButton.addEventListener(EVENT.click, () => {
       this.follow = !this.follow;
       this.renderFollow();
-      this.save();
+      this.hooks.followChanged(this.follow);
       if (this.follow) this.followCursor();
     });
     top.append(this.backButton, this.crumbs, this.followButton, close);
@@ -67,13 +68,8 @@ export class ReferencePanel {
     this.render();
   }
 
-  get isOpen(): boolean {
-    return !this.container.hidden;
-  }
-
-  toggle(open = this.container.hidden): void {
-    this.container.hidden = !open;
-    this.save();
+  toggle(open = !this.hooks.isOpen()): void {
+    this.hooks.setOpen(open);
     if (open && this.follow) this.followCursor();
   }
 
@@ -92,7 +88,7 @@ export class ReferencePanel {
   }
 
   cursorMoved(): void {
-    if (!this.follow || this.container.hidden) return;
+    if (!this.follow || !this.hooks.isOpen()) return;
     window.clearTimeout(this.followTimer);
     this.followTimer = window.setTimeout(() => this.followCursor(), FOLLOW_DELAY);
   }
@@ -111,10 +107,6 @@ export class ReferencePanel {
   private back(): void {
     const previous = this.history.pop();
     if (previous !== undefined) this.open(previous, false);
-  }
-
-  private save(): void {
-    this.hooks.changed({ open: !this.container.hidden, follow: this.follow });
   }
 
   private renderFollow(): void {

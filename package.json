@@ -33,6 +33,7 @@
     "@replit/codemirror-vim": "^6.4.0",
     "@types/node": "26.6.6",
     "codemirror": "^6.0.2",
+    "dockview-core": "^8.8.3",
     "esbuild": "^0.28.2",
     "eslint": "10.14.0",
     "typescript": "6.0.3",

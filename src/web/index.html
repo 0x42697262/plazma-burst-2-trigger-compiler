@@ -11,7 +11,8 @@
   <header class="toolbar">
     <div class="toolbar-side">
       <span class="app-title">PB2 Trigger Compiler</span>
-      <select id="examples" title="Open an example in new tabs (your files stay)"></select>
+      <button id="examples-button" class="quiet picker" title="Open an example in new tabs (your files stay)">Examples</button>
+      <button id="files-button" class="quiet picker" title="Open a file of the workspace">Files</button>
     </div>
     <div class="toolbar-center">
       <button id="run" class="primary" title="Run in the simulator">Run</button>
@@ -29,7 +30,8 @@
     </div>
   </header>
 
-  <div id="settings" class="popover" hidden>
+  <div id="panels" hidden>
+  <div id="settings" class="settings">
     <section>
       <h2>Output</h2>
       <label class="row" title="triggers: compile to triggers. pcode: compile to p-code that a fixed set of triggers runs (about 20 times slower, experimental; --target)">Target
@@ -61,33 +63,30 @@
     </section>
     <footer><a href="https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md" target="_blank" rel="noopener">Language guide</a><span id="shortcut-help" class="muted"></span></footer>
   </div>
+  <section id="output-panel" class="output-panel">
+    <nav id="output-tabs">
+      <div class="segmented">
+        <button data-output="problems" class="active">Problems</button>
+        <button data-output="xml">XML</button>
+        <button data-output="text">Trigger text</button>
+        <button data-output="map">Map</button>
+        <button data-output="run">Run</button>
+      </div>
+      <span class="spacer"></span>
+      <button id="copy" class="quiet">Copy</button>
+      <button id="download" class="quiet">Download</button>
+    </nav>
+    <pre id="output"></pre>
+  </section>
+  <aside id="reference" class="inspector"></aside>
+  </div>
 
   <div id="palette" class="palette" hidden>
     <input id="palette-input" placeholder="Type a command" spellcheck="false" autocomplete="off">
     <ul id="palette-list"></ul>
   </div>
 
-  <main id="main">
-    <section class="workbench">
-      <nav id="tabs"></nav>
-      <div id="editor"></div>
-      <div id="splitter" title="Drag to resize"></div>
-      <nav id="output-tabs">
-        <div class="segmented">
-          <button data-output="problems" class="active">Problems</button>
-          <button data-output="xml">XML</button>
-          <button data-output="text">Trigger text</button>
-          <button data-output="map">Map</button>
-          <button data-output="run">Run</button>
-        </div>
-        <span class="spacer"></span>
-        <button id="copy" class="quiet">Copy</button>
-        <button id="download" class="quiet">Download</button>
-      </nav>
-      <pre id="output"></pre>
-    </section>
-    <aside id="reference" class="inspector" hidden></aside>
-  </main>
+  <main id="dock"></main>
   <script type="module" src="app.js"></script>
 </body>
 </html>

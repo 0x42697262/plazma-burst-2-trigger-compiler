@@ -2,6 +2,7 @@ import type { Options } from './pipeline.ts';
 import { DEFAULT_GUARD } from './constants.ts';
 import { DEFAULT_TARGET } from '../pcode/keys.ts';
 import { TEXT } from './text.ts';
+import { ELEMENT, WORD_GAP } from './keys.ts';
 
 export type Command = { title: string; detail: string; shortcut: string; run: () => void };
 
@@ -20,29 +21,38 @@ const subsequence = (text: string, query: string): number | null => {
 export function filterCommands(commands: readonly Command[], query: string): Command[] {
   const wanted = query.trim().toLowerCase();
   if (wanted === '') return [...commands];
-  const scored: { command: Command; score: number }[] = [];
+  const words = wanted.split(WORD_GAP).filter((word) => word !== '');
+  const byWords: { command: Command; score: number }[] = [];
+  const byLetters: { command: Command; score: number }[] = [];
   for (const command of commands) {
     const title = command.title.toLowerCase();
-    const contained = title.indexOf(wanted);
-    const gaps = contained >= 0 ? null : subsequence(title, wanted);
-    if (contained < 0 && gaps === null) continue;
-    scored.push({ command, score: contained >= 0 ? contained : title.length + (gaps ?? 0) });
+    const positions = words.map((word) => title.indexOf(word));
+    if (positions.every((position) => position >= 0)) {
+      byWords.push({ command, score: positions.reduce((total, position) => total + position, 0) });
+      continue;
+    }
+    const gaps = subsequence(title, wanted);
+    if (gaps !== null) byLetters.push({ command, score: title.length + gaps });
   }
+  const scored = byWords.length > 0 ? byWords : byLetters;
   return scored.sort((first, second) => first.score - second.score).map((entry) => entry.command);
 }
 
-export function optionChips(options: Options, environmentCount: number): string[] {
+export type Chip = { label: string; setting: string };
+
+export function optionChips(options: Options, environmentCount: number): Chip[] {
+  const chip = (shown: boolean, label: string, setting: string): Chip | null => (shown ? { label, setting } : null);
   return [
-    options.target !== DEFAULT_TARGET ? TEXT.chips.target(options.target) : null,
-    options.obfuscate ? TEXT.chips.obfuscate : null,
-    options.directIndex ? TEXT.chips.directIndex : null,
-    options.numberText ? null : TEXT.chips.numberText,
-    options.replace ? TEXT.chips.replace : null,
-    options.prefix === '' ? null : TEXT.chips.prefix(options.prefix),
-    options.nameSeed.trim() === '' ? null : TEXT.chips.nameSeed,
-    options.guard === DEFAULT_GUARD ? null : options.guard === 0 ? TEXT.chips.noGuard : TEXT.chips.guard(options.guard),
-    environmentCount === 0 ? null : TEXT.chips.environment(environmentCount),
-  ].filter((chip) => chip !== null);
+    chip(options.target !== DEFAULT_TARGET, TEXT.chips.target(options.target), ELEMENT.target),
+    chip(options.obfuscate, TEXT.chips.obfuscate, ELEMENT.obfuscate),
+    chip(options.directIndex, TEXT.chips.directIndex, ELEMENT.directIndex),
+    chip(!options.numberText, TEXT.chips.numberText, ELEMENT.numberText),
+    chip(options.replace, TEXT.chips.replace, ELEMENT.replace),
+    chip(options.prefix !== '', TEXT.chips.prefix(options.prefix), ELEMENT.prefix),
+    chip(options.nameSeed.trim() !== '', TEXT.chips.nameSeed, ELEMENT.nameSeed),
+    chip(options.guard !== DEFAULT_GUARD, options.guard === 0 ? TEXT.chips.noGuard : TEXT.chips.guard(options.guard), ELEMENT.guard),
+    chip(environmentCount !== 0, TEXT.chips.environment(environmentCount), ELEMENT.environment),
+  ].filter((entry) => entry !== null);
 }
 
 export const shortcutLabel = (keys: readonly string[], mac: boolean): string => keys.map((key) => (mac ? TEXT.macKeys[key] ?? key : TEXT.otherKeys[key] ?? key)).join(mac ? '' : TEXT.keyJoin);
