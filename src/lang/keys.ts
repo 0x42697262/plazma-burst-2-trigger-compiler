@@ -91,9 +91,11 @@ export const PARENT_SEGMENT = '..';
 export const ACTION_BUILTIN = 'action';
 export const SIDE_B = 'B';
 
-export const BUILD_NAMES = Object.freeze({ log: 'mapLog', count: 'mapCount', function: 'mapStep', parameter: 'mapValue', counter: 'mapIndex' });
+export const BUILD_NAMES = Object.freeze({ log: 'mapLog', count: 'mapCount', function: 'mapStep', parameter: 'mapValue', counter: 'mapIndex', trigger: 'mapTrigger' });
 export const BUILD_SUFFIX = '_';
-export const BUILD_RECORD = Object.freeze({ object: 'N', property: 'S', bind: 'B', element: 'A' });
+export const BUILD_RECORD = Object.freeze({ object: 'N', property: 'S', bind: 'B', element: 'A', action: 'T' });
+export const ACTION_ARITY = 4;
+export const NO_TARGET = '0';
 export const MAP_MARK = Object.freeze({ start: '\u0002', field: '\u0003', record: '\u001E', unit: '\u001F' });
 export const MARK_TYPE = Object.freeze({ object: 'O', host: 'H', name: 'N', named: 'G', function: 'F' });
 export const MARK_KIND = 'engine_mark';

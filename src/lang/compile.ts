@@ -9,9 +9,11 @@ import { checkSecrets, foldConstants } from './comptime.ts';
 import { buildMaps } from './mapblock.ts';
 import type { AttributeValue, BuiltObject, MapBuild } from './mapblock.ts';
 import type { MapObject } from '../objects/types.ts';
+import { checkTriggers } from '../compiler/check.ts';
+import { mapTriggers } from '../emit/place.ts';
 import type { Folded } from './comptime.ts';
 import { SourceError } from './lexer.ts';
-import { TEXT } from './text.ts';
+import { MAP_TEXT, TEXT } from './text.ts';
 import { directoryOf, importTarget, isStandardLibrary, relativePath, resolvePath } from './file-paths.ts';
 
 export type SourceOrigin = { file: string; read: (file: string) => string };
@@ -53,6 +55,7 @@ function mapObjectsOf(objects: readonly BuiltObject[], entries: ReadonlyMap<stri
     constructorName: object.constructorName, tag: object.tag, uid: object.uid, mark: object.mark,
     set: object.set.map(([name, value]) => [name, textOf(value, object.location)] as const),
     initial: object.initial.map(([name, value]) => [name, textOf(value, object.location)] as const),
+    actions: object.actions?.map((action) => ({ opcode: action.opcode, targetA: textOf(action.targetA, object.location), targetB: textOf(action.targetB, object.location) })) ?? null,
     line: object.location.line, ...(object.location.file === undefined ? {} : { file: object.location.file }),
   }));
 }
@@ -77,18 +80,24 @@ export function compileSource(source: string, prefix: string, options: Partial<C
   }
   let maps: MapBuild;
   try {
-    maps = buildMaps(folded.file);
+    maps = buildMaps(folded.file, names);
   } catch (error) {
     if (error instanceof SourceError) throw new CompileError(TEXT.where(error.line, error.message, error.file));
     throw error;
   }
   const generateOptions = {
     protectNumberText: merged.protectNumberText && merged.target !== 'pcode', directIndex: merged.directIndex || merged.target === 'pcode',
-    compileTimeFunctions: new Set([...folded.compileTimeFunctions, ...maps.functions]), referencedFunctions: maps.references,
+    compileTimeFunctions: new Set([...folded.compileTimeFunctions, ...maps.functions]), referencedFunctions: maps.references, writtenElsewhere: maps.variables,
   };
   const mapUids = maps.objects.flatMap((object) => (object.uid === null ? [] : [object.uid]));
   const compiled = compileModule(generate(maps.file, names, generateOptions), names, { ...merged, externalUids: [...merged.externalUids, ...mapUids] });
-  const result: CompileResult = { ...compiled, warnings: [...maps.warnings, ...compiled.warnings], mapObjects: mapObjectsOf(maps.objects, compiled.entries) };
+  const mapObjects = mapObjectsOf(maps.objects, compiled.entries);
+  const ownUids = new Set([...compiled.program.triggers.map((trigger) => trigger.uid), ...compiled.program.timers.map((timer) => timer.uid)]);
+  const clash = mapObjects.find((object) => object.uid !== null && ownUids.has(object.uid));
+  if (clash) throw new CompileError(TEXT.where(clash.line, MAP_TEXT.uidOfProgram(clash.uid ?? ''), clash.file));
+  const known = [...merged.externalUids, ...ownUids, ...compiled.objects.map((object) => object.uid), ...mapUids];
+  const mapWarnings = checkTriggers(mapTriggers(mapObjects), known);
+  const result: CompileResult = { ...compiled, warnings: [...maps.warnings, ...compiled.warnings, ...mapWarnings], mapObjects };
   const lineOf = (uid: string, position: number): number | null => result.sourceMap.find((entry) => entry.uid === uid)?.lines[position] ?? null;
   const machineUids = result.obfuscation?.machineUids ?? new Set<string>();
   checkSecrets(folded.secrets, [
@@ -100,6 +109,9 @@ export function compileSource(source: string, prefix: string, options: Partial<C
     ...result.mapObjects.flatMap((object) => [...object.set, ...object.initial].map(([name, text]) => ({
       text, where: TEXT.leakObject(object.uid ?? object.mark ?? object.constructorName, name, object.line),
     }))),
+    ...result.mapObjects.flatMap((object) => (object.actions ?? []).flatMap((action, position) => [action.targetA, action.targetB].map((text) => ({
+      text, where: TEXT.leakPlace(object.uid ?? object.constructorName, position + 1, object.line),
+    })))),
   ]);
   return result;
 }

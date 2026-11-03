@@ -13,6 +13,11 @@ export const MAP_ELEMENT = /<[A-Za-z][\w-]*\b[^>]*\/>\r?\n?/g;
 export const ELEMENT_PARTS = /^<([A-Za-z][\w-]*)\b([^>]*?)\s*\/>$/;
 export const ELEMENT_ATTRIBUTE = /([A-Za-z0-9_]+)="([^"]*)"/g;
 export const REGION_TAG = 'region';
+export const TRIGGER_TAG = 'trigger';
+export const TIMER_TAG = 'timer';
+export const TRUE_TEXT = 'true';
+export const ACTION_ATTRIBUTE = /^actions_\d+_/;
+export const ACTION_FIELDS = 3;
 export const TRAILING_LINE_END = /\s*$/;
 export const ATTRIBUTE_SEPARATOR = ' ';
 export const BASE_MAP = [

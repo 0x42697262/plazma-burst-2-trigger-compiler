@@ -121,4 +121,61 @@ describe('map blocks', () => {
     assert.ok(result.warnings.some((warning) => warning.includes('#s url') && warning.includes('into the number 7')));
     fails('secret const KEY = "abcdef";\nmap { Decor("#d", text: KEY); }', /the secret KEY would be written into the map \(the text of the map object #d/);
   });
+
+  it('makes triggers with raw actions, worked out while compiling, and timers', () => {
+    const result = compileSource([
+      'var opened = 0;',
+      'var log[];',
+      'extern score = "score";',
+      'region exit = "#exit";',
+      'function hello() { }',
+      'map {',
+      '  gate = Door("#gate");',
+      '  bump = Trigger("#bump", maxcalls: Infinite) {',
+      '    action(VarAddValue, opened, 1);',
+      '    for (let i = 1; i <= 2; i += 1) { action(VarAddValue, score, i); }',
+      '    action(MovableTo, gate, exit);',
+      '    action(SetAIBehavior, "#enemy*1", DoNothing);',
+      '    action(ExecTrigger, @hello);',
+      '    action(VarSetValue, log[2], "n {opened}");',
+      '  }',
+      '  Timer("#tick", target: bump, delay: 0, maxcalls: 2);',
+      '  Trigger("#empty") { }',
+      '  Trigger("#kept");',
+      '}',
+      'on start { action(ExecTrigger, bump); action(TimerEnable, "#tick"); }',
+    ].join('\n'), 't');
+    const [, bump, tick, empty, kept] = result.mapObjects;
+    assert.deepEqual(bump?.actions?.map((action) => [action.opcode, action.targetA, action.targetB]), [
+      [102, '~t_opened~', '1'], [102, 'score', '1'], [102, 'score', '2'], [0, '#gate', '#exit'], [32, '#enemy*1', '4'], [99, result.entries.get('hello'), '0'],
+      [100, '~t_log[2]~', 'n ~t_opened~'],
+    ]);
+    assert.deepEqual(attributes(bump), { maxcalls: '-1' });
+    assert.deepEqual(attributes(tick), { target: '#bump', delay: '0', maxcalls: '2' });
+    assert.deepEqual(empty?.actions, []);
+    assert.equal(kept?.actions, null);
+    assert.ok(result.program.triggers.some((trigger) => trigger.actions.some((action) => action.opcode === 99 && action.targetA === '#bump')));
+  });
+
+  it('counts a variable a map trigger writes as changing', () => {
+    const result = compileSource('var n = 0;\nvar list[];\nmap { Trigger("#t") { action(VarAddValue, n, 1); } }\non start { list[n] = 1; }', 't');
+    assert.ok(result.program.triggers.flatMap((trigger) => trigger.actions).every((action) => action.targetA !== '~t_list[0]~'));
+  });
+
+  it('refuses wrong actions in map triggers', () => {
+    fails('map { action(VarAddValue, "x", 1); }', /action\(\.\.\.\) in a map block adds an action to a trigger/);
+    fails('map { Trigger("#t") { action(Nope, 1, 2); } }', /unknown action "Nope"/);
+    fails('map { r = Region("#r"); Trigger("#t") { action(MovableTo, r, r); } }', /action 0 takes door as A, not a region/);
+    fails('function f() { }\nmap { Trigger("#t") { action(MovableTo, @f, "#r"); } }', /takes door as A, not a function's trigger/);
+    fails('map { Trigger("#t") { for (let i = 0; i < 101; i += 1) { action(VarAddValue, "x", i); } } }', /trigger #t has 101 actions; the game loads at most 100/);
+    fails('map { list = []; push(list, Trigger("#t") { }); }', /must stand alone or be assigned to a name/);
+    fails('map { Trigger("#t:start") { } }\non start { }', /#t:start is created in a map block, but the program already uses that uid/);
+    fails('map { Timer("#t", target: Region("#r")); }', /Timer target takes @function, a trigger uid or NoTrigger/);
+  });
+
+  it('warns about map trigger actions like compiled ones', () => {
+    const result = compileSource('map { Trigger("#t") { for (let i = 0; i < 99; i += 1) { action(VarAddValue, "x", i); } action(MovableTo, "#nowhere", "#r"); } }', 't');
+    assert.ok(result.warnings.some((warning) => warning.includes('Trigger #t has an action 100')));
+  });
 });
+

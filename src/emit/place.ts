@@ -4,8 +4,10 @@ import { DEFAULT_SIZE, ENGINE_MARK_TAG, MARK_ARGUMENT, POSITION_ATTRIBUTES, SIZE
 import type { Region } from '../sim/simulator.ts';
 import { escapeXml } from './xml-emitter.ts';
 import type { Position } from './xml-emitter.ts';
-import { ELEMENT_ATTRIBUTE, ELEMENT_PARTS, MAP_ELEMENT, REGION_TAG, XML_LINE_END } from './keys.ts';
-import { ENGINE_MARK } from './attributes.ts';
+import { ACTION_ATTRIBUTE, ACTION_FIELDS, ELEMENT_ATTRIBUTE, ELEMENT_PARTS, MAP_ELEMENT, REGION_TAG, TIMER_TAG, TRIGGER_TAG, TRUE_TEXT, XML_LINE_END } from './keys.ts';
+import { ENGINE_MARK, TRIGGER_ATTRIBUTE } from './attributes.ts';
+import { FIRST_ACTION_NUMBER } from './constants.ts';
+import type { Action, Program, Timer, Trigger } from '../program/types.ts';
 import { PLACE_TEXT as TEXT } from './text.ts';
 
 export type Placement = {
@@ -50,10 +52,28 @@ function createElement(object: MapObject, staging: () => Position): string {
   }
   for (const [name, value] of Object.entries(rules?.defaults ?? {})) attributes.set(name, value);
   for (const [name, value] of given) attributes.set(name, value);
-  return elementText(object.tag, [...attributes].map(([name, value]) => [name, escapeXml(value)] as const));
+  return elementText(object.tag, [...attributes, ...actionAttributes(object.actions ?? [])].map(([name, value]) => [name, escapeXml(value)] as const));
 }
 
-function updateElement(element: Element, changes: readonly Attribute[]): { text: string; changed: string[] } {
+const actionAttributes = (actions: readonly Action[]): (readonly [string, string])[] => actions.flatMap((action, index) => {
+  const position = index + FIRST_ACTION_NUMBER;
+  return [
+    [TEXT.actionAttribute(position, TRIGGER_ATTRIBUTE.type), String(action.opcode)] as const,
+    [TEXT.actionAttribute(position, TRIGGER_ATTRIBUTE.targetA), action.targetA] as const,
+    [TEXT.actionAttribute(position, TRIGGER_ATTRIBUTE.targetB), action.targetB] as const,
+  ];
+});
+
+function replaceActions(attributes: [string, string][], actions: readonly Action[]): string | null {
+  const before = attributes.filter(([name]) => ACTION_ATTRIBUTE.test(name));
+  const after = actionAttributes(actions).map(([name, value]): [string, string] => [name, escapeXml(value)]);
+  if (before.length === after.length && before.every(([name, value], index) => after[index]?.[0] === name && after[index]?.[1] === value)) return null;
+  const kept = attributes.filter(([name]) => !ACTION_ATTRIBUTE.test(name));
+  attributes.splice(0, attributes.length, ...kept, ...after);
+  return TEXT.actionsChanged(before.length / ACTION_FIELDS, actions.length);
+}
+
+function updateElement(element: Element, changes: readonly Attribute[], actions: readonly Action[] | null): { text: string; changed: string[] } {
   const attributes = element.attributes.map(([name, value]): [string, string] => [name, value]);
   const changed: string[] = [];
   for (const [name, raw] of changes) {
@@ -64,6 +84,8 @@ function updateElement(element: Element, changes: readonly Attribute[]): { text:
     if (existing) existing[1] = value;
     else attributes.push([name, value]);
   }
+  const actionChange = actions === null ? null : replaceActions(attributes, actions);
+  if (actionChange !== null) changed.push(actionChange);
   if (changed.length === 0) return { text: element.text, changed };
   const lineEnd = element.text.endsWith(XML_LINE_END) ? XML_LINE_END : '';
   return { text: elementText(element.tag, attributes) + lineEnd, changed };
@@ -113,7 +135,7 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
   const replaced = new Map<number, string>();
   const added: string[] = [];
   const update = (object: MapObject, element: Element): void => {
-    const { text, changed } = updateElement(element, object.set);
+    const { text, changed } = updateElement(element, object.set, object.actions);
     if (changed.length === 0) return;
     replaced.set(element.index, text);
     notes.push(TEXT.changed(nameOf(object), changed));
@@ -157,6 +179,28 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
     return replaced.get(current) ?? text;
   });
   return { host, xml: added.join(''), notes, problems, walls, declaresVarSync };
+}
+
+const valueOf = (object: MapObject, name: string): string => new Map([...object.initial, ...object.set]).get(name) ?? tagRules(object.tag)?.defaults[name] ?? '';
+
+export function mapTriggers(objects: readonly MapObject[]): Program {
+  const triggers: Trigger[] = [];
+  const timers: Timer[] = [];
+  for (const object of objects) {
+    if (object.uid === null) continue;
+    const enabled = valueOf(object, TRIGGER_ATTRIBUTE.enabled) === TRUE_TEXT;
+    const maxCalls = Number(valueOf(object, TRIGGER_ATTRIBUTE.maxCalls));
+    if (object.tag === TRIGGER_TAG) triggers.push({ uid: object.uid, enabled, maxCalls, actions: object.actions ?? [] });
+    if (object.tag === TIMER_TAG) {
+      timers.push({ uid: object.uid, target: valueOf(object, TRIGGER_ATTRIBUTE.target), enabled, maxCalls, delay: Number(valueOf(object, TRIGGER_ATTRIBUTE.delay)) });
+    }
+  }
+  return { triggers, timers };
+}
+
+export function withMapTriggers(program: Program, objects: readonly MapObject[]): Program {
+  const extra = mapTriggers(objects);
+  return { ...program, triggers: [...program.triggers, ...extra.triggers], timers: [...program.timers, ...extra.timers] };
 }
 
 export function regionsOf(objects: readonly MapObject[]): Record<string, Region> {

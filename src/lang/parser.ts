@@ -263,7 +263,7 @@ class Parser {
     if (this.isPunctuator(PUNCTUATOR.openBrace)) return { kind: 'block', body: this.block(), location };
     if (this.accept(KEYWORD.let)) {
       const statement = this.letRest(location);
-      this.expect(PUNCTUATOR.semicolon);
+      this.endStatement(statement);
       return statement;
     }
     if (this.accept(KEYWORD.if)) return this.ifRest(location);
@@ -292,8 +292,14 @@ class Parser {
       return { kind: 'wait', frames, location };
     }
     const statement = this.simpleStatement(location);
-    this.expect(PUNCTUATOR.semicolon);
+    this.endStatement(statement);
     return statement;
+  }
+
+  private endStatement(statement: Statement): void {
+    const value = statement.kind === 'let' || statement.kind === 'assign' ? statement.value : statement.kind === 'expression' ? statement.expression : null;
+    if (value?.kind === 'construct' && value.body !== null) this.accept(PUNCTUATOR.semicolon);
+    else this.expect(PUNCTUATOR.semicolon);
   }
 
   private matchRest(location: Location): Statement {
@@ -396,7 +402,8 @@ class Parser {
       } while (this.accept(PUNCTUATOR.comma));
     }
     this.expect(PUNCTUATOR.closeParen);
-    return { kind: 'construct', name, args, named, location };
+    const body = constructorOf(name)?.actions === true && this.isPunctuator(PUNCTUATOR.openBrace) ? this.block() : null;
+    return { kind: 'construct', name, args, named, body, location };
   }
 
   private parenthesized(): Expression {

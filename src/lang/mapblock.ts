@@ -3,36 +3,54 @@ import { SourceError } from './lexer.ts';
 import { generate } from './codegen.ts';
 import { compileModule, DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import { createNames } from '../compiler/names.ts';
+import type { Names } from '../compiler/names.ts';
+import { opcodeByName, opcodeByNumber } from '../opcodes/table.ts';
+import { LOOSE_VALUE_KINDS } from '../opcodes/keys.ts';
+import { valueGroup } from '../opcodes/values.ts';
+import { MAX_ACTIONS_PER_TRIGGER } from '../program/constants.ts';
+import { arrayLengthName, ELEMENT_END, elementOpening } from './symbols.ts';
 import { Simulation } from '../sim/simulator.ts';
 import { COMPILE_TIME_ACTIONS } from '../opcodes/constants.ts';
 import { valueList } from '../opcodes/values.ts';
-import { CONSTRUCTORS, MARK_ARGUMENT, MARK_VALUE, NO_VALUE_KIND, OBJECT_KINDS, OPEN_LISTS, UID_ARGUMENT } from '../objects/keys.ts';
+import { CONSTRUCTORS, MARK_ARGUMENT, MARK_VALUE, NO_VALUE_KIND, OBJECT_KINDS, OBJECT_PARAM_KINDS, OPEN_LISTS, UID_ARGUMENT } from '../objects/keys.ts';
 import type { ConstructorInfo } from '../objects/keys.ts';
-import { constructorOf, markValueKind, markValueKinds, propertyOf, tagsWithProperty } from '../objects/properties.ts';
+import { constructorForTag, constructorOf, markValueKind, markValueKinds, propertyOf, tagsWithProperty } from '../objects/properties.ts';
 import { checkValue } from '../objects/value-check.ts';
 import type { BuildValue } from '../objects/value-check.ts';
-import { COMPILE_TIME_MAX_STEPS } from './constants.ts';
+import { ACTION_ARGUMENTS, COMPILE_TIME_MAX_STEPS } from './constants.ts';
 import { escapeXml } from '../emit/xml-emitter.ts';
 import { editorTurnsIntoNumber } from '../program/editor-text.ts';
 import { callGraph, reachable } from './calls.ts';
 import {
-  BUILD_NAMES, BUILD_RECORD, BUILD_SUFFIX, BUILTIN, COMPILE_TIME_PREFIX, EVENT, FORBIDDEN_IN_MAP, MAP_MARK, MARK_KIND, MARK_TYPE, ONE_TEXT, OPEN_LIST, PROPERTY_ARITY, TEXT_KIND, UID_MARK, ZERO_TEXT,
+  ACTION_ARITY, BUILD_NAMES, BUILD_RECORD, BUILD_SUFFIX, BUILTIN, COMPILE_TIME_PREFIX, EVENT, FORBIDDEN_IN_MAP, MAP_MARK, MARK_KIND, MARK_TYPE, NO_TARGET, ONE_TEXT, OPEN_LIST,
+  PROPERTY_ARITY, SIDE, TEXT_KIND, TRIGGER_KIND, UID_MARK, WHOLE_NUMBER, ZERO_TEXT,
 } from './keys.ts';
 import { MAP_TEXT as TEXT, TEXT as LANG_TEXT } from './text.ts';
 
 export type AttributeValue = { kind: 'text'; text: string } | { kind: 'function'; name: string };
+export type BuiltAction = { opcode: number; targetA: AttributeValue; targetB: AttributeValue };
 export type BuiltObject = {
   constructorName: string; tag: string; keyword: string | null; uid: string | null; mark: string | null;
-  set: [string, AttributeValue][]; initial: [string, AttributeValue][]; location: Location;
+  set: [string, AttributeValue][]; initial: [string, AttributeValue][]; actions: BuiltAction[] | null; location: Location;
 };
-export type MapBuild = { file: SourceFile; objects: BuiltObject[]; references: ReadonlySet<string>; functions: ReadonlySet<string>; warnings: string[] };
+export type MapBuild = {
+  file: SourceFile; objects: BuiltObject[]; references: ReadonlySet<string>; functions: ReadonlySet<string>; variables: ReadonlySet<string>; warnings: string[];
+};
 
-type ConstructSite = { kind: 'construct'; constructorName: string; info: ConstructorInfo; attributes: string[]; location: Location };
+type ConstructSite = { kind: 'construct'; constructorName: string; info: ConstructorInfo; attributes: string[]; actions: boolean; location: Location };
 type PropertySite = { kind: 'property'; property: string; initial: boolean; location: Location };
-type Site = ConstructSite | PropertySite;
+type ActionSite = { kind: 'action'; location: Location };
+type Site = ConstructSite | PropertySite | ActionSite;
 type MapName = { name: string; array: boolean; location: Location };
-type GlobalEntry = { kind: Declaration['kind']; keyword: string | null; uid: string | null; array: boolean };
-type RawObject = { site: ConstructSite; values: BuildValue[]; properties: { site: PropertySite; value: BuildValue }[] };
+type GlobalEntry = { kind: Declaration['kind']; keyword: string | null; uid: string | null; array: boolean; hostName: string | null };
+type RawAction = { site: ActionSite; values: BuildValue[] };
+type RawObject = { site: ConstructSite; values: BuildValue[]; properties: { site: PropertySite; value: BuildValue }[]; actions: RawAction[] };
+type Construct = Extract<Expression, { kind: 'construct' }>;
+
+const withActions = (expression: Expression | null): expression is Construct & { body: Statement[] } => expression?.kind === 'construct' && expression.body !== null;
+
+const statementValue = (statement: Statement): Expression | null =>
+  (statement.kind === 'let' || statement.kind === 'assign' ? statement.value : statement.kind === 'expression' ? statement.expression : null);
 
 const WHERE = (location: Location, message: string): string => LANG_TEXT.where(location.line, message, location.file);
 
@@ -47,6 +65,7 @@ const concat = (parts: Expression[], location: Location): Expression =>
   parts.slice(1).reduce((left, right): Expression => ({ kind: 'binary', operator: '..', left, right, location }), parts[0] ?? text('', location));
 const appendLog = (log: string, parts: Expression[], location: Location): Statement =>
   ({ kind: 'assign', target: { kind: 'name', name: log }, operator: '..', value: concat(parts, location), location });
+const plainText = (expression: Extract<Expression, { kind: 'string' }>): string => expression.parts.map((part) => (part.kind === 'text' ? part.text : '')).join('');
 const marker = (type: string, fields: readonly string[]): string => MAP_MARK.start + type + fields.join(MAP_MARK.field);
 
 const RESERVED_CHARACTERS: readonly string[] = [MAP_MARK.start, MAP_MARK.field, MAP_MARK.record, MAP_MARK.unit];
@@ -182,6 +201,8 @@ function collectMapNames(blocks: readonly Statement[][], globals: ReadonlyMap<st
   const scopes = new Scopes();
   const visit = (statements: readonly Statement[]): void => scopes.within(() => {
     for (const statement of statements) {
+      const value = statementValue(statement);
+      if (withActions(value)) visit(value.body);
       switch (statement.kind) {
         case 'let':
           scopes.declare(statement.name);
@@ -230,15 +251,20 @@ class MapTransformer {
   readonly called = new Set<string>();
   readonly references = new Set<string>();
   readonly functionsCode: Declaration[] = [];
+  readonly variables = new Set<string>();
   private readonly scopes = new Scopes();
   private readonly globals: ReadonlyMap<string, GlobalEntry>;
   private readonly mapNames: ReadonlyMap<string, MapName>;
   private readonly names: Record<keyof typeof BUILD_NAMES, string>;
+  private readonly gameNames: Names;
+  private readonly triggers: string[] = [];
+  private triggerCount = 0;
 
-  constructor(globals: ReadonlyMap<string, GlobalEntry>, mapNames: ReadonlyMap<string, MapName>, names: Record<keyof typeof BUILD_NAMES, string>) {
+  constructor(globals: ReadonlyMap<string, GlobalEntry>, mapNames: ReadonlyMap<string, MapName>, names: Record<keyof typeof BUILD_NAMES, string>, gameNames: Names) {
     this.globals = globals;
     this.mapNames = mapNames;
     this.names = names;
+    this.gameNames = gameNames;
   }
 
   private declared(name: string): boolean {
@@ -246,14 +272,40 @@ class MapTransformer {
   }
 
   block(statements: readonly Statement[], location: Location): Statement {
-    return { kind: 'block', body: this.scopes.within(() => statements.map((statement) => this.statement(statement))), location };
+    return { kind: 'block', body: this.body(statements), location };
   }
 
   private body(statements: readonly Statement[]): Statement[] {
-    return this.scopes.within(() => statements.map((statement) => this.statement(statement)));
+    return this.scopes.within(() => statements.flatMap((statement) => this.statements(statement)));
+  }
+
+  private statements(statement: Statement): Statement[] {
+    const value = statementValue(statement);
+    if (!withActions(value)) return [this.statement(statement)];
+    const { location } = statement;
+    const holder = `${this.names.trigger}${this.triggerCount}`;
+    this.triggerCount += 1;
+    const created: Statement = { kind: 'let', name: holder, value: this.construct(value), location };
+    let bind: Statement[] = [];
+    if (statement.kind === 'let') {
+      this.scopes.declare(statement.name);
+      bind = [{ ...statement, value: nameOf(holder, location) }];
+    } else if (statement.kind === 'assign') {
+      if (statement.target.kind !== 'name' || statement.operator !== null) return fail(location, TEXT.triggerBodyPlace);
+      const local = this.scopes.has(statement.target.name);
+      if (!local && !this.mapNames.has(statement.target.name) && this.globals.has(statement.target.name)) fail(location, TEXT.changesProgram(statement.target.name));
+      bind = [{ ...statement, value: nameOf(holder, location) }];
+    }
+    this.triggers.push(holder);
+    try {
+      return [created, ...bind, { kind: 'block', body: this.body(value.body), location }];
+    } finally {
+      this.triggers.pop();
+    }
   }
 
   private statement(statement: Statement): Statement {
+    if (withActions(statementValue(statement))) return fail(statement.location, TEXT.triggerBodyPlace);
     switch (statement.kind) {
       case 'let':
         if (statement.value?.kind === 'array') fail(statement.location, TEXT.arrayNeedsName);
@@ -390,10 +442,12 @@ class MapTransformer {
         return { ...expression, index: this.expression(expression.index), ...(expression.more ? { more: expression.more.map((more) => this.expression(more)) } : {}) };
       }
       case 'call':
+        if (expression.callee === BUILTIN.action) return this.rawAction(expression);
         if (FORBIDDEN_IN_MAP.has(expression.callee)) fail(location, TEXT.forbiddenCall(expression.callee));
         if (this.globals.get(expression.callee)?.kind === 'function') this.called.add(expression.callee);
         return { ...expression, args: expression.args.map((argument) => this.expression(argument)) };
       case 'construct':
+        if (expression.body !== null) fail(location, TEXT.triggerBodyPlace);
         return this.construct(expression);
       case 'array':
         return fail(location, TEXT.arrayNeedsName);
@@ -407,6 +461,67 @@ class MapTransformer {
         return { ...expression, left: this.expression(expression.left), right: this.expression(expression.right) };
       default:
         return expression;
+    }
+  }
+
+  private rawAction(expression: Extract<Expression, { kind: 'call' }>): Expression {
+    const { location, args } = expression;
+    const holder = this.triggers[this.triggers.length - 1] ?? fail(location, TEXT.actionOutsideTrigger);
+    if (args.length < ACTION_ARGUMENTS.min || args.length > ACTION_ARGUMENTS.max) fail(location, LANG_TEXT.argumentRange(BUILTIN.action, ACTION_ARGUMENTS.min, ACTION_ARGUMENTS.max, args.length));
+    const [which, targetA, targetB] = args;
+    const named = which?.kind === 'name' && !this.declared(which.name) ? opcodeByName(which.name) : null;
+    const literal = which?.kind === 'number' ? opcodeByNumber(Number(which.text)) : which?.kind === 'string' && which.parts.every((part) => part.kind === 'text') ? opcodeByName(plainText(which)) : null;
+    const opcode = named ?? literal;
+    if (which?.kind === 'name' && !this.declared(which.name) && named === null) fail(which.location, LANG_TEXT.unknownAction(which.name));
+    const operation = named ? text(String(named.number), location) : this.expression(which ?? text('', location));
+    const side = (argument: Expression | undefined, kind: string | null): Expression => (argument === undefined ? text(NO_TARGET, location) : this.rawArgument(argument, kind));
+    const site: ActionSite = { kind: 'action', location };
+    this.sites.push(site);
+    const values = [nameOf(holder, location), operation, side(targetA, opcode?.paramA ?? null), side(targetB, opcode?.paramB ?? null)];
+    return call(this.siteFunction(this.sites.length - 1, ACTION_ARITY, location), values, location);
+  }
+
+  private gameName(name: string, global: GlobalEntry): string {
+    if (global.kind === 'extern') return global.hostName ?? name;
+    this.variables.add(name);
+    return global.array ? arrayLengthName(this.gameNames, name) : this.gameNames.variable(name);
+  }
+
+  private programVariable(name: string): GlobalEntry | null {
+    if (this.scopes.has(name) || this.mapNames.has(name)) return null;
+    const global = this.globals.get(name);
+    return global?.kind === 'var' || global?.kind === 'extern' ? global : null;
+  }
+
+  private rawArgument(expression: Expression, kind: string | null): Expression {
+    const location = expression.location;
+    const candidates = new Set(kind === null ? [] : valueList(kind).members.keys());
+    switch (expression.kind) {
+      case 'name': {
+        const global = this.programVariable(expression.name);
+        if (global === null) return this.value(expression, candidates);
+        if (candidates.has(expression.name)) return fail(location, TEXT.valueNameClash(expression.name));
+        return text(this.gameName(expression.name, global), location);
+      }
+      case 'index': {
+        const global = this.programVariable(expression.array);
+        if (global === null || !global.array || expression.more) return this.expression(expression);
+        this.variables.add(expression.array);
+        return concat([text(elementOpening(this.gameNames, expression.array), location), this.expression(expression.index), text(ELEMENT_END, location)], location);
+      }
+      case 'string':
+        return { ...expression, parts: expression.parts.map((part): TemplatePart => {
+          if (part.kind === 'text') {
+            if (RESERVED_CHARACTERS.some((character) => part.text.includes(character))) fail(location, TEXT.reservedCharacter);
+            return part;
+          }
+          const inner = part.expression;
+          const global = inner.kind === 'name' ? this.programVariable(inner.name) : null;
+          if (inner.kind === 'name' && global !== null) return { kind: 'text', text: this.gameName(inner.name, global) };
+          return { kind: 'expression', expression: this.expression(inner) };
+        }) };
+      default:
+        return this.value(expression, candidates);
     }
   }
 
@@ -426,7 +541,7 @@ class MapTransformer {
       attributes.push(argument.name);
       values.push(this.value(argument.value, this.valueNames(info.tag, argument.name)));
     }
-    const site: ConstructSite = { kind: 'construct', constructorName: expression.name, info, attributes, location };
+    const site: ConstructSite = { kind: 'construct', constructorName: expression.name, info, attributes, actions: expression.body !== null, location };
     this.sites.push(site);
     return call(this.siteFunction(this.sites.length - 1, values.length, location), values, location);
   }
@@ -443,7 +558,7 @@ class MapTransformer {
         appendLog(this.names.log, [text(MAP_MARK.record + BUILD_RECORD.object + MAP_MARK.unit + String(index), location), unit, nameOf(this.names.count, location), ...fields], location),
         { kind: 'return', value: concat([text(MAP_MARK.start + MARK_TYPE.object, location), nameOf(this.names.count, location)], location), location },
       ]
-      : [appendLog(this.names.log, [text(MAP_MARK.record + BUILD_RECORD.property + MAP_MARK.unit + String(index), location), ...fields], location)];
+      : [appendLog(this.names.log, [text(MAP_MARK.record + (site.kind === 'action' ? BUILD_RECORD.action : BUILD_RECORD.property) + MAP_MARK.unit + String(index), location), ...fields], location)];
     this.functionsCode.push({ kind: 'function', name, params, body, exported: false, location });
     return name;
   }
@@ -466,15 +581,19 @@ function globalsOf(file: SourceFile): Map<string, GlobalEntry> {
   for (const declaration of file.declarations) {
     switch (declaration.kind) {
       case 'var':
-        globals.set(declaration.name, { kind: declaration.kind, keyword: null, uid: null, array: declaration.array });
+        globals.set(declaration.name, { kind: declaration.kind, keyword: null, uid: null, array: declaration.array, hostName: null });
+        break;
+      case 'extern':
+        globals.set(declaration.name, { kind: declaration.kind, keyword: null, uid: null, array: false, hostName: declaration.hostName });
         break;
       case 'const':
-      case 'extern':
       case 'function':
-        globals.set(declaration.name, { kind: declaration.kind, keyword: null, uid: null, array: false });
+        globals.set(declaration.name, { kind: declaration.kind, keyword: null, uid: null, array: false, hostName: null });
         break;
       case 'object':
-        globals.set(declaration.name, { kind: declaration.kind, keyword: declaration.keyword, uid: declaration.tree === null ? declaration.uid : null, array: declaration.tree !== null });
+        globals.set(declaration.name, {
+          kind: declaration.kind, keyword: declaration.keyword, uid: declaration.tree === null ? declaration.uid : null, array: declaration.tree !== null, hostName: null,
+        });
         break;
       default:
         break;
@@ -557,7 +676,42 @@ function resolveObject(object: RawObject): BuiltObject {
     }
     (propertySite.initial ? initial : set).push([propertySite.property, resolve(propertySite.property, value, propertySite.location)]);
   }
-  return { constructorName, tag: info.tag, keyword: info.keyword, uid, mark, set, initial, location };
+  const actions = site.actions ? object.actions.map((action) => resolveAction(action)) : null;
+  if (actions !== null && actions.length > MAX_ACTIONS_PER_TRIGGER) fail(location, TEXT.tooManyActions(uid ?? constructorName, actions.length, MAX_ACTIONS_PER_TRIGGER));
+  return { constructorName, tag: info.tag, keyword: info.keyword, uid, mark, set, initial, actions, location };
+}
+
+function resolveAction(action: RawAction): BuiltAction {
+  const { location } = action.site;
+  const [which, targetA, targetB] = action.values;
+  const name = which?.kind === 'text' || which?.kind === 'named' ? which.text : '';
+  const opcode = (WHOLE_NUMBER.test(name) ? opcodeByNumber(Number(name)) : opcodeByName(name)) ?? fail(location, LANG_TEXT.unknownAction(name));
+  const target = (value: BuildValue | undefined, kind: string, side: string): AttributeValue => {
+    const given = value ?? { kind: 'text', text: NO_TARGET };
+    const expectsObject = OBJECT_PARAM_KINDS.has(kind);
+    switch (given.kind) {
+      case 'object': {
+        const keyword = Object.entries(OBJECT_KINDS).find(([, info]) => info.tags.includes(given.tag))?.[0] ?? null;
+        const constructorName = constructorForTag(given.tag) ?? given.tag;
+        if (keyword === null || given.uid === null) return fail(location, TEXT.actionNoUid(opcode.number, side, constructorName));
+        if (OBJECT_KINDS[keyword]?.paramKind !== kind) return fail(location, TEXT.actionObject(opcode.number, side, kind, keyword));
+        return { kind: 'text', text: given.uid };
+      }
+      case 'function':
+        if (kind !== TRIGGER_KIND) return fail(location, LANG_TEXT.referenceNotTrigger(opcode.number, side, kind));
+        return { kind: 'function', name: given.name };
+      case 'named': {
+        const group = valueGroup(given.group);
+        if (group && !group.kinds.includes(kind) && (expectsObject || !LOOSE_VALUE_KINDS.has(kind))) fail(location, LANG_TEXT.wrongValueGroup(opcode.number, side, kind, given.group));
+        return { kind: 'text', text: given.text };
+      }
+      case 'name':
+        return { kind: 'text', text: valueList(kind).members.get(given.name) ?? fail(location, LANG_TEXT.unknownVariable(given.name)) };
+      default:
+        return { kind: 'text', text: given.text };
+    }
+  };
+  return { opcode: opcode.number, targetA: target(targetA, opcode.paramA, SIDE.a), targetB: target(targetB, opcode.paramB, SIDE.b) };
 }
 
 function bindings(mapNames: readonly MapName[], records: readonly string[][], objects: readonly RawObject[], built: readonly BuiltObject[]): Declaration[] {
@@ -597,16 +751,16 @@ function bindings(mapNames: readonly MapName[], records: readonly string[][], ob
   return declarations;
 }
 
-export function buildMaps(file: SourceFile): MapBuild {
+export function buildMaps(file: SourceFile, gameNames: Names): MapBuild {
   const blocks = file.declarations.flatMap((declaration) => (declaration.kind === 'map' ? [declaration] : []));
-  if (blocks.length === 0) return { file, objects: [], references: new Set(), functions: new Set(), warnings: [] };
+  if (blocks.length === 0) return { file, objects: [], references: new Set(), functions: new Set(), variables: new Set(), warnings: [] };
   const first = blocks[0] as Extract<Declaration, { kind: 'map' }>;
   const globals = globalsOf(file);
   const mapNames = collectMapNames(blocks.map((block) => block.body), globals);
   const taken = new Set<string>([...globals.keys(), ...mapNames.keys()]);
   namesInStatements(blocks.flatMap((block) => block.body), taken);
   const names = freshNames(taken);
-  const transformer = new MapTransformer(globals, mapNames, names);
+  const transformer = new MapTransformer(globals, mapNames, names, gameNames);
   const location = first.location;
   const body = blocks.map((block) => transformer.block(block.body, block.location));
   const mapNameList = [...mapNames.values()];
@@ -680,13 +834,19 @@ export function buildMaps(file: SourceFile): MapBuild {
     const site = transformer.sites[Number(siteText)];
     if (type === BUILD_RECORD.object && site?.kind === 'construct') {
       const [, ...values] = rest;
-      objects.push({ site, values: values.map((raw) => parseValue(raw, objects, site.location)), properties: [] });
+      objects.push({ site, values: values.map((raw) => parseValue(raw, objects, site.location)), properties: [], actions: [] });
     } else if (type === BUILD_RECORD.property && site?.kind === 'property') {
       const [target = '', raw = ''] = rest;
       const index = objectIndex(target);
       const object = index === null ? null : objects[index - 1] ?? null;
       if (object === null) fail(site.location, target.startsWith(MAP_MARK.start) ? TEXT.hostPropertyValue : TEXT.notAMapObject(site.property));
       object?.properties.push({ site, value: parseValue(raw, objects, site.location) });
+    } else if (type === BUILD_RECORD.action && site?.kind === 'action') {
+      const [holder = '', ...values] = rest;
+      const index = objectIndex(holder);
+      const object = index === null ? null : objects[index - 1] ?? null;
+      if (object === null || !object.site.actions) return fail(site.location, TEXT.notATrigger);
+      object.actions.push({ site, values: values.map((raw) => parseValue(raw, objects, site.location)) });
     }
   }
   const built = objects.map(resolveObject);
@@ -709,6 +869,7 @@ export function buildMaps(file: SourceFile): MapBuild {
     objects: built,
     references: transformer.references,
     functions: needed,
+    variables: transformer.variables,
     warnings: built.flatMap(textWarnings),
   };
 }

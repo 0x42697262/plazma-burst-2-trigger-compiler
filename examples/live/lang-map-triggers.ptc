@@ -1,0 +1,19 @@
+// Triggers and timers made by a map { } block: raw actions, worked out while compiling.
+var opened = 0;
+var total = 0;
+var names[];
+
+map {
+  bump = Trigger("#ptc_bump", maxcalls: Infinite) {
+    action(VarAddValue, opened, 1);
+    for (let i = 1; i <= 3; i += 1) {
+      action(VarAddValue, total, i * 10);
+    }
+    action(VarSetValue, names[0], "bumped");
+  }
+  Timer("#ptc_bump_timer", target: bump, delay: 0, maxcalls: 2);
+}
+
+on start {
+  action(ExecTrigger, bump);
+}

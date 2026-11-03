@@ -26,7 +26,9 @@ import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
 import { callGraph, reachable, usedFunctions, writtenNames } from './calls.ts';
 
-export type GenerateOptions = { protectNumberText: boolean; directIndex: boolean; compileTimeFunctions?: ReadonlySet<string>; referencedFunctions?: ReadonlySet<string> };
+export type GenerateOptions = {
+  protectNumberText: boolean; directIndex: boolean; compileTimeFunctions?: ReadonlySet<string>; referencedFunctions?: ReadonlySet<string>; writtenElsewhere?: ReadonlySet<string>;
+};
 
 const DEFAULT_GENERATE: GenerateOptions = Object.freeze({ protectNumberText: true, directIndex: false });
 
@@ -203,7 +205,7 @@ export class Generator {
     const graph = callGraph(file);
     this.reach = reachable(graph);
     this.used = usedFunctions(file, graph, options.referencedFunctions ?? new Set());
-    this.written = writtenNames(file);
+    this.written = new Set([...writtenNames(file), ...(options.writtenElsewhere ?? [])]);
     this.usesStack = [...this.reach.entries()].some(([name, targets]) => targets.has(name));
   }
 

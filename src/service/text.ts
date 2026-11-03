@@ -58,7 +58,7 @@ export const TEXT = Object.freeze({
     import: 'import "file.ptc"; adds the declarations of another file.',
     true: 'The value 1.',
     false: 'The value 0.',
-    map: 'map { ... } creates and sets map objects while compiling: gate = Door("#door*1", maxspeed: 50); gate.x ?= 0; (?= only when the object is created).',
+    map: 'map { ... } creates and sets map objects while compiling: gate = Door("#door*1", maxspeed: 50); gate.x ?= 0; (?= only when the object is created). Trigger("#t") { action(...); } makes a trigger with raw actions.',
   } as Record<string, string>),
   actionHover: (number: number, name: string, description: string, kindA: string, kindB: string): string =>
     `**action ${number}** \`${name}\`\n\n${description}\n\nA: \`${kindA}\` · B: \`${kindB}\``,

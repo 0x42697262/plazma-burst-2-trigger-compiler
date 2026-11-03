@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import { spawn } from 'node:child_process';
 import { emitXml } from '../../emit/xml-emitter.ts';
 import { appendToMap } from '../../emit/merge.ts';
-import { placeObjects, regionsOf } from '../../emit/place.ts';
+import { placeObjects, regionsOf, withMapTriggers } from '../../emit/place.ts';
 import type { MapObject } from '../../objects/types.ts';
 import { BASE_MAP } from '../../emit/keys.ts';
 import { Simulation } from '../../sim/simulator.ts';
@@ -40,7 +40,7 @@ function loadCases(options: Partial<CompileOptions>): Case[] {
     const frontEnd = frontEndFor(file);
     const prefix = frontEnd.prefixOf(source) ?? prefixFromFile(file);
     const result = frontEnd.compile(source, prefix, options, file);
-    const simulation = new Simulation(result.program, { players: SIMULATED_PLAYERS, maxSteps: SIMULATED_MAX_STEPS, regions: regionsOf(result.mapObjects) });
+    const simulation = new Simulation(withMapTriggers(result.program, result.mapObjects), { players: SIMULATED_PLAYERS, maxSteps: SIMULATED_MAX_STEPS, regions: regionsOf(result.mapObjects) });
     simulation.tick(SIMULATED_FRAMES);
     return {
       name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), objects: result.mapObjects, simulated: encodeVariables(simulation.variables), errors: simulation.errors,

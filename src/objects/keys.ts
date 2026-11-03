@@ -1,5 +1,5 @@
 export type ObjectKindInfo = { paramKind: string; tags: readonly string[] };
-export type ConstructorInfo = { tag: string; keyword: string | null; positional: readonly string[] };
+export type ConstructorInfo = { tag: string; keyword: string | null; positional: readonly string[]; actions?: boolean };
 
 export const OBJECT_KINDS: Readonly<Record<string, ObjectKindInfo>> = Object.freeze({
   region: { paramKind: 'region', tags: ['region'] },
@@ -36,6 +36,8 @@ export const CONSTRUCTORS: Readonly<Record<string, ConstructorInfo>> = Object.fr
   Light: { tag: 'lamp', keyword: 'light', positional: [UID_ARGUMENT] },
   Water: { tag: 'water', keyword: 'water', positional: [UID_ARGUMENT] },
   Song: { tag: 'song', keyword: 'song', positional: [UID_ARGUMENT] },
+  Trigger: { tag: 'trigger', keyword: 'trigger', positional: [UID_ARGUMENT], actions: true },
+  Timer: { tag: 'timer', keyword: 'timer', positional: [UID_ARGUMENT] },
   Wall: { tag: 'box', keyword: null, positional: AREA_ARGUMENTS },
   Background: { tag: 'bg', keyword: null, positional: AREA_ARGUMENTS },
   EngineMark: { tag: 'inf', keyword: null, positional: [MARK_ARGUMENT] },

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { emitXml, stagingPosition } from '../emit/xml-emitter.ts';
 import { checkObjects } from '../objects/objects.ts';
-import { placeObjects, regionsOf } from '../emit/place.ts';
+import { placeObjects, regionsOf, withMapTriggers } from '../emit/place.ts';
 import { missingHostObject } from '../objects/missing.ts';
 import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
@@ -89,7 +89,7 @@ const readBuildRecord = (file: string): BuildRecord => {
 const showValue = (value: unknown): string => (typeof value === 'string' || Array.isArray(value) ? JSON.stringify(value) : stringOf(value));
 
 const simulate = (result: CompileResult, frames: number, output: Output): void => {
-  const simulation = new Simulation(result.program, { regions: regionsOf(result.mapObjects) });
+  const simulation = new Simulation(withMapTriggers(result.program, result.mapObjects), { regions: regionsOf(result.mapObjects) });
   simulation.tick(frames);
   for (const [name, value] of Object.entries(simulation.variables)) output.out(TEXT.variable(name, showValue(value)));
   for (const line of simulation.chat) output.out(TEXT.chat(line));
@@ -147,10 +147,11 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const xml = emitXml(program, layout) + placement.xml;
     writeFile(base + OUTPUT.xml, xml, output);
     try {
-      writeFile(base + OUTPUT.text, joinTextBlocks(emitText(result.program)), output);
+      const textProgram = withMapTriggers(result.program, result.mapObjects);
+      writeFile(base + OUTPUT.text, joinTextBlocks(emitText(textProgram)), output);
       if (result.program.varSyncMark) output.err(TEXT.warning(TEXT.textNeedsVarSync));
       if (result.obfuscation !== null) output.err(TEXT.warning(TEXT.textNeedsOrder));
-      if (result.program.timers.length > 0) output.err(TEXT.warning(TEXT.textHasNoTimers(result.program.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)))));
+      if (textProgram.timers.length > 0) output.err(TEXT.warning(TEXT.textHasNoTimers(textProgram.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)))));
     } catch (error) {
       fs.rmSync(base + OUTPUT.text, { force: true });
       output.err(TEXT.warning(TEXT.noText(error instanceof Error ? error.message : String(error))));
@@ -160,8 +161,10 @@ export function main(argumentsList: readonly string[], output: Output): number {
       writeFile(base + OUTPUT.names, JSON.stringify({ prefix, seed, names: describeLegend(prefix, result.obfuscation.legend) }, null, JSON_INDENT), output);
     }
     if (placement.host !== null) {
-      for (const warning of checkHostNames(result.program, placement.host)) output.err(TEXT.warning(warning));
-      for (const warning of checkHostUses(placement.host, names.ownsVariable, result.exports)) output.err(TEXT.warning(warning));
+      const mapUids = new Set(result.mapObjects.flatMap((object) => (object.uid === null ? [] : [object.uid])));
+      const hostOnly = removeOwned(placement.host, (uid) => mapUids.has(uid));
+      for (const warning of checkHostNames(result.program, hostOnly)) output.err(TEXT.warning(warning));
+      for (const warning of checkHostUses(hostOnly, names.ownsVariable, result.exports)) output.err(TEXT.warning(warning));
       writeFile(base + OUTPUT.map, appendToMap(placement.host, xml), output);
       const producedUids = [...result.program.triggers.map((trigger) => trigger.uid), ...result.program.timers.map((timer) => timer.uid)];
       writeFile(buildPath, JSON.stringify({ prefix, uids: producedUids, walls: placement.walls }, null, JSON_INDENT), output);

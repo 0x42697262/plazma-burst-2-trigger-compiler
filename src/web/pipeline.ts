@@ -7,7 +7,7 @@ import { appendToMap, removeOwned } from '../emit/merge.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { checkObjects } from '../objects/objects.ts';
 import { missingHostObject } from '../objects/missing.ts';
-import { placeObjects, regionsOf } from '../emit/place.ts';
+import { placeObjects, regionsOf, withMapTriggers } from '../emit/place.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames, seededPrefix } from '../compiler/names.ts';
 import { isRandomSeed, resolveSeed } from '../obfuscate/random.ts';
@@ -105,11 +105,12 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const xml = emitXml(program) + placement.xml;
   let text = '';
   try {
-    text = joinTextBlocks(emitText(result.program));
+    const textProgram = withMapTriggers(result.program, result.mapObjects);
+    text = joinTextBlocks(emitText(textProgram));
     if (result.obfuscation !== null) notes.push(TEXT.textNeedsOrder);
     if (seed !== null && isRandomSeed(givenSeed)) notes.push(TEXT.randomSeed(seed));
-    if (result.program.timers.length > 0) {
-      notes.push(TEXT.textNeedsTimers(result.program.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)).join(TEXT.listSeparator)));
+    if (textProgram.timers.length > 0) {
+      notes.push(TEXT.textNeedsTimers(textProgram.timers.map((timer) => TEXT.timerTarget(timer.uid, timer.target)).join(TEXT.listSeparator)));
     }
   } catch (error) {
     notes.push(error instanceof Error ? error.message : String(error));
@@ -118,7 +119,9 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const uids = [...result.program.triggers.map((trigger) => trigger.uid), ...result.program.timers.map((timer) => timer.uid)];
   notes.push(...blocking);
   if (placement.host !== null) {
-    notes.push(...checkHostNames(result.program, placement.host), ...checkHostUses(placement.host, names.ownsVariable, result.exports));
+    const mapUids = new Set(result.mapObjects.flatMap((object) => (object.uid === null ? [] : [object.uid])));
+    const hostOnly = removeOwned(placement.host, (uid) => mapUids.has(uid));
+    notes.push(...checkHostNames(result.program, hostOnly), ...checkHostUses(hostOnly, names.ownsVariable, result.exports));
     try {
       if (blocking.length === 0) map = appendToMap(placement.host, xml);
     } catch (error) {
@@ -129,7 +132,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
 }
 
 export function simulate(result: CompileResult, frames: number): string[] {
-  const simulation = new Simulation(result.program, { regions: regionsOf(result.mapObjects) });
+  const simulation = new Simulation(withMapTriggers(result.program, result.mapObjects), { regions: regionsOf(result.mapObjects) });
   simulation.tick(frames);
   const show = (value: unknown): string => (typeof value === 'string' || Array.isArray(value) ? JSON.stringify(value) : stringOf(value));
   return [

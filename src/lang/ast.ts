@@ -16,7 +16,7 @@ export type Expression =
   | { kind: 'unary'; operator: '-' | '!'; operand: Expression; location: Location }
   | { kind: 'binary'; operator: BinaryOperator; left: Expression; right: Expression; location: Location }
   | { kind: 'member'; object: string; property: string; location: Location }
-  | { kind: 'construct'; name: string; args: Expression[]; named: NamedArgument[]; location: Location }
+  | { kind: 'construct'; name: string; args: Expression[]; named: NamedArgument[]; body: Statement[] | null; location: Location }
   | { kind: 'array'; elements: Expression[]; location: Location };
 
 export type NamedArgument = { name: string; value: Expression; location: Location };

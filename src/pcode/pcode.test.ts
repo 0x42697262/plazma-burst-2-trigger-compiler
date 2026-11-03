@@ -7,7 +7,7 @@ import { prefixFromFile } from '../cli/main.ts';
 import { compileSource } from '../lang/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
 import type { Region } from '../sim/simulator.ts';
-import { regionsOf } from '../emit/place.ts';
+import { regionsOf, withMapTriggers } from '../emit/place.ts';
 import type { CompileOptions } from '../compiler/compile.ts';
 import type { Program } from '../program/types.ts';
 
@@ -45,8 +45,9 @@ describe('p-code target', () => {
         const compile = (target: CompileOptions['target']) => frontEnd.compile(source, prefix, { target, loopGuard: SMALL_GUARD, directIndex: true, protectNumberText: false }, fullPath);
         const nativeResult = compile('triggers');
         const regions = regionsOf(nativeResult.mapObjects);
-        const native = simulate(nativeResult.program, FRAMES, regions);
-        const machine = simulate(compile('pcode').program, FRAMES, regions);
+        const native = simulate(withMapTriggers(nativeResult.program, nativeResult.mapObjects), FRAMES, regions);
+        const machineResult = compile('pcode');
+        const machine = simulate(withMapTriggers(machineResult.program, machineResult.mapObjects), FRAMES, regions);
         assert.deepEqual(machine.chat, native.chat);
         assert.deepEqual(machine.errors, native.errors);
         assert.deepEqual(machine.variables, native.variables);

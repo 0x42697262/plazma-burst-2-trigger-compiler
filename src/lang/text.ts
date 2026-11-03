@@ -135,5 +135,13 @@ export const MAP_TEXT = Object.freeze({
     `${object} ${attribute}: the website editor turns ${JSON.stringify(value)} into the number ${Number(value)} when it loads the map`,
   hashValue: (object: string, attribute: string, value: string): string =>
     `${object} ${attribute}: "${value}" starts with "#"; the game replaces it with an object index if a uid matches`,
+  triggerBodyPlace: 'a Trigger(...) { } with actions must stand alone or be assigned to a name, like open = Trigger("#open") { ... }',
+  tooManyActions: (uid: string, count: number, limit: number): string => `trigger ${uid} has ${count} actions; the game loads at most ${limit}`,
+  actionTarget: (uid: string, message: string): string => `trigger ${uid}: ${message}`,
+  actionObject: (action: number, side: string, expected: string, given: string): string => `action ${action} takes ${expected} as ${side}, not a ${given}`,
+  actionNoUid: (action: number, side: string, constructorName: string): string => `action ${action}: a ${constructorName} has no uid to pass as ${side}`,
+  actionOutsideTrigger: 'action(...) in a map block adds an action to a trigger: write it inside Trigger("#uid") { ... }',
+  notATrigger: 'action(...) belongs to a trigger made in this map block',
+  uidOfProgram: (uid: string): string => `${uid} is created in a map block, but the program already uses that uid for one of its own triggers or timers`,
   createdTwice: (key: string, line: number): string => `${key} is created twice (also on line ${line})`,
 });

@@ -18,6 +18,8 @@ export const PLACE_TEXT = Object.freeze({
   element: (tag: string, attributes: readonly string[]): string => `<${tag} ${attributes.join(' ')} />`,
   attribute: (name: string, value: string): string => `${name}="${value}"`,
   markName: (mark: string): string => `engine mark ${mark}`,
+  actionAttribute: (position: number, field: string): string => `actions_${position}_${field}`,
+  actionsChanged: (before: number, after: number): string => `actions rewritten (${before} → ${after})`,
   change: (name: string, before: string | null, after: string): string => `${name} ${before ?? '(unset)'} → ${after}`,
   changed: (object: string, changes: readonly string[]): string => `${object}: ${changes.join(', ')}`,
   added: (constructorName: string, name: string): string => `Added ${constructorName} ${name}`,
