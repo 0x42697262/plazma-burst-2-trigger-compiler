@@ -20,10 +20,13 @@ import { renderMarkdown } from './markdown.ts';
 import { problemsOf } from './pipeline.ts';
 import type { CompileOptions } from '../compiler/compile.ts';
 import type { Workspace } from './workspace.ts';
-import { ASSEMBLY_EXTENSION, CLASS, KEY, TAG, WORD_BEFORE } from './keys.ts';
+import { ASSEMBLY_EXTENSION, CLASS, DOT, KEY, PLAIN_EDITOR_THEME, TAG, WORD_AFTER, WORD_BEFORE } from './keys.ts';
 import { HOVER_DELAY, LINT_DELAY } from './constants.ts';
 
 export type EditorHooks = { onChange: (file: string, text: string) => void; onJump: (location: ServiceLocation) => void; checkOptions: () => Partial<CompileOptions> };
+
+const LIGHT_THEME = EditorView.theme(PLAIN_EDITOR_THEME, { dark: false });
+const DARK_THEME = [oneDark, EditorView.theme(PLAIN_EDITOR_THEME, { dark: true })];
 
 const positionOf = (state: EditorState, offset: number): { line: number; column: number } => {
   const line = state.doc.lineAt(offset);
@@ -36,13 +39,17 @@ export class CodeEditor {
   private readonly hooks: EditorHooks;
   private readonly states = new Map<string, EditorState>();
   private readonly vimMode = new Compartment();
+  private readonly theme = new Compartment();
   private vimOn: boolean;
+  private dark: boolean;
   private file: string;
+  private readonly cursorListeners: (() => void)[] = [];
 
-  constructor(parent: HTMLElement, workspace: Workspace, hooks: EditorHooks, vimOn: boolean) {
+  constructor(parent: HTMLElement, workspace: Workspace, hooks: EditorHooks, vimOn: boolean, dark: boolean) {
     this.workspace = workspace;
     this.hooks = hooks;
     this.vimOn = vimOn;
+    this.dark = dark;
     this.file = workspace.active;
     this.view = new EditorView({ parent, state: this.stateFor(this.file) });
   }
@@ -84,6 +91,34 @@ export class CodeEditor {
     this.vimOn = on;
     this.view.dispatch({ effects: this.vimMode.reconfigure(on ? vim() : []) });
     for (const [file, state] of this.states) this.states.set(file, state.update({ effects: this.vimMode.reconfigure(on ? vim() : []) }).state);
+  }
+
+  setDark(on: boolean): void {
+    this.dark = on;
+    const effects = this.theme.reconfigure(on ? DARK_THEME : LIGHT_THEME);
+    this.view.dispatch({ effects });
+    for (const [file, state] of this.states) this.states.set(file, state.update({ effects }).state);
+  }
+
+  wordAtCursor(): { word: string; group: string | null } {
+    const state = this.view.state;
+    const offset = state.selection.main.head;
+    const line = state.doc.lineAt(offset);
+    const before = WORD_BEFORE.exec(line.text.slice(0, offset - line.from))?.[0] ?? '';
+    const after = WORD_AFTER.exec(line.text.slice(offset - line.from))?.[0] ?? '';
+    const start = offset - line.from - before.length;
+    const group = line.text.charAt(start - 1) === DOT ? WORD_BEFORE.exec(line.text.slice(0, start - 1))?.[0] ?? null : null;
+    return { word: before + after, group };
+  }
+
+  insert(text: string): void {
+    const { from, to } = this.view.state.selection.main;
+    this.view.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length }, scrollIntoView: true });
+    this.view.focus();
+  }
+
+  onCursor(listener: () => void): void {
+    this.cursorListeners.push(listener);
   }
 
   private stateFor(file: string): EditorState {
@@ -136,7 +171,7 @@ export class CodeEditor {
       indentOnInput(),
       bracketMatching(),
       closeBrackets(),
-      oneDark,
+      this.theme.of(this.dark ? DARK_THEME : LIGHT_THEME),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       isAssembly ? pasmLanguage : ptcLanguage,
       ...(isAssembly ? [] : [autocompletion({ override: [completions] }), hovers]),
@@ -148,6 +183,7 @@ export class CodeEditor {
       ]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) this.hooks.onChange(file, update.state.doc.toString());
+        if (update.selectionSet || update.docChanged) for (const listener of this.cursorListeners) listener();
       }),
     ];
   }

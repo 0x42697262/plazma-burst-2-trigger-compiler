@@ -3,4 +3,6 @@ export const DEFAULT_FRAMES = 300;
 export const DEFAULT_GUARD = 100000;
 export const HOVER_DELAY = 250;
 export const STATUS_TIME = 3000;
+export const MIN_OUTPUT_HEIGHT = 60;
+export const MIN_EDITOR_HEIGHT = 140;
 export const FIRST_COPY_NUMBER = 2;

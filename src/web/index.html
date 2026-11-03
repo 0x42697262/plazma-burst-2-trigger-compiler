@@ -3,56 +3,90 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>PB2 Trigger Compiler</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>PB2 Trigger Compiler</h1>
-    <select id="examples" title="Open an example in new tabs (your files stay)"></select>
-    <label title="Prefix of every variable and trigger uid; empty: from the file name">prefix <input id="prefix" size="8" placeholder="auto"></label>
-    <label title="Stop a loop after this many jumps back per event; 0: no guard">guard <input id="guard" type="number" min="0" step="1000"></label>
-    <label title="Frames to simulate with Run">frames <input id="frames" type="number" min="1"></label>
-    <label title="Keep text such as &quot;007&quot; or &quot;0123456789.&quot; as text when the map is saved in the website editor, which turns it into a number (one more action each). Untick for other map editors."><input id="number-text" type="checkbox"> site editor</label>
-    <label title="triggers: compile to triggers. pcode: compile to p-code that a fixed set of triggers runs (about 20 times slower, experimental; --target)">target <select id="target"><option value="triggers">triggers</option><option value="pcode">pcode</option></select></label>
-    <label title="Read and write array elements without scanning every variable: 2 more actions each, faster in maps with many variables (--direct-index)"><input id="direct-index" type="checkbox"> direct index</label>
-    <label title="Vim key bindings"><input id="vim" type="checkbox"> Vim</label>
-    <button id="compile" title="Ctrl+Enter">Compile</button>
-    <button id="run" title="Ctrl+Shift+Enter">Run</button>
-    <input id="host-map" type="file" accept=".xml,.txt" hidden>
-    <button id="host-map-button" title="A map XML downloaded from the editor: the program is appended to it">map XML…</button>
-    <span id="host-map-name" class="muted">no map</span>
-    <label title="When adding to a map that already has this program, remove its old triggers and timers first (update in place)"><input id="replace" type="checkbox"> replace</label>
-    <label title="Derive the name prefix from a seed: reproducible, source-independent names. Use with replace to update in place.">name seed <input id="name-seed" size="8" placeholder="off"></label>
-    <label title="Shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check; about 3 times slower (--obfuscate)"><input id="obfuscate" type="checkbox"> obfuscate</label>
-    <label title="Seed for obfuscate: the same seed gives the same build, a new seed changes every generated name (--obfuscate-seed). Empty: the name seed or the prefix. random: a new seed at every compile, shown in the problems">seed <input id="obfuscate-seed" size="8" placeholder="auto"></label>
-    <button id="new-seed" title="Put a new random seed in the seed box">new seed</button>
-    <button id="environment-button" title="Values for env(&quot;NAME&quot;) in constants, one NAME=value per line. Kept only until the page is closed">env…</button>
-    <div id="environment-panel" hidden>
-      <label for="environment">env() values, one <code>NAME=value</code> per line. Not saved: gone when the page closes.</label>
-      <textarea id="environment" rows="4" spellcheck="false" autocomplete="off" placeholder="MAP_PASSWORD=open sesame"></textarea>
+  <header class="toolbar">
+    <div class="toolbar-side">
+      <span class="app-title">PB2 Trigger Compiler</span>
+      <select id="examples" title="Open an example in new tabs (your files stay)"></select>
     </div>
-    <a href="https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md" target="_blank" rel="noopener">docs</a>
+    <div class="toolbar-center">
+      <button id="run" class="primary" title="Run in the simulator">Run</button>
+      <button id="compile" title="Build the XML and trigger text">Build</button>
+      <div class="activity"><span id="status">Ready</span><span id="chips"></span></div>
+    </div>
+    <div class="toolbar-side toolbar-end">
+      <input id="host-map" type="file" accept=".xml,.txt" hidden>
+      <button id="host-map-button" class="quiet" title="A map XML downloaded from the editor: the program is added to it">Map…</button>
+      <span id="host-map-name" class="muted"></span>
+      <button id="host-map-clear" class="quiet icon" title="Forget the map" hidden>×</button>
+      <button id="settings-button" class="quiet icon" title="Build settings">⚙︎</button>
+      <button id="palette-button" class="quiet" title="Commands">⌘K</button>
+      <button id="reference-button" class="quiet" title="Reference" hidden>Reference</button>
+    </div>
   </header>
-  <main>
-    <section class="source">
+
+  <div id="settings" class="popover" hidden>
+    <section>
+      <h2>Output</h2>
+      <label class="row" title="triggers: compile to triggers. pcode: compile to p-code that a fixed set of triggers runs (about 20 times slower, experimental; --target)">Target
+        <select id="target"><option value="triggers">Triggers</option><option value="pcode">P-code</option></select></label>
+      <label class="row" title="Keep text such as &quot;007&quot; or &quot;0123456789.&quot; as text when the map is saved in the website editor, which turns it into a number (one more action each). Untick for other map editors.">Protect text from the site editor <input id="number-text" type="checkbox"></label>
+      <label class="row" title="Read and write array elements without scanning every variable: 2 more actions each, faster in maps with many variables (--direct-index)">Direct array index <input id="direct-index" type="checkbox"></label>
+    </section>
+    <section>
+      <h2>Names</h2>
+      <label class="row" title="Prefix of every variable and trigger uid; empty: from the file name">Prefix <input id="prefix" size="10" placeholder="from file name"></label>
+      <label class="row" title="Derive the name prefix from a seed: reproducible, source-independent names. Use with replace to update in place.">Name seed <input id="name-seed" size="10" placeholder="off"></label>
+    </section>
+    <section>
+      <h2>Protection</h2>
+      <label class="row" title="Shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check; about 3 times slower (--obfuscate)">Obfuscate <input id="obfuscate" type="checkbox"></label>
+      <label class="row" title="Seed for obfuscate: the same seed gives the same build, a new seed changes every generated name (--obfuscate-seed). Empty: the name seed or the prefix. random: a new seed at every build">Seed <span class="inline"><input id="obfuscate-seed" size="10" placeholder="auto"><button id="new-seed" class="quiet" title="Put a new random seed in the seed box">New</button></span></label>
+    </section>
+    <section>
+      <h2>Map</h2>
+      <label class="row" title="When adding to a map that already has this program, remove its old triggers, timers, walls and backgrounds first (update in place)">Replace the previous build <input id="replace" type="checkbox"></label>
+    </section>
+    <section>
+      <h2>Advanced</h2>
+      <label class="row" title="Stop a loop after this many jumps back per event; 0: no guard">Loop guard <input id="guard" type="number" min="0" step="1000"></label>
+      <label class="row" title="Frames to simulate with Run">Frames to run <input id="frames" type="number" min="1"></label>
+      <label class="row" title="Vim key bindings in the editor">Vim keys <input id="vim" type="checkbox"></label>
+      <label class="stack" for="environment" title="Values for env(&quot;NAME&quot;) in constants. Kept only until the page is closed"><span>env() values, one <code>NAME=value</code> per line (not saved)</span>
+        <textarea id="environment" rows="3" spellcheck="false" autocomplete="off" placeholder="MAP_PASSWORD=open sesame"></textarea></label>
+    </section>
+    <footer><a href="https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md" target="_blank" rel="noopener">Language guide</a><span id="shortcut-help" class="muted"></span></footer>
+  </div>
+
+  <div id="palette" class="palette" hidden>
+    <input id="palette-input" placeholder="Type a command" spellcheck="false" autocomplete="off">
+    <ul id="palette-list"></ul>
+  </div>
+
+  <main id="main">
+    <section class="workbench">
       <nav id="tabs"></nav>
       <div id="editor"></div>
-    </section>
-    <section class="result">
+      <div id="splitter" title="Drag to resize"></div>
       <nav id="output-tabs">
-        <button data-output="problems" class="active">Problems</button>
-        <button data-output="xml">XML</button>
-        <button data-output="text">Trigger text</button>
-        <button data-output="map">Map</button>
-        <button data-output="run">Run</button>
+        <div class="segmented">
+          <button data-output="problems" class="active">Problems</button>
+          <button data-output="xml">XML</button>
+          <button data-output="text">Trigger text</button>
+          <button data-output="map">Map</button>
+          <button data-output="run">Run</button>
+        </div>
         <span class="spacer"></span>
-        <button id="copy">Copy</button>
-        <button id="download">Download</button>
+        <button id="copy" class="quiet">Copy</button>
+        <button id="download" class="quiet">Download</button>
       </nav>
       <pre id="output"></pre>
-      <div id="status"></div>
     </section>
+    <aside id="reference" class="inspector" hidden></aside>
   </main>
   <script type="module" src="app.js"></script>
 </body>
