@@ -18,14 +18,15 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Emitters | `src/emit/` | XML elements (grid placement, `maxcalls -1`), editor text (F12, F14), appending to a map |
 | Simulator | `src/sim/` | The game's trigger runner for the actions the compiler uses, with load-time conversion (F18) and XML escaping (F26) |
 | CLI | `src/cli/` | `npm run compile` |
-| Language service | `src/service/` | Diagnostics, completion, hover, definitions, symbols; shared by the language server and the web page |
+| Language service | `src/service/` | Diagnostics, completion, hover, definitions, references, symbols; shared by the language server and the web page |
+| Reference | `src/reference/` | One model of everything the language and the game offer (actions with categories and colors, parameter kinds, map objects and properties, values, engine marks, builtins, keywords), with links and search; read by the web page's sidebar and `actions-doc` |
 | Language server | `src/lsp/`, `bin/ptc-lsp.js` | LSP over stdio for any editor; Neovim files in `editors/nvim/` |
 | Compile-time constants | `src/lang/comptime.ts` | `const` values worked out in the simulator, `secret` checks, `env()` |
 | Map blocks | `src/lang/mapblock.ts`, `src/objects/`, `src/emit/place.ts` | `map { }` runs in the simulator while compiling (constructors log the objects they create); properties are checked against the editor's tables (`properties.ts`, `value-check.ts`); `place.ts` writes new objects and rewrites existing ones in the host map |
 | Standard library | `std/` | `.ptc` files for `import "std/..."` (`hash.ptc`); read by `src/cli/sources.ts`, bundled into the web page |
 | P-code target | `src/pcode/` | `--target pcode`: instructions as text plus one trigger per kind of instruction ([pcode.md](pcode.md)) |
 | Obfuscation | `src/obfuscate/` | `--obfuscate`: encoded texts and a start routine with the integrity check, dispatched jumps, grouped actions and fixed-outcome checks around the layout ([obfuscation.md](obfuscation.md)) |
-| Web page | `src/web/`, `src/tools/build-web/` | CodeMirror editor (Vim mode), compiler and simulator in the browser; built into `site/` |
+| Web page | `src/web/`, `src/tools/build-web/` | CodeMirror editor (Vim mode), compiler and simulator in the browser; toolbar, settings popover, command palette (`commands.ts`), reference sidebar (`reference-panel.ts`); built into `site/` |
 | Tools | `src/tools/` | `live-check`, `snapshot-opcodes`, `actions-doc` (writes `docs/actions.md`), `emit-sample` (the hand-built M1 sample), the repository's lint rules |
 
 ## Testing
