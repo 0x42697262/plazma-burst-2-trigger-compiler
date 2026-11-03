@@ -28,6 +28,25 @@ elsewhere.
 - **Map…:** choose a map downloaded from the editor; the Map tab shows it with the program added
   (and the objects of `map { }` blocks added or updated; the changes are listed in Problems). `×`
   forgets it.
+- **Blueprint:** a drawing of the map: the objects of `map { }` blocks in the editor's colors, and
+  the chosen map's own objects dimmed behind them. It starts as a small card in the bottom-right
+  corner; a click expands it.
+  - Scroll to zoom, drag empty space to pan, F or "Fit" shows everything; the bar shows the
+    coordinates under the pointer, snapped to 10 like the editor (Alt: exact).
+  - Click an object to select it: the editor shows the line that made it. Put the code cursor on a
+    constructor line and its objects light up (all of them for a line inside a loop). Hover shows
+    the uid, kind and values.
+  - Drag an object, or a handle of a rectangle, to try another place or size. This is a scratchpad:
+    the code is not changed, and the next compile (any edit) puts everything back. A moved object
+    shows its code position as a dashed outline; "N moved · Reset" undoes all moves, arrow keys
+    nudge the selected object by 10 (Shift: 1).
+  - The card of the selected object shows its current values (`x: 420, y: -60, w: 200, h: 30`) with
+    Copy and "Insert at cursor". Double-click an empty spot to insert `x: …, y: …` at the code
+    cursor; Shift+drag a rectangle to insert `x: …, y: …, w: …, h: …`.
+- **Window controls** in the tab bar of Blueprint, Settings and Reference: `–` shrinks the panel to
+  a card in a corner (drag it near another corner and it snaps there; cards in the same corner
+  stack), `⤢` expands it again, `⇲` puts a floating panel back into the layout, `⧉` opens it in its
+  own browser window. A minimized Settings card shows the settings that differ from the defaults.
 - **Settings (⚙, ⌘,):** opens as a floating window (drag it by its tab, or dock it like any panel).
   - Output: target `Triggers` (default) or `P-code` (`--target`, [pcode.md](pcode.md)); "Protect text
     from the site editor" (on by default) keeps text like `"007"` as text when the map is saved in
