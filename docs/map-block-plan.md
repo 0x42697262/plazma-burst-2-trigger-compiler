@@ -11,6 +11,9 @@ block"); this file keeps the design record. Differences found while building:
 - Short names are added next to the existing full-label names (`Behavior.DoNothing` and
   `Behavior.DoNothingControllableWithTriggers` both work), so older programs keep compiling.
 - `at x, y` on old declarations is an error that shows the `map { }` line to write.
+- Decision 16 changed afterwards: `Trigger(uid) { action(...); }` and `Timer(uid, ...)` make raw
+  triggers and timers (at most 100 actions, written as given), for old-school maps kept as source
+  (`docs/language.md`, "Triggers and timers in a map block").
 - The live check places the `map { }` objects of every program in its map (`examples/live/lang-map-objects.ptc`
   reads region positions back in the game).
 
@@ -142,7 +145,7 @@ with its source.
     (`botaction = 4`). Model lists also take values that are not in the list (custom decorations
     and skins such as `c53013`).
 15. **`map { }` is allowed in imported files.** Blocks run in import order, then the main file.
-16. **No triggers or timers in `map { }`:** the program makes its own.
+16. ~~**No triggers or timers in `map { }`:** the program makes its own.~~ Changed: `Trigger(uid) { actions }` and `Timer(uid, ...)` make raw ones (see Status).
 
 ## Current state (check before building)
 
