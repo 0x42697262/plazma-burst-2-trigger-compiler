@@ -2,7 +2,7 @@ import examples from 'virtual:examples';
 import type { SerializedDockview } from 'dockview-core';
 import { CodeEditor } from './editor.ts';
 import { Workspace } from './workspace.ts';
-import { build, checkOptions, parseEnvironment, preview, simulate } from './pipeline.ts';
+import { build, checkOptions, parseEnvironment, prefixFor, preview, simulate, tamperOf } from './pipeline.ts';
 import { BlueprintView } from './blueprint.ts';
 import { sceneOf } from './blueprint-model.ts';
 import { directoryOf, resolvePath } from '../lang/file-paths.ts';
@@ -21,6 +21,8 @@ import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { DEFAULT_TARGET, isTarget, TARGETS } from '../pcode/keys.ts';
 import { isStandardLibrary } from '../lang/file-paths.ts';
 import { randomSeed } from '../obfuscate/random.ts';
+import { TAMPER_MODE, isTamperMode } from '../tamper/keys.ts';
+import type { TamperMode } from '../tamper/keys.ts';
 import { convertMap } from '../convert/convert.ts';
 import { STYLE } from '../convert/keys.ts';
 
@@ -61,6 +63,9 @@ const replaceInput = element<HTMLInputElement>(ELEMENT.replace);
 const nameSeedInput = element<HTMLInputElement>(ELEMENT.nameSeed);
 const obfuscateInput = element<HTMLInputElement>(ELEMENT.obfuscate);
 const obfuscateSeedInput = element<HTMLInputElement>(ELEMENT.obfuscateSeed);
+const tamperSelect = element<HTMLSelectElement>(ELEMENT.tamperCheck);
+const tamperSeedInput = element<HTMLInputElement>(ELEMENT.tamperSeed);
+const tamperMode = (): TamperMode => (isTamperMode(tamperSelect.value) ? tamperSelect.value : TAMPER_MODE.off);
 const environmentInput = element<HTMLTextAreaElement>(ELEMENT.environment);
 const environment = () => parseEnvironment(environmentInput.value);
 const output = element<HTMLPreElement>(ELEMENT.output);
@@ -90,6 +95,8 @@ replaceInput.checked = savedOptions.replace ?? false;
 nameSeedInput.value = savedOptions.nameSeed ?? '';
 obfuscateInput.checked = savedOptions.obfuscate ?? false;
 obfuscateSeedInput.value = savedOptions.obfuscateSeed ?? '';
+tamperSelect.value = savedOptions.tamper ?? TAMPER_MODE.off;
+tamperSeedInput.value = savedOptions.tamperSeed ?? '';
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 element(ELEMENT.shortcutHelp).textContent = TEXT.shortcutHelp(shortcut(SHORTCUT.build), shortcut(SHORTCUT.run), shortcut(SHORTCUT.palette), shortcut(SHORTCUT.files), shortcut(SHORTCUT.settings), shortcut(SHORTCUT.reference));
 element(ELEMENT.compile).title = TEXT.withShortcut(element(ELEMENT.compile).title, shortcut(SHORTCUT.build));
@@ -111,7 +118,7 @@ const darkQuery = window.matchMedia(DARK_QUERY);
 
 const options = (): Options => {
   const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked, nameSeed: nameSeedInput.value,
-    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value,
+    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value, tamper: tamperMode(), tamperSeed: tamperSeedInput.value,
   };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   renderChips(value);
@@ -216,7 +223,7 @@ const editorHooks = {
     scheduleBlueprint();
   },
   onJump: (location: { file: string; line: number; column: number }): void => jumpTo(location),
-  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target, environment()),
+  checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target, environment(), tamperOf(tamperMode(), '', prefixFor(activeFile))),
   onCursor: (file: string): void => {
     if (file === activeFile) panel.cursorMoved();
     const line = editors.get(file)?.cursorLine();
@@ -368,8 +375,8 @@ const optionChanged = (): void => {
   scheduleBlueprint();
 };
 environmentInput.addEventListener(EVENT.input, optionChanged);
-for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput]) input.addEventListener(EVENT.change, optionChanged);
-for (const input of [nameSeedInput, obfuscateSeedInput, prefixInput, guardInput, framesInput]) input.addEventListener(EVENT.input, optionChanged);
+for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput, tamperSelect]) input.addEventListener(EVENT.change, optionChanged);
+for (const input of [nameSeedInput, obfuscateSeedInput, tamperSeedInput, prefixInput, guardInput, framesInput]) input.addEventListener(EVENT.input, optionChanged);
 const newSeed = (): void => {
   obfuscateSeedInput.value = randomSeed();
   obfuscateInput.checked = true;
@@ -535,6 +542,10 @@ const commands = (): Command[] => {
     { title: TEXT.commands.resetLayout, detail: TEXT.commandDetail.action, shortcut: '', run: () => dock.restore(null, workspace.list(), activeFile, dock.isOpen(DOCK.panel.reference)) },
     ...TARGETS.map((target): Command => ({ title: TEXT.commands.target(target), detail: TEXT.commandDetail.option, shortcut: '', run: () => {
       targetSelect.value = target;
+      optionChanged();
+    } })),
+    ...Object.values(TAMPER_MODE).map((mode): Command => ({ title: TEXT.commands.tamper(mode), detail: TEXT.commandDetail.option, shortcut: '', run: () => {
+      tamperSelect.value = mode;
       optionChanged();
     } })),
     toggle(obfuscateInput, TEXT.optionNames.obfuscate),

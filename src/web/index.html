@@ -57,6 +57,9 @@
       <h2>Protection</h2>
       <label class="row" title="Shorten names, encode texts, route jumps through computed trigger indexes and add an integrity check; about 3 times slower (--obfuscate)">Obfuscate <input id="obfuscate" type="checkbox"></label>
       <label class="row" title="Seed for obfuscate: the same seed gives the same build, a new seed changes every generated name (--obfuscate-seed). Empty: the name seed or the prefix. random: a new seed at every build">Seed <span class="inline"><input id="obfuscate-seed" size="10" placeholder="auto"><button id="new-seed" class="quiet" title="Put a new random seed in the seed box">New</button></span></label>
+      <label class="row" title="Notice triggers run outside the program and values it did not write. Report: count the findings and run on tamper { }. Enforce: after firm evidence and a delay, run on tamper { }, reset the program's variables and turn its triggers off (--tamper-check; triggers target only)">Tamper check
+        <select id="tamper-check"><option value="off">Off</option><option value="report">Report</option><option value="enforce">Enforce</option></select></label>
+      <label class="row" title="Seed for the tamper check values (--tamper-seed). Empty: the obfuscation seed, the name seed or the prefix. random: a new seed at every build">Tamper seed <input id="tamper-seed" size="10" placeholder="auto"></label>
     </section>
     <section>
       <h2>Map</h2>

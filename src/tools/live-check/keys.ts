@@ -35,4 +35,6 @@ export const PCODE_FLAG = '--pcode';
 export const OBFUSCATE_FLAG = '--obfuscate';
 export const OBFUSCATE_SEED = 'live-check';
 export const ONLY_FLAG = '--only';
+export const TAMPER_FLAG = '--tamper-check';
+export const TAMPER_SEED = 'live-check';
 export const PCODE_TARGET = 'pcode';

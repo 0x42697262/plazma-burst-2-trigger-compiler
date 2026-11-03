@@ -11,7 +11,9 @@ import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
 import { appendToMap, removeOwned } from '../emit/merge.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames, describeLegend, seededPrefix } from '../compiler/names.ts';
-import { isRandomSeed, resolveSeed } from '../obfuscate/random.ts';
+import { isRandomSeed, randomSeed, resolveSeed } from '../obfuscate/random.ts';
+import { tamperCheckOf } from '../tamper/options.ts';
+import { TAMPER_MODE } from '../tamper/keys.ts';
 import { DEFAULT_OPTIONS } from '../compiler/compile.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { Simulation } from '../sim/simulator.ts';
@@ -124,7 +126,18 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const seed = obfuscationSeed(parsed, plainPrefix);
     if (seed !== null && isRandomSeed(lastValue(parsed, FLAG.obfuscateSeed) ?? '')) output.out(TEXT.randomSeed(seed));
     const prefix = nameSeed !== null ? seededPrefix(nameSeed) : givenPrefix ?? (seed === null ? plainPrefix : seededPrefix(seed));
-    const result = frontEnd.compile(source, prefix, { ...options, obfuscate: seed === null ? null : { seed } }, file);
+    const tamper = tamperCheckOf({
+      mode: lastValue(parsed, FLAG.tamperCheck) ?? TAMPER_MODE.off, seed: lastValue(parsed, FLAG.tamperSeed), layers: lastValue(parsed, FLAG.tamperLayers),
+      fallbackSeed: () => {
+        if (seed !== null) return seed;
+        const fresh = randomSeed();
+        output.out(TEXT.tamperSeed(fresh));
+        return fresh;
+      },
+    });
+    if (tamper !== null && isRandomSeed(lastValue(parsed, FLAG.tamperSeed) ?? '')) output.out(TEXT.tamperSeed(tamper.seed));
+    const result = frontEnd.compile(source, prefix, { ...options, obfuscate: seed === null ? null : { seed }, tamper }, file);
+    if (result.tamper !== null) output.out(TEXT.tamperFindings(result.tamper.variables.findings, result.tamper.variables.last));
     for (const warning of result.warnings) output.err(TEXT.warning(warning));
     const actions = result.program.triggers.reduce((total, trigger) => total + trigger.actions.length, 0);
     output.out(TEXT.summary(result.program.triggers.length, actions, result.program.timers.length));

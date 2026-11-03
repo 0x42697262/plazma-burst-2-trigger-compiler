@@ -14,7 +14,7 @@ export const TEXT = Object.freeze({
   chips: Object.freeze({
     target: (target: string): string => target, obfuscate: 'obfuscated', directIndex: 'direct index', numberText: 'raw number text', replace: 'replace',
     prefix: (prefix: string): string => `prefix ${prefix}`, nameSeed: 'name seed', noGuard: 'no guard', guard: (guard: number): string => `guard ${guard}`,
-    environment: (count: number): string => `env ${count}`,
+    environment: (count: number): string => `env ${count}`, tamper: (mode: string): string => `tamper ${mode}`,
   }),
   macKeys: Object.freeze({ mod: '⌘', shift: '⇧', enter: '↩', alt: '⌥' } as Record<string, string>),
   otherKeys: Object.freeze({ mod: 'Ctrl', shift: 'Shift', enter: 'Enter', alt: 'Alt' } as Record<string, string>),
@@ -28,6 +28,7 @@ export const TEXT = Object.freeze({
     guide: 'Open the language guide', searchReference: 'Search the reference', resetLayout: 'Reset the layout', blueprint: 'Show or hide the blueprint',
     openFile: (name: string): string => `Open file: ${name}`, deleteFile: (name: string): string => `Delete file: ${name}`, example: (name: string): string => `Open example: ${name}`, output: (name: string): string => `Show ${name}`,
     toggle: (name: string, on: boolean): string => `${on ? 'Turn off' : 'Turn on'}: ${name}`, target: (name: string): string => `Target: ${name}`,
+    tamper: (mode: string): string => `Tamper check: ${mode}`,
   }),
   commandDetail: Object.freeze({ example: 'example', output: 'output', option: 'setting', action: '', file: 'file' }),
   optionNames: Object.freeze({ obfuscate: 'obfuscate', directIndex: 'direct array index', numberText: 'protect text from the site editor', replace: 'replace the previous build' }),

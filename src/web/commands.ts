@@ -1,6 +1,7 @@
 import type { Options } from './pipeline.ts';
 import { DEFAULT_GUARD } from './constants.ts';
 import { DEFAULT_TARGET } from '../pcode/keys.ts';
+import { TAMPER_MODE } from '../tamper/keys.ts';
 import { TEXT } from './text.ts';
 import { ELEMENT, WORD_GAP } from './keys.ts';
 
@@ -45,6 +46,7 @@ export function optionChips(options: Options, environmentCount: number): Chip[] 
   return [
     chip(options.target !== DEFAULT_TARGET, TEXT.chips.target(options.target), ELEMENT.target),
     chip(options.obfuscate, TEXT.chips.obfuscate, ELEMENT.obfuscate),
+    chip(options.tamper !== TAMPER_MODE.off, TEXT.chips.tamper(options.tamper), ELEMENT.tamperCheck),
     chip(options.directIndex, TEXT.chips.directIndex, ELEMENT.directIndex),
     chip(!options.numberText, TEXT.chips.numberText, ELEMENT.numberText),
     chip(options.replace, TEXT.chips.replace, ELEMENT.replace),

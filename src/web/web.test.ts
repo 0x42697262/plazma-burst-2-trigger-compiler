@@ -7,7 +7,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '' };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '', tamper: 'off' as const, tamperSeed: '' };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -81,6 +81,19 @@ describe('web page logic', () => {
     const order = [...second.map.matchAll(/<trigger uid="([^"]+)"/g)].map((match) => match[1]);
     assert.deepEqual(order, second.result!.program.triggers.map((trigger) => trigger.uid));
     assert.ok(second.notes.some((note) => note.includes('trigger order')));
+  });
+
+  it('adds the tamper check and checks protected values in the editor', () => {
+    const workspace = new Workspace(null);
+    workspace.set('/work/main.ptc', 'protected var gold = 1;\non start { gold += 1; say("gold {gold}"); }\n');
+    workspace.activate('/work/main.ptc');
+    const plain = build(workspace, '/work/main.ptc', OPTIONS, null);
+    assert.ok(plain.problems.some((problem) => problem.message.includes('nothing checks it')));
+    const checked = build(workspace, '/work/main.ptc', { ...OPTIONS, tamper: 'enforce' }, null);
+    assert.deepEqual(checked.problems, []);
+    assert.notEqual(checked.result?.tamper, null);
+    assert.equal(simulate(checked.result!, 1)[0], 'chat: gold 2');
+    assert.equal(build(workspace, '/work/main.ptc', { ...OPTIONS, tamper: 'enforce' }, null).xml, checked.xml);
   });
 
   it('picks a random seed when asked and shows it', () => {

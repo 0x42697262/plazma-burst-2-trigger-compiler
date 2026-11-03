@@ -14,6 +14,7 @@ import { mapTriggers } from '../emit/place.ts';
 import type { Folded } from './comptime.ts';
 import { SourceError } from './lexer.ts';
 import { MAP_TEXT, TEXT } from './text.ts';
+import { createProtection } from '../tamper/protect.ts';
 import { directoryOf, importTarget, isStandardLibrary, relativePath, resolvePath } from './file-paths.ts';
 
 export type SourceOrigin = { file: string; read: (file: string) => string };
@@ -88,6 +89,7 @@ export function compileSource(source: string, prefix: string, options: Partial<C
   const generateOptions = {
     protectNumberText: merged.protectNumberText && merged.target !== 'pcode', directIndex: merged.directIndex || merged.target === 'pcode',
     compileTimeFunctions: new Set([...folded.compileTimeFunctions, ...maps.functions]), referencedFunctions: maps.references, writtenElsewhere: maps.variables,
+    tamperCheck: merged.tamper !== null, protection: createProtection(names, merged.tamper),
   };
   const mapUids = maps.objects.flatMap((object) => (object.uid === null ? [] : [object.uid]));
   const compiled = compileModule(generate(maps.file, names, generateOptions), names, { ...merged, externalUids: [...merged.externalUids, ...mapUids] });

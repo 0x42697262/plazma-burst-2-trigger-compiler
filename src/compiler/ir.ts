@@ -28,6 +28,7 @@ export type Module = {
   objects?: readonly ObjectDeclaration[];
   exports?: readonly ExportedVariable[];
   hostNames?: readonly string[];
+  tamper?: string | null;
 };
 
 export const variable = (name: string): Value => ({ kind: 'variable', name });

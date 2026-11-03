@@ -7,13 +7,13 @@ export const KEYWORD = Object.freeze({
   if: 'if', else: 'else', while: 'while', for: 'for', player: 'player', break: 'break', continue: 'continue', return: 'return',
   true: 'true', false: 'false', wait: 'wait', import: 'import', match: 'match',
 } as const);
-export const CONTEXTUAL = Object.freeze({ secret: 'secret', map: 'map' } as const);
+export const CONTEXTUAL = Object.freeze({ secret: 'secret', map: 'map', protected: 'protected' } as const);
 export const COMPILE_TIME_BUILTIN = Object.freeze({ env: 'env' } as const);
 export const STD_IMPORT = 'std/';
 export const STD_SCHEME = 'std:';
 export const COMPILE_TIME_PREFIX = 'comptime';
 export const COMPILE_TIME_RESULT = 'comptimeResult';
-export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat' } as const);
+export const EVENT = Object.freeze({ start: 'start', join: 'join', chat: 'chat', tamper: 'tamper' } as const);
 export const PUNCTUATORS: readonly string[] = Object.freeze([
   '..=', '?=', '+=', '-=', '*=', '/=', '%=', '=>', '==', '!=', '<=', '>=', '&&', '||', '..',
   '(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '+', '-', '*', '/', '%', '!', '@', '.', ':',
@@ -61,7 +61,7 @@ export const ELEMENT_CLOSE = ']';
 export const ADDRESS_NAME = 'address';
 export const TEXT_CONSTANT = Object.freeze({ elementEnd: 'element-end', keySeparator: 'key-separator' });
 export const LABEL = Object.freeze({
-  start: ':start', join: ':join', chat: ':chat', every: 'every', wait: 'wait', timer: 'timer', else: 'else', end: 'end', head: 'loop',
+  start: ':start', join: ':join', chat: ':chat', tamper: ':tamper', every: 'every', wait: 'wait', timer: 'timer', else: 'else', end: 'end', head: 'loop',
   next: 'next', skip: 'skip', arm: 'case',
 });
 export const BUILTIN = Object.freeze({
@@ -69,6 +69,7 @@ export const BUILTIN = Object.freeze({
   slot: 'slot', initiator: 'initiator', name: 'name', time: 'time', number: 'number', text: 'text', charAt: 'charAt', drop: 'drop', sync: 'sync',
   chatText: 'chatText', talker: 'talker', talkerName: 'talkerName', talkerLogin: 'talkerLogin', login: 'login', killer: 'killer', multiplayer: 'multiplayer', mapId: 'mapId',
   sin: 'sin', cos: 'cos', asin: 'asin', acos: 'acos', atan2: 'atan2', team: 'team', clear: 'clear', pop: 'pop',
+  tamperFinding: 'tamperFinding', tamperCount: 'tamperCount',
 } as const);
 export const SPLIT_EVERY_CHARACTER = '';
 export const NUMBER_TEXT_MARK = '_';

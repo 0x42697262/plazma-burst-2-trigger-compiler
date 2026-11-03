@@ -4,7 +4,7 @@ import { filterCommands, optionChips, shortcutLabel } from './commands.ts';
 import type { Command } from './commands.ts';
 
 const command = (title: string): Command => ({ title, detail: '', shortcut: '', run: () => undefined });
-const DEFAULTS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '' };
+const DEFAULTS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '', tamper: 'off' as const, tamperSeed: '' };
 
 describe('web commands', () => {
   it('filters commands by words first, then by letters in order', () => {
@@ -19,9 +19,9 @@ describe('web commands', () => {
 
   it('shows a chip for every setting that is not the default', () => {
     assert.deepEqual(optionChips(DEFAULTS, 0), []);
-    const chips = optionChips({ ...DEFAULTS, target: 'pcode', obfuscate: true, numberText: false, guard: 0, prefix: 'mine' }, 2);
-    assert.deepEqual(chips.map((chip) => chip.label), ['pcode', 'obfuscated', 'raw number text', 'prefix mine', 'no guard', 'env 2']);
-    assert.deepEqual(chips.map((chip) => chip.setting), ['target', 'obfuscate', 'number-text', 'prefix', 'guard', 'environment']);
+    const chips = optionChips({ ...DEFAULTS, target: 'pcode', obfuscate: true, tamper: 'report', numberText: false, guard: 0, prefix: 'mine' }, 2);
+    assert.deepEqual(chips.map((chip) => chip.label), ['pcode', 'obfuscated', 'tamper report', 'raw number text', 'prefix mine', 'no guard', 'env 2']);
+    assert.deepEqual(chips.map((chip) => chip.setting), ['target', 'obfuscate', 'tamper-check', 'number-text', 'prefix', 'guard', 'environment']);
   });
 
   it('writes shortcuts the way the system does', () => {

@@ -18,8 +18,11 @@ export const FLAG = Object.freeze({
   nameSeed: '--name-seed',
   obfuscate: '--obfuscate',
   obfuscateSeed: '--obfuscate-seed',
+  tamperCheck: '--tamper-check',
+  tamperSeed: '--tamper-seed',
+  tamperLayers: '--tamper-layers',
 });
-export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at, FLAG.target, FLAG.nameSeed, FLAG.obfuscateSeed]);
+export const VALUE_FLAGS: ReadonlySet<string> = new Set([FLAG.prefix, FLAG.out, FLAG.into, FLAG.guard, FLAG.extern, FLAG.frames, FLAG.at, FLAG.target, FLAG.nameSeed, FLAG.obfuscateSeed, FLAG.tamperCheck, FLAG.tamperSeed, FLAG.tamperLayers]);
 export const POSITION_SEPARATOR = ',';
 export const ASSEMBLY_EXTENSION = '.pasm';
 export const FLAG_MARK = '--';

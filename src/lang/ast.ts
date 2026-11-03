@@ -42,13 +42,13 @@ export type Statement =
 export type MatchArm = { patterns: Expression[] | null; body: Statement[]; location: Location };
 
 export type Declaration =
-  | { kind: 'var'; name: string; array: boolean; value: Expression | null; exported: boolean; location: Location }
+  | { kind: 'var'; name: string; array: boolean; value: Expression | null; exported: boolean; protected?: boolean; location: Location }
   | { kind: 'const'; name: string; value: Expression; secret: boolean; location: Location }
   | { kind: 'extern'; name: string; hostName: string; location: Location }
   | { kind: 'object'; keyword: string; name: string; uid: string; tree: ObjectTree[] | null; built: boolean; location: Location }
   | { kind: 'map'; body: Statement[]; location: Location }
   | { kind: 'function'; name: string; params: string[]; body: Statement[]; exported: boolean; location: Location }
-  | { kind: 'on'; event: 'start' | 'join' | 'chat'; body: Statement[]; location: Location }
+  | { kind: 'on'; event: 'start' | 'join' | 'chat' | 'tamper'; body: Statement[]; location: Location }
   | { kind: 'every'; frames: number; body: Statement[]; location: Location };
 
 export type ObjectTree = string | ObjectTree[];

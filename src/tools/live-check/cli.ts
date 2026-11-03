@@ -13,7 +13,7 @@ import { prefixFromFile } from '../../cli/main.ts';
 import { createNames } from '../../compiler/names.ts';
 import { CASES_DIRECTORIES, GAME_NAMES_FILE, REPOSITORY_ROOT, MAP_FILE, MAP_NAME, SANDBOX } from './paths.ts';
 import { prepareSandbox } from './sandbox.ts';
-import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, DIRECT_INDEX_FLAG, PCODE_FLAG, OBFUSCATE_FLAG, OBFUSCATE_SEED, PCODE_TARGET, ONLY_FLAG, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
+import { CASE_EXTENSIONS, ELECTRON_ARGUMENTS, ENTER_KEY, GUEST_NAME, EXPRESSION, FILE_ENCODING, FRAME, KEY_EVENTS, MAP_VARIABLES_KEY, METHOD, NAMES_GLOBAL, NPX, PAGE_TYPE, REBUILD_FLAG, DIRECT_INDEX_FLAG, PCODE_FLAG, OBFUSCATE_FLAG, OBFUSCATE_SEED, PCODE_TARGET, ONLY_FLAG, TAMPER_FLAG, TAMPER_SEED, SIGNAL, SIMULATE_FLAG, SPACE_KEY } from './keys.ts';
 import {
   CLICK_ATTEMPTS, CLICK_PAUSE, CONSOLE_TIMEOUT, DEBUG_PORT, ENTER_KEY_CODE, FIRST_USER_ARGUMENT, GAMING_TIMEOUT, LAUNCH_TIMEOUT, MENU_TIMEOUT, MILLISECONDS,
   RUN_SECONDS, SETTLE_MILLISECONDS, SIMULATED_FRAMES, SIMULATED_MAX_STEPS, PCODE_LOOP_GUARD, SIMULATED_PLAYERS, SPACE_KEY_CODE, STAGING,
@@ -24,6 +24,7 @@ import { compareSnapshots, encodeVariables } from './compare.ts';
 import type { CompileOptions } from '../../compiler/compile.ts';
 import { DEFAULT_TARGET, VM_VARIABLE } from '../../pcode/keys.ts';
 import type { Snapshot } from './compare.ts';
+import { tamperCheckOf } from '../../tamper/options.ts';
 
 type Case = { name: string; prefix: string; xml: string; objects: readonly MapObject[]; simulated: Snapshot; errors: string[]; mapDependent: readonly string[] };
 
@@ -44,7 +45,7 @@ function loadCases(options: Partial<CompileOptions>): Case[] {
     simulation.tick(SIMULATED_FRAMES);
     return {
       name: path.relative(REPOSITORY_ROOT, file), prefix, xml: emitXml(result.program), objects: result.mapObjects, simulated: encodeVariables(simulation.variables), errors: simulation.errors,
-      mapDependent: result.obfuscation?.mapDependent ?? [],
+      mapDependent: [...(result.obfuscation?.mapDependent ?? []), ...(result.tamper?.variables.timeDependent ?? [])],
     };
   });
 }
@@ -105,9 +106,11 @@ async function main(): Promise<number> {
   const flags = process.argv.slice(FIRST_USER_ARGUMENT);
   const pcode = flags.includes(PCODE_FLAG);
   const only = flags.flatMap((flag, position) => (flag === ONLY_FLAG ? [flags[position + 1] ?? ''] : []));
+  const tamperPosition = flags.indexOf(TAMPER_FLAG);
+  const tamper = tamperPosition < 0 ? null : tamperCheckOf({ mode: flags[tamperPosition + 1] ?? '', seed: TAMPER_SEED, layers: null, fallbackSeed: () => TAMPER_SEED });
   const cases = loadCases({
     directIndex: flags.includes(DIRECT_INDEX_FLAG), target: pcode ? PCODE_TARGET : DEFAULT_TARGET, ...(pcode ? { loopGuard: PCODE_LOOP_GUARD } : {}),
-    obfuscate: flags.includes(OBFUSCATE_FLAG) ? { seed: OBFUSCATE_SEED } : null,
+    obfuscate: flags.includes(OBFUSCATE_FLAG) ? { seed: OBFUSCATE_SEED } : null, tamper,
   }).filter((entry) => only.length === 0 || only.some((part) => entry.name.includes(part)));
   prepareSandbox(flags.includes(REBUILD_FLAG), print);
   const map = cases.reduce((combined, entry) => {

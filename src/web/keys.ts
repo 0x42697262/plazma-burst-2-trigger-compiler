@@ -27,6 +27,8 @@ export const ELEMENT = Object.freeze({
   nameSeed: 'name-seed',
   obfuscate: 'obfuscate',
   obfuscateSeed: 'obfuscate-seed',
+  tamperCheck: 'tamper-check',
+  tamperSeed: 'tamper-seed',
   newSeed: 'new-seed',
   output: 'output',
   copy: 'copy',

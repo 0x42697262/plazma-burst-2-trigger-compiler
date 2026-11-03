@@ -20,9 +20,13 @@ import { PATH_SEPARATOR } from '../lang/keys.ts';
 import { TEXT } from './text.ts';
 import type { Workspace } from './workspace.ts';
 import type { Target } from '../pcode/keys.ts';
+import type { TamperMode } from '../tamper/keys.ts';
+import type { TamperCheck } from '../tamper/tamper.ts';
+import { tamperCheckOf } from '../tamper/options.ts';
 
 export type Options = {
   prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string;
+  tamper: TamperMode; tamperSeed: string;
 };
 export type BuildRecord = { uids: readonly string[]; walls: readonly string[] };
 export const EMPTY_RECORD: BuildRecord = Object.freeze({ uids: [], walls: [] });
@@ -46,8 +50,11 @@ export const prefixFor = (file: string): string => {
 
 export type Environment = Readonly<Record<string, string>>;
 
-export const checkOptions = (numberText: boolean, directIndex: boolean, target: Target, environment: Environment = {}): Partial<CompileOptions> =>
-  ({ protectNumberText: numberText, directIndex, target, environment });
+export const checkOptions = (numberText: boolean, directIndex: boolean, target: Target, environment: Environment = {}, tamper: TamperCheck | null = null): Partial<CompileOptions> =>
+  ({ protectNumberText: numberText, directIndex, target, environment, tamper });
+
+export const tamperOf = (mode: TamperMode, seed: string, fallbackSeed: string): TamperCheck | null =>
+  tamperCheckOf({ mode, seed: seed.trim() === '' ? null : seed, layers: null, fallbackSeed: () => fallbackSeed });
 
 export function parseEnvironment(text: string): Environment {
   const environment: Record<string, string> = {};
@@ -67,7 +74,8 @@ export function problemsOf(workspace: Workspace, file: string, options: Partial<
 }
 
 export function build(workspace: Workspace, file: string, options: Options, hostMap: string | null, environment: Environment = {}, recorded: BuildRecord = EMPTY_RECORD): Build {
-  const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex, options.target, environment));
+  const plainTamper = tamperOf(options.tamper, '', prefixFor(file));
+  const problems = problemsOf(workspace, file, checkOptions(options.numberText, options.directIndex, options.target, environment, plainTamper));
   const empty: Build = { result: null, problems, xml: '', text: '', map: '', notes: [], uids: [], walls: [] };
   if (problems.some((entry) => entry.severity === 'error')) return empty;
   const source = workspace.get(file) ?? '';
@@ -79,7 +87,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const compileOptions: Partial<CompileOptions> = {
     loopGuard: options.guard > 0 ? options.guard : null,
     varSync: hostMap !== null && VAR_SYNC_IN_MAP.test(hostMap) ? 'present' : 'add',
-    ...checkOptions(options.numberText, options.directIndex, options.target, environment),
+    ...checkOptions(options.numberText, options.directIndex, options.target, environment, tamperOf(options.tamper, options.tamperSeed, seed ?? (nameSeed || plainPrefix))),
     obfuscate: seed === null ? null : { seed },
   };
   let result: CompileResult;
@@ -137,7 +145,7 @@ export function preview(workspace: Workspace, file: string, options: Options, en
   if (file.endsWith(ASSEMBLY_EXTENSION)) return { objects: [], staging: () => ({ x: 0, y: 0 }) };
   const prefix = options.prefix === '' ? prefixFor(file) : options.prefix;
   try {
-    const result = compileSource(workspace.get(file) ?? '', prefix, checkOptions(options.numberText, options.directIndex, options.target, environment), { file, read: (name) => workspace.get(name) ?? '' });
+    const result = compileSource(workspace.get(file) ?? '', prefix, checkOptions(options.numberText, options.directIndex, options.target, environment, tamperOf(options.tamper, '', prefix)), { file, read: (name) => workspace.get(name) ?? '' });
     return { objects: result.mapObjects, staging: (index) => stagingPosition(index, result.program) };
   } catch {
     return null;

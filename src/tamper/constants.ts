@@ -1,0 +1,12 @@
+export const WATCHDOG_DELAY = 150;
+export const PARTNER_SHARE = 2;
+export const PULSE_SLACK = 3;
+export const LATE_MILLISECONDS = 60000;
+export const SOFT_WINDOW = 60000;
+export const SOFT_PROOF = 3;
+export const REACTION_DELAY = Object.freeze({ low: 20000, high: 90000 });
+export const TOKEN_RANGE = Object.freeze({ low: 1, high: 1000000000 });
+export const MASK_START = Object.freeze({ low: 1, high: 1000000 });
+export const MASK_STEP = Object.freeze({ low: 1, high: 10000 });
+export const UNSET_BEAT = '-10000000000000000';
+export const WINDOW_UNSET = '1';

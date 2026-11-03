@@ -25,9 +25,13 @@ import {
 import type { FunctionInfo, SymbolEntry } from './symbols.ts';
 import { TEXT } from './text.ts';
 import { callGraph, reachable, usedFunctions, writtenNames } from './calls.ts';
+import type { CheckAction, Protection } from '../tamper/protect.ts';
+import { TAMPER_VARIABLE } from '../tamper/keys.ts';
+import { TEXT as TAMPER_TEXT } from '../tamper/text.ts';
 
 export type GenerateOptions = {
   protectNumberText: boolean; directIndex: boolean; compileTimeFunctions?: ReadonlySet<string>; referencedFunctions?: ReadonlySet<string>; writtenElsewhere?: ReadonlySet<string>;
+  tamperCheck?: boolean; protection?: Protection | null;
 };
 
 const DEFAULT_GENERATE: GenerateOptions = Object.freeze({ protectNumberText: true, directIndex: false });
@@ -40,6 +44,7 @@ const VALUE_BUILTINS: ReadonlySet<string> = new Set([
   BUILTIN.len, BUILTIN.contains, BUILTIN.random, BUILTIN.floor, BUILTIN.round, BUILTIN.slot, BUILTIN.initiator, BUILTIN.name, BUILTIN.time,
   BUILTIN.number, BUILTIN.text, BUILTIN.charAt, BUILTIN.drop, BUILTIN.chatText, BUILTIN.talker, BUILTIN.talkerName, BUILTIN.talkerLogin, BUILTIN.login, BUILTIN.team, BUILTIN.pop,
   BUILTIN.killer, BUILTIN.multiplayer, BUILTIN.mapId, BUILTIN.sin, BUILTIN.cos, BUILTIN.asin, BUILTIN.acos, BUILTIN.atan2,
+  BUILTIN.tamperFinding, BUILTIN.tamperCount,
 ]);
 const TRIGONOMETRY: Readonly<Record<string, number>> = {
   [BUILTIN.sin]: OPCODE.sine, [BUILTIN.cos]: OPCODE.cosine, [BUILTIN.asin]: OPCODE.arcSine, [BUILTIN.acos]: OPCODE.arcCosine,
@@ -49,7 +54,7 @@ const SYNC_MODES: Readonly<Record<string, number>> = {
 };
 const VOID_BUILTINS: ReadonlySet<string> = new Set([BUILTIN.say, BUILTIN.push, BUILTIN.action, BUILTIN.sync, BUILTIN.clear]);
 const BUILTIN_ARITY: Readonly<Record<string, number>> = {
-  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2, chatText: 0, talker: 0, talkerName: 0, talkerLogin: 0, login: 1, killer: 0, multiplayer: 0, mapId: 0, sin: 1, cos: 1, asin: 1, acos: 1, atan2: 2, team: 1, clear: 1, pop: 1,
+  len: 1, contains: 2, random: 1, floor: 1, round: 1, slot: 0, initiator: 0, name: 1, time: 0, number: 1, text: 1, push: 2, charAt: 2, drop: 2, chatText: 0, talker: 0, talkerName: 0, talkerLogin: 0, login: 1, killer: 0, multiplayer: 0, mapId: 0, sin: 1, cos: 1, asin: 1, acos: 1, atan2: 2, team: 1, clear: 1, pop: 1, tamperFinding: 0, tamperCount: 0,
 };
 
 const fail = (location: Location, message: string): never => {
@@ -191,6 +196,10 @@ export class Generator {
   private readonly fixed = new Map<string, string>();
   private readonly warnings: string[] = [];
   private readonly usesStack: boolean;
+  private readonly tamperCheck: boolean;
+  private readonly protection: Protection | null;
+  private readonly writtenElsewhere: ReadonlySet<string>;
+  private readonly protectedNames = new Map<string, string>();
   private instructions: Instruction[] = [];
   private frame: Frame;
   private location: SourceLocation = { line: 0 };
@@ -207,6 +216,34 @@ export class Generator {
     this.used = usedFunctions(file, graph, options.referencedFunctions ?? new Set());
     this.written = new Set([...writtenNames(file), ...(options.writtenElsewhere ?? [])]);
     this.usesStack = [...this.reach.entries()].some(([name, targets]) => targets.has(name));
+    this.tamperCheck = options.tamperCheck ?? false;
+    this.protection = options.protection ?? null;
+    this.writtenElsewhere = options.writtenElsewhere ?? new Set();
+  }
+
+  private actAll(actions: readonly CheckAction[]): void {
+    for (const action of actions) this.act(action.opcode, action.targetA, action.targetB);
+  }
+
+  private checkRead(gameName: string): void {
+    const source = this.protectedNames.get(gameName);
+    if (source !== undefined && this.protection !== null) this.actAll(this.protection.read(gameName, source));
+  }
+
+  private assignVariable(value: Expression, name: string, source: string): void {
+    const protectedSource = this.protection === null ? undefined : this.protectedNames.get(name);
+    if (protectedSource === undefined || this.protection === null) {
+      this.into(value, name);
+      return;
+    }
+    if (this.mentions(value, name)) {
+      const temp = this.frame.temp();
+      this.into(value, temp);
+      this.act(OPCODE.copyVariable, name, temp);
+    } else {
+      this.into(value, name);
+    }
+    this.actAll(this.protection.write(name, source));
   }
 
   private emit(instruction: Instruction): void {
@@ -262,6 +299,7 @@ export class Generator {
       if (declaration.kind === 'on' && declaration.event === EVENT.chat) hasChat = true;
     }
     sections.push(this.section(LABEL.start, EVENT.start, false, () => {
+      if (this.protection !== null) for (const [gameName, source] of this.protectedNames) this.actAll(this.protection.start(gameName, source));
       for (const declaration of file.declarations) this.initializeGlobal(declaration);
       if (hasJoin) this.act(OPCODE.onPlayerJoin, labelOperand(LABEL.join));
       if (hasChat) this.act(OPCODE.setChatReceiver, labelOperand(LABEL.chat));
@@ -278,6 +316,9 @@ export class Generator {
         sections.push(this.section(LABEL.join, EVENT.join, false, () => this.statements(declaration.body)));
       } else if (declaration.kind === 'on' && declaration.event === EVENT.chat) {
         sections.push(this.section(LABEL.chat, EVENT.chat, false, () => this.statements(declaration.body)));
+      } else if (declaration.kind === 'on' && declaration.event === EVENT.tamper) {
+        if (this.tamperCheck) sections.push(this.section(LABEL.tamper, EVENT.tamper, false, () => this.statements(declaration.body)));
+        else this.warnings.push(TEXT.where(declaration.location.line, TAMPER_TEXT.tamperUnused, declaration.location.file));
       } else if (declaration.kind === 'every') {
         const handler = this.fresh(LABEL.every);
         const timer = this.fresh(LABEL.timer);
@@ -293,7 +334,8 @@ export class Generator {
     }
     this.setTextConstants(sections);
     const hostNames = file.declarations.flatMap((declaration) => (declaration.kind === 'extern' ? [declaration.hostName] : []));
-    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects, exports: this.exports, hostNames };
+    const tamper = this.tamperCheck && file.declarations.some((declaration) => declaration.kind === 'on' && declaration.event === EVENT.tamper) ? LABEL.tamper : null;
+    return { instructions: sections.flat(), start: LABEL.start, timers: this.timers, warnings: this.warnings, objects: this.objects, exports: this.exports, hostNames, tamper };
   }
 
   private collect(file: SourceFile): void {
@@ -312,6 +354,7 @@ export class Generator {
             const text = this.fixedInitializer(declaration.value);
             if (text !== null) this.fixed.set(this.names.variable(declaration.name), text);
           }
+          if (declaration.protected === true) this.protect(declaration);
           if (declaration.exported) {
             const gameName = declaration.array ? elementName(this.names, declaration.name, ARRAY_INDEX_PLACEHOLDER) : this.names.variable(declaration.name);
             this.exports.push({ name: declaration.name, gameName, lengthName: declaration.array ? arrayLengthName(this.names, declaration.name) : null });
@@ -364,6 +407,19 @@ export class Generator {
           break;
       }
     }
+  }
+
+  private protect(declaration: Extract<Declaration, { kind: 'var' }>): void {
+    if (declaration.array) fail(declaration.location, TAMPER_TEXT.protectedArray(declaration.name));
+    if (declaration.exported) fail(declaration.location, TAMPER_TEXT.protectedExport(declaration.name));
+    if (this.writtenElsewhere.has(declaration.name)) fail(declaration.location, TAMPER_TEXT.protectedMap(declaration.name));
+    if (this.protection === null) this.warnings.push(TEXT.where(declaration.location.line, TAMPER_TEXT.protectedUnchecked(declaration.name), declaration.location.file));
+    this.protectedNames.set(this.names.variable(declaration.name), declaration.name);
+  }
+
+  private failIfProtected(gameName: string, location: Location, message: (name: string) => string): void {
+    const source = this.protectedNames.get(gameName);
+    if (source !== undefined && this.protection !== null) fail(location, message(source));
   }
 
   private textVariable(hint: string, text: string): string {
@@ -436,7 +492,7 @@ export class Generator {
     this.at(declaration.location);
     const entry = this.globals.get(declaration.name);
     if (entry?.kind === 'array') this.act(OPCODE.setVariable, entry.length, FALSE_TEXT);
-    else if (entry?.kind === 'variable' && declaration.value) this.statementScope(() => this.into(declaration.value as Expression, entry.name));
+    else if (entry?.kind === 'variable' && declaration.value) this.statementScope(() => this.assignVariable(declaration.value as Expression, entry.name, declaration.name));
   }
 
   private lookup(name: string, location: Location): SymbolEntry {
@@ -675,6 +731,7 @@ export class Generator {
 
   private wait(statement: Extract<Statement, { kind: 'wait' }>): void {
     if (this.frame.isFunction) fail(statement.location, TEXT.waitInFunction);
+    if (this.frame.key === EVENT.tamper) fail(statement.location, TAMPER_TEXT.waitInTamper);
     const frames = statement.frames;
     const delay = frames.kind === 'number' ? Number(frames.text) : NaN;
     if (!Number.isInteger(delay) || delay <= 0) fail(statement.location, TEXT.waitDelay);
@@ -697,7 +754,7 @@ export class Generator {
       const value: Expression = statement.operator
         ? { kind: 'binary', operator: statement.operator, left: { kind: 'name', name: target.name, location }, right: statement.value, location }
         : statement.value;
-      this.into(value, name);
+      this.assignVariable(value, name, target.name);
       return;
     }
     const array = this.arrayOf(target.array, location);
@@ -784,6 +841,7 @@ export class Generator {
         if (entry.kind === 'constant') return literal(entry.text);
         if (entry.kind === 'array') return fail(expression.location, TEXT.arrayAsValue(expression.name));
         if (entry.kind === 'object' || entry.kind === 'objectArray') return fail(expression.location, TEXT.objectAsValue(expression.name));
+        this.checkRead(entry.name);
         return variable(entry.name);
       }
       case 'index': {
@@ -1272,6 +1330,12 @@ export class Generator {
       case BUILTIN.mapId:
         this.act(OPCODE.mapId, destination);
         return;
+      case BUILTIN.tamperFinding:
+        this.act(OPCODE.copyVariable, destination, this.names.internalVariable(TAMPER_VARIABLE.last));
+        return;
+      case BUILTIN.tamperCount:
+        this.act(OPCODE.copyVariable, destination, this.names.internalVariable(TAMPER_VARIABLE.findings));
+        return;
       case BUILTIN.sin:
       case BUILTIN.cos:
       case BUILTIN.asin:
@@ -1405,6 +1469,7 @@ export class Generator {
     if (target.kind === 'name') {
       const entry = this.lookup(target.name, target.location);
       name = entry.kind === 'variable' ? entry.name : null;
+      if (name !== null) this.failIfProtected(name, target.location, TAMPER_TEXT.protectedSync);
     } else if (target.kind === 'index') {
       const fixedIndex = this.staticIndex(target.index);
       name = fixedIndex === null ? null : elementName(this.names, this.arrayOf(target.array, target.location).base, fixedIndex);
@@ -1424,7 +1489,7 @@ export class Generator {
     }
     const color = colorExpression ? this.compileTimeText(colorExpression) ?? fail(colorExpression.location, TEXT.sayColor) : DEFAULT_SAY_COLOR;
     const message = this.argument(expression, 0);
-    const inline = this.inlineTemplate(message);
+    const inline = this.inlineTemplate(message, (gameName) => this.checkRead(gameName));
     this.act(OPCODE.showText, inline ?? this.variableValue(message), color);
   }
 
@@ -1444,8 +1509,9 @@ export class Generator {
     return entry?.kind === 'variable' ? this.fixed.get(entry.name) ?? null : null;
   }
 
-  private inlineTemplate(expression: Expression): string | null {
+  private inlineTemplate(expression: Expression, onVariable: (gameName: string, location: Location) => void): string | null {
     if (expression.kind !== 'string') return null;
+    const used: [string, Location][] = [];
     let text = EMPTY_TEXT;
     for (const part of expression.parts) {
       if (part.kind === 'text') {
@@ -1456,8 +1522,10 @@ export class Generator {
       if (inner.kind !== 'name') return null;
       const entry = this.lookup(inner.name, inner.location);
       if (entry.kind === 'array' || entry.kind === 'object' || entry.kind === 'objectArray') return null;
+      if (entry.kind !== 'constant') used.push([entry.name, inner.location]);
       text += entry.kind === 'constant' ? entry.text : entry.name;
     }
+    for (const [gameName, location] of used) onVariable(gameName, location);
     return text;
   }
 
@@ -1485,6 +1553,7 @@ export class Generator {
       if (entry.kind === 'objectArray') return fail(expression.location, TEXT.objectIndexCount(expression.name, entry.dimensions, 0));
       if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));
       if (entry.kind === 'array') return textOperand(entry.length);
+      this.failIfProtected(entry.name, expression.location, TAMPER_TEXT.protectedAction);
       if (takesVariableName(opcode, side)) return textOperand(entry.name);
       const fixedText = this.fixed.get(entry.name);
       if (fixedText !== undefined) return textOperand(fixedText);
@@ -1493,7 +1562,7 @@ export class Generator {
       return textOperand(entry.name);
     }
     if (expectsObject) return fail(expression.location, TEXT.needsObject(opcode.number, side, kind));
-    const inline = this.inlineTemplate(expression);
+    const inline = this.inlineTemplate(expression, (gameName, location) => this.failIfProtected(gameName, location, TAMPER_TEXT.protectedAction));
     if (inline !== null) return textOperand(inline);
     if (takesVariableName(opcode, side)) return textOperand(this.variableValue(expression));
     return fail(expression.location, TEXT.literalOnly(BUILTIN.action));

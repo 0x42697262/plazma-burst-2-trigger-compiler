@@ -97,6 +97,13 @@ class Parser {
   private declaration(): Declaration {
     const location = this.location();
     if (this.accept(KEYWORD.var)) return this.variableDeclaration(location, false);
+    const guarded = this.isWord(CONTEXTUAL.protected) && this.peek(1).kind === 'keyword' && (this.peek(1).text === KEYWORD.var || this.peek(1).text === KEYWORD.export);
+    if (guarded) {
+      this.next();
+      const exported = this.accept(KEYWORD.export);
+      this.expect(KEYWORD.var);
+      return this.variableDeclaration(location, exported, true);
+    }
     if (this.isWord(CONTEXTUAL.map) && this.peek(1).kind === 'punctuator' && this.peek(1).text === PUNCTUATOR.openBrace) {
       this.next();
       this.inMap = true;
@@ -146,7 +153,7 @@ class Parser {
     if (this.accept(KEYWORD.on)) {
       const eventLine = this.current.line;
       const event = this.identifier();
-      if (event !== EVENT.start && event !== EVENT.join && event !== EVENT.chat) throw new SourceError(eventLine, TEXT.unknownEvent(event));
+      if (event !== EVENT.start && event !== EVENT.join && event !== EVENT.chat && event !== EVENT.tamper) throw new SourceError(eventLine, TEXT.unknownEvent(event));
       return { kind: 'on', event, body: this.block(), location };
     }
     if (this.accept(KEYWORD.every)) {
@@ -162,13 +169,13 @@ class Parser {
     return this.fail(TEXT.topLevel);
   }
 
-  private variableDeclaration(location: Location, exported: boolean): Declaration {
+  private variableDeclaration(location: Location, exported: boolean, guarded = false): Declaration {
     const name = this.identifier();
     const array = this.accept(PUNCTUATOR.openBracket);
     if (array) this.expect(PUNCTUATOR.closeBracket);
     const value = !array && this.accept(PUNCTUATOR.assign) ? this.expression() : null;
     this.expect(PUNCTUATOR.semicolon);
-    return { kind: 'var', name, array, value, exported, location };
+    return guarded ? { kind: 'var', name, array, value, exported, protected: true, location } : { kind: 'var', name, array, value, exported, location };
   }
 
   private objectDeclaration(location: Location): Declaration {
