@@ -20,6 +20,7 @@ import {
 } from './keys.ts';
 import { AFTER_NEXT, FIRST_LINE, FIRST_PARAMETER, MAX_ACTION_COMPLETIONS } from './constants.ts';
 import { TEXT } from './text.ts';
+import { REFERENCE_TEXT } from '../reference/text.ts';
 
 export type Severity = (typeof SEVERITY)[keyof typeof SEVERITY];
 export type CompletionKind = (typeof COMPLETION_KIND)[keyof typeof COMPLETION_KIND];
@@ -241,9 +242,9 @@ export function complete(source: string, position: Position, file: string, read:
     });
   }
   const items: ServiceCompletion[] = [];
-  for (const keyword of [...KEYWORDS, ...Object.values(CONTEXTUAL)]) items.push({ label: keyword, kind: COMPLETION_KIND.keyword, detail: '', documentation: TEXT.keywords[keyword] ?? '', insertText: keyword });
+  for (const keyword of [...KEYWORDS, ...Object.values(CONTEXTUAL)]) items.push({ label: keyword, kind: COMPLETION_KIND.keyword, detail: '', documentation: REFERENCE_TEXT.keywords[keyword] ?? '', insertText: keyword });
   for (const name of BUILTIN_NAMES) {
-    const [signature, description] = TEXT.builtins[name] ?? [name, ''];
+    const [signature, description] = REFERENCE_TEXT.builtins[name] ?? [name, ''];
     items.push({ label: name, kind: COMPLETION_KIND.function, detail: signature, documentation: description, insertText: name });
   }
   for (const entry of VALUE_GROUP_LIST) items.push({ label: entry.name, kind: COMPLETION_KIND.group, detail: entry.paramKind, documentation: '', insertText: entry.name });
@@ -295,9 +296,9 @@ export function hover(source: string, position: Position, file: string, read: So
   }
   const forMap = mapHover(source, word, text, start, end);
   if (forMap !== null) return forMap;
-  const builtin = TEXT.builtins[word];
+  const builtin = REFERENCE_TEXT.builtins[word];
   if (builtin) return TEXT.builtinHover(builtin[0], builtin[1]);
-  const keyword = TEXT.keywords[word];
+  const keyword = REFERENCE_TEXT.keywords[word];
   if (keyword) return keyword;
   if (isObjectKeyword(word)) return TEXT.objectKindHover(word);
   const opcode = DIGITS.test(word) && ACTION_BEFORE_CURSOR.test(text.slice(0, end)) ? opcodeByNumber(Number(word)) : opcodeByName(word);
