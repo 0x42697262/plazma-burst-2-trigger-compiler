@@ -284,7 +284,7 @@ on start {
 ```
 
 - Declare each map object with its kind and uid: `region`, `door`, `player` (a player slot),
-  `character` (any other character), `gun`, `barrel`, `vehicle`, `decor`, `pusher`, `light`, `water`, `timer`, `trigger`. `at x, y` is where the
+  `actor` (any other character), `gun`, `barrel`, `vehicle`, `decor`, `pusher`, `light`, `water`, `timer`, `trigger`. `at x, y` is where the
   compiler puts it if the map lacks it (with `--into`).
 - `exits[]` is an object array; `exits[which]` picks one, even with a changing index.
   A range writes many uids at once: `door doors[] = ["#door*{0..9}", "#Bullet*{1..6}"];` is 16
@@ -396,7 +396,7 @@ What the compiler says for the usual slips, and the fix:
 | `say("hi", c)` with a changing `c` | `the color of say(...) must be a fixed value: ...` | `const C = 2;` or `Color.NoirLime` |
 | `say('hi');` | `unexpected character "'"` | double quotes: `"hi"` |
 | `say("hi") }` | `expected ";", got "}"` | end the statement with `;` |
-| `action(SetCharHP, spawn, 100)` with `region spawn` | `action 23 takes character as A, but "spawn" is a region` | pass a `character` |
+| `action(SetCharHP, spawn, 100)` with `region spawn` | `action 23 takes character as A, but "spawn" is a region` | pass a `player` or `actor` |
 | `say("hi", Team.RedTeam)` | `action 42 takes textmsg as B, not a Team value` | a `Color` value |
 | `wait(30);` in a function | `"wait" works only in "on" and "every" blocks, not in functions` | move the wait into the event block |
 
