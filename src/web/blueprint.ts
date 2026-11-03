@@ -43,7 +43,8 @@ export class BlueprintView {
   private drag: Drag | null = null;
   private mini = false;
   private observer: ResizeObserver | null = null;
-  private frame = 0;
+  private pending = false;
+  private refit = false;
 
   constructor(element: HTMLElement, hooks: BlueprintHooks) {
     this.element = element;
@@ -89,9 +90,9 @@ export class BlueprintView {
 
   setMini(mini: boolean): void {
     this.mini = mini;
+    this.refit = true;
     this.element.classList.toggle(BLUEPRINT_VIEW.miniClass, mini);
     this.resize();
-    if (mini) this.fitView();
     this.renderChrome();
   }
 
@@ -132,15 +133,16 @@ export class BlueprintView {
     const { width, height } = this.size();
     this.canvas.width = Math.round(width * ratio);
     this.canvas.height = Math.round(height * ratio);
-    if (!this.fitted || this.mini) this.fitView();
+    if (!this.fitted || this.mini || this.refit) this.fitView();
+    if (width > 0 && height > 0) this.refit = false;
     this.request();
   }
 
   private request(): void {
-    const view = this.element.ownerDocument.defaultView;
-    if (!view || this.frame !== 0) return;
-    this.frame = view.requestAnimationFrame(() => {
-      this.frame = 0;
+    if (this.pending) return;
+    this.pending = true;
+    queueMicrotask(() => {
+      this.pending = false;
       this.draw();
     });
   }

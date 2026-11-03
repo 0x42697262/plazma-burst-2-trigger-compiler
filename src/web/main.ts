@@ -247,6 +247,7 @@ const saveLayout = (layout: SerializedDockview): void => {
   layoutTimer = window.setTimeout(() => storage?.setItem(STORAGE.layout, JSON.stringify(layout)), LAYOUT_SAVE_DELAY);
 };
 
+const fixedPanels = { output: element(ELEMENT.outputPanel), reference: element(ELEMENT.reference), settings, blueprint: element(ELEMENT.blueprint) };
 const dock = new Dock(element(ELEMENT.dock), {
   createFile: (file, parent) => {
     const editor = new CodeEditor(parent, file, workspace, editorHooks, vimInput.checked, darkQuery.matches);
@@ -258,12 +259,17 @@ const dock = new Dock(element(ELEMENT.dock), {
       },
     };
   },
-  fixed: { output: element(ELEMENT.outputPanel), reference: element(ELEMENT.reference), settings, blueprint: element(ELEMENT.blueprint) },
+  fixed: fixedPanels,
   mounted: (mountedPanel) => {
     if (mountedPanel !== DOCK.panel.blueprint) return;
     blueprint.attach();
     scheduleBlueprint();
   },
+  miniChanged: (miniPanel, mini) => {
+    fixedPanels[miniPanel].classList.toggle(CLASS.mini, mini);
+    if (miniPanel === DOCK.panel.blueprint) blueprint.setMini(mini);
+  },
+  windowsChanged: (windows) => storage?.setItem(STORAGE.windows, JSON.stringify(windows)),
   activeFile: (file) => setActiveFile(file),
   changed: saveLayout,
   newFile: () => newFile(),
@@ -276,7 +282,7 @@ const blueprint = new BlueprintView(element(ELEMENT.blueprint), {
   copy: (text) => {
     void navigator.clipboard.writeText(text).then(() => say(TEXT.copied));
   },
-  expand: () => dock.show(DOCK.panel.blueprint, true),
+  expand: () => dock.expand(DOCK.panel.blueprint),
 });
 
 const savedPanel = readJson<{ open: boolean; follow: boolean }>(STORAGE.reference);
@@ -327,6 +333,7 @@ const savedLayout = ((): SerializedDockview | null => {
   }
 })();
 dock.restore(savedLayout, workspace.list(), workspace.active, savedPanel.open ?? false);
+dock.restoreWindows(readJson<Record<string, never>>(STORAGE.windows));
 darkQuery.addEventListener(EVENT.change, () => {
   dock.setDark(darkQuery.matches);
   for (const editor of editors.values()) editor.setDark(darkQuery.matches);
@@ -384,6 +391,8 @@ const revealSetting = (id: string): void => {
 };
 
 function renderChips(current: Options): void {
+  const labels = optionChips(current, Object.keys(environment()).length).map((chip) => chip.label);
+  element(ELEMENT.settingsSummary).textContent = labels.length === 0 ? TEXT.defaultSettings : labels.join(TEXT.listSeparator);
   chips.replaceChildren(...optionChips(current, Object.keys(environment()).length).map((chip) => {
     const node = document.createElement(TAG.button);
     node.className = CLASS.chip;

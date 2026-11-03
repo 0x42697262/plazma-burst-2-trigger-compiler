@@ -177,3 +177,9 @@ nav .spacer { flex: 1; }
 .bp-tip { position: absolute; pointer-events: none; padding: 4px 8px; border-radius: 6px; background: var(--bar); box-shadow: var(--shadow); font: 11px var(--mono); white-space: pre; z-index: 2; }
 .blueprint.mini .bp-bar { display: none; }
 .blueprint.mini .bp-canvas { cursor: zoom-in; }
+
+.mini-summary { display: none; }
+.settings.mini > :not(.mini-summary) { display: none; }
+.settings.mini .mini-summary { display: block; padding: 8px 0; color: var(--muted); font-size: 12px; }
+.inspector.mini .ref-search, .inspector.mini .ref-body, .inspector.mini .ref-follow, .inspector.mini .ref-back { display: none; }
+.group-actions button[hidden] { display: none; }

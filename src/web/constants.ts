@@ -17,6 +17,9 @@ export const BLUEPRINT_SIZE = Object.freeze({
   marker: Object.freeze({ x: -16, y: -16, w: 32, h: 32 }), defaultSide: 10, minScale: 0.02, maxScale: 8, fitPadding: 24, grid: 10,
 });
 export const LAYOUT_SAVE_DELAY = 300;
-export const DOCK_SIZE = Object.freeze({ settingsWidth: 380, settingsHeight: 620, margin: 12, referenceWidth: 360, outputShare: 0.34, blueprintWidth: 560, blueprintHeight: 380, sides: 2 });
+export const DOCK_SIZE = Object.freeze({
+  settingsWidth: 380, settingsHeight: 620, margin: 12, referenceWidth: 360, outputShare: 0.34, blueprintWidth: 560, blueprintHeight: 380, sides: 2,
+  miniMapWidth: 280, miniMapHeight: 190, miniWidth: 260, miniHeight: 88, half: 0.5, lastCorner: 3, snapDelay: 120, snapTolerance: 2, grownBy: 40,
+});
 export const BLUEPRINT_REFRESH_DELAY = 350;
 export const FIRST_COPY_NUMBER = 2;

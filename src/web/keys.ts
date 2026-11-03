@@ -38,10 +38,11 @@ export const ELEMENT = Object.freeze({
   reference: 'reference',
   blueprint: 'blueprint',
   blueprintButton: 'blueprint-button',
+  settingsSummary: 'settings-summary',
 });
 export const OUTPUT = Object.freeze({ problems: 'problems', xml: 'xml', text: 'text', map: 'map', run: 'run' } as const);
 export const STORAGE = Object.freeze({
-  files: 'ptc.files', active: 'ptc.active', vim: 'ptc.vim', options: 'ptc.options', example: 'ptc.example', build: 'ptc.build', layout: 'ptc.layout', reference: 'ptc.reference',
+  files: 'ptc.files', active: 'ptc.active', vim: 'ptc.vim', options: 'ptc.options', example: 'ptc.example', build: 'ptc.build', layout: 'ptc.layout', reference: 'ptc.reference', windows: 'ptc.windows',
 });
 export const WORKSPACE_ROOT = '/work/';
 export const DEFAULT_FILE = '/work/main.ptc';
@@ -54,7 +55,7 @@ export const WORD_AFTER = /^[A-Za-z0-9_]*/;
 export const DOT = '.';
 export const CLASS = Object.freeze({
   active: 'active', error: 'error', warning: 'warning', hover: 'hover-doc', chip: 'chip', muted: 'muted', shortcut: 'shortcut', flash: 'flash', panelFill: 'panel-fill',
-  groupActions: 'group-actions', watermark: 'watermark', quiet: 'quiet',
+  groupActions: 'group-actions', watermark: 'watermark', quiet: 'quiet', mini: 'mini',
 });
 export const MIME = Object.freeze({ xml: 'application/xml', text: 'text/plain' });
 export const ATTRIBUTE = Object.freeze({ file: 'data-file', output: 'data-output' });
@@ -149,7 +150,12 @@ export const BLUEPRINT = Object.freeze({
 export const DOCK = Object.freeze({
   panel: Object.freeze({ output: 'output', reference: 'reference', settings: 'settings', blueprint: 'blueprint' } as const),
   filePrefix: 'file:', fileComponent: 'file', dragHandle: 'tabbar',
-  direction: Object.freeze({ above: 'above', below: 'below', right: 'right' } as const),
+  direction: Object.freeze({ above: 'above', below: 'below', right: 'right', bottom: 'bottom' } as const),
+  tools: Object.freeze(['blueprint', 'settings', 'reference'] as const),
+  corners: Object.freeze(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const),
+  defaultCorner: 'bottom-right' as const,
+  gridLocation: 'grid', floatingLocation: 'floating', popoutLocation: 'popout',
+  componentField: 'component', floatingFinder: 'getFloatingWindowForGroup', gridviewField: 'gridview', layoutMethod: 'layout', heightField: 'height',
 });
 export const SCROLL_NEAREST = 'nearest';
 export const GUIDE_URL = 'https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md';

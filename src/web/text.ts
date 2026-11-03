@@ -44,6 +44,11 @@ export const TEXT = Object.freeze({
     area: (left: number, top: number, width: number, height: number): string => `x: ${left}, y: ${top}, w: ${width}, h: ${height}`,
   }),
   chipTitle: 'Show this setting',
+  defaultSettings: 'All settings at their defaults',
+  window: Object.freeze({
+    minimize: '–', minimizeTitle: 'Shrink to a small card in a corner (drag it to another corner)', expand: '⤢', expandTitle: 'Expand to the full window',
+    dock: '⇲', dockTitle: 'Put back into the layout', popOut: '⧉', popOutTitle: 'Open in its own browser window',
+  }),
   dock: Object.freeze({ settings: 'Settings', reference: 'Reference', output: 'Output', blueprint: 'Blueprint', empty: 'No open files. Press ⌘P / Ctrl+P to open one, or pick an example.' }),
   reference: Object.freeze({
     follow: 'Follow', followTitle: 'Show the page of the word at the cursor', back: '‹', backTitle: 'Back', close: 'Close the reference',
