@@ -17,7 +17,7 @@ export const OBJECT_KINDS: Readonly<Record<string, ObjectKindInfo>> = Object.fre
     defaults: [...AREA, ['moving', 'false'], ['tarx', '0'], ['tary', '0'], ['maxspeed', '10'], ['vis', 'true'], ['attach', '-1']],
   },
   player: { paramKind: 'character', tags: ['player'], createTag: 'player', defaults: CHARACTER },
-  character: { paramKind: 'character', tags: ['enemy'], createTag: 'enemy', defaults: CHARACTER },
+  actor: { paramKind: 'character', tags: ['enemy'], createTag: 'enemy', defaults: CHARACTER },
   gun: { paramKind: 'gun', tags: ['gun'], createTag: 'gun', defaults: [['model', 'gun_rifle'], ['command', '-1'], ['upg', '0']] },
   barrel: { paramKind: 'barrel', tags: ['barrel'], createTag: 'barrel', defaults: [['model', 'bar_orange'], ['tox', '0'], ['toy', '0']] },
   vehicle: {
@@ -43,6 +43,6 @@ export const OBJECT_KINDS: Readonly<Record<string, ObjectKindInfo>> = Object.fre
 
 export const OBJECT_PARAM_KINDS: ReadonlySet<string> = new Set(Object.values(OBJECT_KINDS).map((info) => info.paramKind));
 export const UID_ATTRIBUTE_NAME = 'uid';
-export const KIND_HINT = Object.freeze({ playerTag: 'player', playerKind: 'player', enemyTag: 'enemy', enemyKind: 'character' });
+export const KIND_HINT = Object.freeze({ playerTag: 'player', playerKind: 'player', enemyTag: 'enemy', enemyKind: 'actor' });
 export const POSITION_ATTRIBUTES = Object.freeze({ x: 'x', y: 'y' });
 export const ELEMENT_WITH_UID = /<([a-z_]+)\b[^>]*\buid="([^"]*)"/g;

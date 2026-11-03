@@ -12,7 +12,7 @@ water pool = "#water*1";
 region spawn = "#SPAWN1" at 100, -200;
 door gate = "#door*3";
 player hero = "#player*0";
-character guard = "#enemy*1";
+actor guard = "#enemy*1";
 gun rifle = "#gun*2";
 trigger hostTrigger = "#trigger*9";
 timer clock = "#timer*1";
@@ -50,12 +50,12 @@ on start {
   });
 
   it('keeps player slots and other characters apart in the map', () => {
-    const result = compileSource('player hero = "#player*1";\ncharacter guard = "#enemy*1";\non start { action(SetCharHP, hero, 1); action(SetCharHP, guard, 1); }', 't');
+    const result = compileSource('player hero = "#player*1";\nactor guard = "#enemy*1";\non start { action(SetCharHP, hero, 1); action(SetCharHP, guard, 1); }', 't');
     const spawned = checkObjects(result.objects, '<player x="0" y="0" />\n');
     assert.deepEqual(spawned.missing.map((object) => objectElement(object, { x: 0, y: 0 }, (value) => value).split(' ')[0]), ['<player', '<enemy']);
     const swapped = checkObjects(result.objects, '<enemy uid="#player*1" x="0" y="0" />\n<player uid="#enemy*1" x="0" y="0" />\n');
-    assert.match(swapped.problems.join('\n'), /"hero" is declared as player, but #player\*1 in the map is a <enemy>\. Declare it as character\./);
-    assert.match(swapped.problems.join('\n'), /"guard" is declared as character, but #enemy\*1 in the map is a <player>\. Declare it as player\./);
+    assert.match(swapped.problems.join('\n'), /"hero" is declared as player, but #player\*1 in the map is a <enemy>\. Declare it as actor\./);
+    assert.match(swapped.problems.join('\n'), /"guard" is declared as actor, but #enemy\*1 in the map is a <player>\. Declare it as player\./);
     assert.ok(actions('on start { for player p { say("{p}"); } }'));
   });
 

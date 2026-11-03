@@ -21,7 +21,7 @@ describe('named values', () => {
   });
 
   it('writes the value into the action', () => {
-    const used = actions('character hero = "#player*0";\non start { say("hi", Color.NoirLime); action(SetCharTeam, hero, Team.BlueTeam); action(507, slot(), Team.RedTeam); }');
+    const used = actions('player hero = "#player*0";\non start { say("hi", Color.NoirLime); action(SetCharTeam, hero, Team.BlueTeam); action(507, slot(), Team.RedTeam); }');
     assert.deepEqual(used.filter((action) => [42, 33, 507].includes(action.opcode)).map((action) => [action.opcode, action.targetB]), [
       [42, '2'], [33, '13'], [507, '12'],
     ]);
@@ -48,7 +48,7 @@ describe('named values', () => {
 
   it('refuses a value from the wrong group, like a strict cast', () => {
     assert.throws(() => actions('on start { say("hi", Team.RedTeam); }'), /action 42 takes textmsg as B, not a Team value/);
-    assert.throws(() => actions('character hero = "#player*0";\non start { action(SetCharTeam, hero, Color.Proxy); }'), /action 33 takes team as B, not a Color value/);
+    assert.throws(() => actions('player hero = "#player*0";\non start { action(SetCharTeam, hero, Color.Proxy); }'), /action 33 takes team as B, not a Color value/);
     assert.throws(() => actions('on start { say("hi", Colour.Proxy); }'), /unknown value group "Colour"/);
     assert.throws(() => actions('on start { say("hi", Color.Purple); }'), /Color has no value "Purple"/);
   });
