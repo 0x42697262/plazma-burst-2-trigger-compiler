@@ -36,16 +36,16 @@ input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
 input[type=number] { width: 8em; }
 
 .toolbar {
-  position: relative; z-index: 5; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 7px 12px;
+  position: relative; z-index: 5; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; padding: 7px 12px;
   background: var(--bar); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line);
 }
 .toolbar-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .toolbar-end { justify-content: flex-end; }
 .app-title { font-weight: 600; white-space: nowrap; margin-right: 6px; }
-#examples { max-width: 16em; }
+#examples { min-width: 0; max-width: 16em; flex: 0 1 auto; }
 .toolbar-center { display: flex; align-items: center; gap: 6px; }
 .activity {
-  display: flex; align-items: center; gap: 6px; min-width: 22em; max-width: 34em; height: 26px; padding: 0 10px; margin-left: 6px;
+  display: flex; align-items: center; gap: 6px; min-width: 14em; max-width: 34em; height: 26px; padding: 0 10px; margin-left: 6px;
   border-radius: 6px; background: var(--control); color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden;
 }
 #status { overflow: hidden; text-overflow: ellipsis; flex: 1; }
@@ -98,7 +98,39 @@ nav .spacer { flex: 1; }
 .hover-doc pre { margin: 4px 0; font-family: var(--mono); }
 .hover-doc code { color: var(--accent); }
 
-.inspector { width: 340px; flex: none; display: flex; flex-direction: column; background: var(--sidebar); border-left: 1px solid var(--line); min-height: 0; }
+.inspector { width: 360px; flex: none; display: flex; flex-direction: column; background: var(--sidebar); border-left: 1px solid var(--line); min-height: 0; }
+.ref-top { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.ref-top button { background: transparent; padding: 2px 8px; }
+.ref-top button:hover:not(:disabled) { background: var(--control); }
+.ref-top button:disabled { opacity: 0.35; }
+.ref-follow { color: var(--muted); font-size: 12px; }
+.ref-follow.active { color: var(--accent); background: var(--selected) !important; }
+.ref-crumbs { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; padding: 0; background: transparent; border: none; overflow: hidden; white-space: nowrap; }
+.ref-crumb { padding: 2px 4px !important; color: var(--muted); max-width: 9em; overflow: hidden; text-overflow: ellipsis; }
+.ref-crumb:last-child { color: var(--text); font-weight: 600; }
+.ref-search { margin: 8px; padding: 5px 9px; border-radius: 7px; background: var(--control); border: none; }
+.ref-body { flex: 1; overflow: auto; padding: 4px 14px 16px; }
+.ref-body h2 { margin: 6px 0 4px; font-size: 17px; }
+.ref-body h2.colored { border-left: 4px solid var(--entry-color); padding-left: 8px; }
+.ref-body h3 { margin: 16px 0 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.ref-signature { display: block; padding: 6px 8px; margin: 6px 0; border-radius: 6px; background: var(--control); white-space: pre-wrap; }
+.ref-summary { margin: 6px 0; }
+.ref-summary code { color: var(--accent); }
+.ref-insert { margin: 4px 0 6px; }
+.ref-list { list-style: none; margin: 0; padding: 0; }
+.ref-list li { display: flex; align-items: flex-start; gap: 8px; padding: 5px 6px; border-radius: 6px; }
+.ref-list li.linked:hover { background: var(--control); }
+.ref-dot { flex: none; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--line); }
+.ref-text { flex: 1; min-width: 0; }
+.ref-line { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.ref-name { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.linked .ref-name { color: var(--accent); }
+.ref-detail { color: var(--muted); font-size: 11px; }
+.ref-field-summary { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; overflow-wrap: anywhere; }
+.ref-add { flex: none; background: transparent; color: var(--muted); padding: 0 7px; opacity: 0; }
+.ref-list li:hover .ref-add { opacity: 1; }
+.ref-add:hover { color: var(--accent); }
+@media (max-width: 1250px) { .app-title { display: none; } .activity { min-width: 10em; } }
 @media (max-width: 900px) {
   .toolbar { grid-template-columns: 1fr; }
   .activity { min-width: 0; }

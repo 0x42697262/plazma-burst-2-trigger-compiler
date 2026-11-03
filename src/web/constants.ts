@@ -5,4 +5,5 @@ export const HOVER_DELAY = 250;
 export const STATUS_TIME = 3000;
 export const MIN_OUTPUT_HEIGHT = 60;
 export const MIN_EDITOR_HEIGHT = 140;
+export const FOLLOW_DELAY = 150;
 export const FIRST_COPY_NUMBER = 2;

@@ -58,8 +58,11 @@ export const CLASS = Object.freeze({
 });
 export const MIME = Object.freeze({ xml: 'application/xml', text: 'text/plain' });
 export const ATTRIBUTE = Object.freeze({ file: 'data-file', output: 'data-output' });
-export const EVENT = Object.freeze({ click: 'click', change: 'change', input: 'input', pointerDown: 'pointerdown', pointerMove: 'pointermove', pointerUp: 'pointerup' });
-export const TAG = Object.freeze({ button: 'button', option: 'option', span: 'span', div: 'div', link: 'a', optionGroup: 'optgroup', listItem: 'li', section: 'section' });
+export const EVENT = Object.freeze({ click: 'click', change: 'change', input: 'input', keydown: 'keydown', pointerDown: 'pointerdown', pointerMove: 'pointermove', pointerUp: 'pointerup' });
+export const TAG = Object.freeze({
+  button: 'button', option: 'option', span: 'span', div: 'div', link: 'a', optionGroup: 'optgroup', listItem: 'li', section: 'section', nav: 'nav', input: 'input', ul: 'ul', li: 'li',
+  h2: 'h2', h3: 'h3', p: 'p', code: 'code',
+});
 export const KEY = Object.freeze({ definition: 'F12', definitionAlternative: 'Mod-b' });
 export const DOWNLOAD_NAMES = Object.freeze({ xml: '.xml', text: '.txt', map: '-map.xml' });
 export const MARKDOWN = Object.freeze({
@@ -119,6 +122,14 @@ export const MAC_PLATFORM = /Mac|iPhone|iPad/;
 export const DARK_QUERY = '(prefers-color-scheme: dark)';
 export const CSS_VARIABLE = Object.freeze({ outputHeight: '--output-height' });
 export const PIXELS = 'px';
+export const ROOT_ID = 'root';
+export const PROGRAM_PREFIX = 'program:';
+export const EVENT_SYMBOL = 'event';
+export const PANEL = Object.freeze({
+  top: 'ref-top', crumbs: 'ref-crumbs', crumb: 'ref-crumb', search: 'ref-search', body: 'ref-body', follow: 'ref-follow', back: 'ref-back', close: 'ref-close',
+  signature: 'ref-signature', summary: 'ref-summary', insert: 'ref-insert', list: 'ref-list', linked: 'linked', dot: 'ref-dot', text: 'ref-text', line: 'ref-line',
+  name: 'ref-name', detail: 'ref-detail', fieldSummary: 'ref-field-summary', add: 'ref-add', colored: 'colored', colorVariable: '--entry-color',
+});
 export const SELECTOR = Object.freeze({ active: '.active' });
 export const SCROLL_NEAREST = 'nearest';
 export const GUIDE_URL = 'https://github.com/0x42697262/plazma-burst-2-trigger-compiler/blob/master/docs/syntax.md';

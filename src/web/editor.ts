@@ -26,7 +26,7 @@ import { HOVER_DELAY, LINT_DELAY } from './constants.ts';
 export type EditorHooks = { onChange: (file: string, text: string) => void; onJump: (location: ServiceLocation) => void; checkOptions: () => Partial<CompileOptions> };
 
 const LIGHT_THEME = EditorView.theme(PLAIN_EDITOR_THEME, { dark: false });
-const DARK_THEME = [oneDark, EditorView.theme(PLAIN_EDITOR_THEME, { dark: true })];
+const DARK_THEME = [EditorView.theme(PLAIN_EDITOR_THEME, { dark: true }), oneDark];
 
 const positionOf = (state: EditorState, offset: number): { line: number; column: number } => {
   const line = state.doc.lineAt(offset);

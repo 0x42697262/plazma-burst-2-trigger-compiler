@@ -5,6 +5,7 @@ import { build, checkOptions, parseEnvironment, simulate } from './pipeline.ts';
 import type { Build, BuildRecord, Options } from './pipeline.ts';
 import { filterCommands, optionChips, shortcutLabel } from './commands.ts';
 import type { Command } from './commands.ts';
+import { ReferencePanel } from './reference-panel.ts';
 import {
   ATTRIBUTE, CLASS, SELECTOR, CSS_VARIABLE, DARK_QUERY, EMPTY_OBJECT, ESCAPE, FOLDER_POSITION, GUIDE_URL, KEY_NAME, KEYDOWN, LIBRARY_FOLDER, MAC_PLATFORM, OUTPUT_BUTTONS, SCROLL_NEAREST, SHORTCUT, SHORTCUT_KEY,
   TAB_ACTIVE, DEFAULT_FILE, DOWNLOAD_NAMES, ELEMENT, EVENT, EXTENSION, MIME, OUTPUT, PIXELS, STARTER_EXAMPLE, STORAGE, TAG, TRUE_TEXT, WORKSPACE_ROOT,
@@ -76,7 +77,8 @@ obfuscateSeedInput.value = savedOptions.obfuscateSeed ?? '';
 vimInput.checked = storage?.getItem(STORAGE.vim) === TRUE_TEXT;
 const savedHeight = storage?.getItem(STORAGE.outputHeight);
 if (savedHeight) workbench.style.setProperty(CSS_VARIABLE.outputHeight, savedHeight);
-element(ELEMENT.shortcutHelp).textContent = TEXT.shortcutHelp(shortcut(SHORTCUT.build), shortcut(SHORTCUT.run), shortcut(SHORTCUT.palette), shortcut(SHORTCUT.settings));
+element(ELEMENT.shortcutHelp).textContent = TEXT.shortcutHelp(shortcut(SHORTCUT.build), shortcut(SHORTCUT.run), shortcut(SHORTCUT.palette), shortcut(SHORTCUT.settings), shortcut(SHORTCUT.reference));
+element(ELEMENT.referenceButton).title = TEXT.withShortcut(element(ELEMENT.referenceButton).title, shortcut(SHORTCUT.reference));
 element(ELEMENT.compile).title = TEXT.withShortcut(element(ELEMENT.compile).title, shortcut(SHORTCUT.build));
 element(ELEMENT.run).title = TEXT.withShortcut(element(ELEMENT.run).title, shortcut(SHORTCUT.run));
 element(ELEMENT.paletteButton).textContent = shortcut(SHORTCUT.palette);
@@ -241,7 +243,10 @@ const renderTabs = (): void => {
 
 const darkQuery = window.matchMedia(DARK_QUERY);
 const editor = new CodeEditor(element(ELEMENT.editor), workspace, {
-  onChange: (file, text) => workspace.set(file, text),
+  onChange: (file, text) => {
+    workspace.set(file, text);
+    panel?.refresh();
+  },
   onJump: (location) => {
     if (location.file !== editor.activeFile && workspace.get(location.file) !== null) openFile(location.file);
     editor.select(location.line, location.column);
@@ -249,6 +254,20 @@ const editor = new CodeEditor(element(ELEMENT.editor), workspace, {
   checkOptions: () => checkOptions(numberTextInput.checked, directIndexInput.checked, options().target, environment()),
 }, vimInput.checked, darkQuery.matches);
 darkQuery.addEventListener(EVENT.change, () => editor.setDark(darkQuery.matches));
+
+const savedPanel = JSON.parse(storage?.getItem(STORAGE.reference) ?? EMPTY_OBJECT) as Partial<{ open: boolean; follow: boolean }>;
+const panel: ReferencePanel | null = new ReferencePanel(element(ELEMENT.reference), {
+  insert: (text) => editor.insert(text),
+  jump: (location) => {
+    if (location.file !== editor.activeFile && workspace.get(location.file) !== null) openFile(location.file);
+    editor.select(location.line, location.column);
+  },
+  source: () => ({ file: editor.activeFile, text: workspace.get(editor.activeFile) ?? '', read: (file) => workspace.get(file) }),
+  cursorWord: () => editor.wordAtCursor(),
+  changed: (state) => storage?.setItem(STORAGE.reference, JSON.stringify(state)),
+}, { open: savedPanel.open ?? false, follow: savedPanel.follow ?? true });
+editor.onCursor(() => panel?.cursorMoved());
+element(ELEMENT.referenceButton).addEventListener(EVENT.click, () => panel?.toggle());
 
 const exampleFiles = Object.keys(examples).filter((name) => !isStandardLibrary(name) && !name.split(PATH_SEPARATOR).includes(LIBRARY_FOLDER)).sort();
 const exampleName = (file: string): string => {
@@ -376,6 +395,8 @@ const commands = (): Command[] => {
     { title: TEXT.commands.build, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.build), run: buildAndShow },
     { title: TEXT.commands.run, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.run), run },
     { title: TEXT.commands.settings, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.settings), run: () => toggleSettings(true) },
+    { title: TEXT.commands.reference, detail: TEXT.commandDetail.action, shortcut: shortcut(SHORTCUT.reference), run: () => panel?.toggle() },
+    { title: TEXT.commands.searchReference, detail: TEXT.commandDetail.action, shortcut: '', run: () => panel?.focusSearch() },
     ...Object.values(OUTPUT).map((name): Command => ({ title: TEXT.commands.output(TEXT.outputNames[name]), detail: TEXT.commandDetail.output, shortcut: '', run: () => show(name) })),
     { title: TEXT.commands.map, detail: TEXT.commandDetail.action, shortcut: '', run: chooseMap },
     ...(hostMap === null ? [] : [{ title: TEXT.commands.clearMap, detail: TEXT.commandDetail.action, shortcut: '', run: clearMap }]),
@@ -474,6 +495,9 @@ window.addEventListener(KEYDOWN, (event) => {
   } else if (key === SHORTCUT_KEY.settings) {
     event.preventDefault();
     toggleSettings();
+  } else if (key === SHORTCUT_KEY.reference) {
+    event.preventDefault();
+    panel?.toggle();
   }
 }, true);
 
