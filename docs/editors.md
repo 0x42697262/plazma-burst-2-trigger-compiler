@@ -25,9 +25,11 @@ elsewhere.
   Build and Run compile.
 - **Output:** Problems, XML, Trigger text, Map, Run. Copy and Download act on the shown tab. Build
   and Run open the panel again if it was closed.
-- **Map…:** choose a map downloaded from the editor; the Map tab shows it with the program added
-  (and the objects of `map { }` blocks added or updated; the changes are listed in Problems). `×`
-  forgets it.
+- **Map ▾:** "Add the program to a map XML…" takes a map downloaded from the editor; the Map tab
+  shows it with the program added (and the objects of `map { }` blocks added or updated; the
+  changes are listed in Problems). The map's name shows next to the button; its `×`, or "Close the
+  map" in the menu, closes it. "Convert a map XML to .ptc…" opens a map as source in a new file
+  ([convert.md](convert.md)).
 - **Blueprint:** a drawing of the map: the objects of `map { }` blocks in the editor's colors, and
   the chosen map's own objects dimmed behind them. It starts as a small card in the bottom-right
   corner; a click expands it.
@@ -69,3 +71,44 @@ elsewhere.
   file's declarations; each shows where it is used (also inside `"{x}"` and in imported files),
   and a click jumps there.
 
+## Neovim (0.11 or newer)
+
+Add the plugin folder of this repository to the runtime path, for example with lazy.nvim:
+
+```lua
+{ dir = '/path/to/plazma-burst-2-trigger-compiler/editors/nvim' }
+```
+
+or in `init.lua`:
+
+```lua
+vim.opt.rtp:append('/path/to/plazma-burst-2-trigger-compiler/editors/nvim')
+```
+
+It sets the `ptc` and `pasm` filetypes, highlighting, comments, and starts the language server
+(`node bin/ptc-lsp.js --stdio`, Node 22.18 or newer, after `npm install` in the repository). Then
+the usual LSP keys work: `K` hover, `gd` / `<C-]>` definition, `grr` references, `<C-x><C-o>` or
+your completion plugin, `]d` next diagnostic, `gO` document symbols.
+
+## Other editors
+
+`ptc-lsp` is a standard language server over stdio. Point any LSP client at
+`node /path/to/plazma-burst-2-trigger-compiler/bin/ptc-lsp.js --stdio` for files ending in `.ptc`
+and `.pasm`. For example Helix (`languages.toml`):
+
+```toml
+[language-server.ptc-lsp]
+command = "node"
+args = ["/path/to/plazma-burst-2-trigger-compiler/bin/ptc-lsp.js", "--stdio"]
+
+[[language]]
+name = "ptc"
+scope = "source.ptc"
+file-types = ["ptc", "pasm"]
+comment-token = "//"
+language-servers = ["ptc-lsp"]
+```
+
+What the server offers: diagnostics (compile errors and warnings, also for imported files),
+completion, hover, go to definition (also into imported files), find references (globals across
+imported files and inside `"{x}"` text, locals in their own function), document symbols.
