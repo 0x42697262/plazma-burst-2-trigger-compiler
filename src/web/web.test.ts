@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { Workspace } from './workspace.ts';
 import { build, parseEnvironment, prefixFor, simulate } from './pipeline.ts';
-import { collectExamples } from '../tools/build-web/build.ts';
+import { collectExamples, collectLibrary } from '../tools/build-web/build.ts';
 import path from 'node:path';
 import fs from 'node:fs';
 
@@ -172,6 +172,18 @@ describe('web page logic', () => {
     const result = build(workspace, '/work/main.ptc', OPTIONS, null);
     assert.deepEqual(result.problems.filter((problem) => problem.severity === 'error'), []);
     assert.match(simulate(result.result!, 1)[0] ?? '', /^chat: \d+-\d+-\d+$/);
+  });
+
+  it('bundles the standard library with its folders and compiles a program that imports from one', () => {
+    const library = collectLibrary(path.resolve(import.meta.dirname, '..', '..', 'std'));
+    assert.ok(library['std:hash.ptc']);
+    assert.ok(library['std:anticheat/core.ptc']);
+    assert.ok(library['std:anticheat/teleport.ptc']);
+    const workspace = new Workspace(null, library);
+    workspace.set('/work/ac.ptc', 'import "std/anticheat/all.ptc";\non start { acSlots = 8; }\n');
+    const result = build(workspace, '/work/ac.ptc', OPTIONS, null);
+    assert.deepEqual(result.problems.filter((problem) => problem.severity === 'error'), []);
+    assert.match(result.xml, /#acProbe/);
   });
 
   it('reads env() values from the environment box', () => {
