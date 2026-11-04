@@ -10,22 +10,22 @@ import {
 import { TEXT } from './text.ts';
 import { KILOBYTE } from './constants.ts';
 
-export function collectLibrary(folder: string): Record<string, string> {
-  return Object.fromEntries(fs.readdirSync(folder).filter((name) => EXAMPLE_FILE.test(name)).map((name) => [STD_SCHEME + name, fs.readFileSync(path.join(folder, name), FILE_ENCODING)]));
-}
-
-export function collectExamples(folder: string): Record<string, string> {
+function collectSources(folder: string, prefix: string): Record<string, string> {
   const files: Record<string, string> = {};
   const walk = (directory: string): void => {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
       const full = path.join(directory, entry.name);
       if (entry.isDirectory()) walk(full);
-      else if (EXAMPLE_FILE.test(entry.name)) files[EXAMPLES_PREFIX + path.relative(folder, full).replace(SEPARATOR, SLASH)] = fs.readFileSync(full, FILE_ENCODING);
+      else if (EXAMPLE_FILE.test(entry.name)) files[prefix + path.relative(folder, full).replace(SEPARATOR, SLASH)] = fs.readFileSync(full, FILE_ENCODING);
     }
   };
   walk(folder);
   return files;
 }
+
+export const collectLibrary = (folder: string): Record<string, string> => collectSources(folder, STD_SCHEME);
+
+export const collectExamples = (folder: string): Record<string, string> => collectSources(folder, EXAMPLES_PREFIX);
 
 const examplesPlugin = (files: Record<string, string>): Plugin => ({
   name: VIRTUAL_NAMESPACE,
