@@ -1,0 +1,47 @@
+// Standard library: anti-cheat gun check: a player holding a gun model the map never hands out.
+// Guide: docs/anticheat.md.
+//
+// List the gun models your map hands out (the map's guns, the hero gun engine marks, gun
+// triggers) with acAllowGun. Every acGunFrames ticks the held gun's model of each player is read
+// (action 555, which leaves the variable alone when no gun is held). A model not on the list is a
+// violation; with acGunDrop 1 the player's own game also drops all its guns (action 60). With no
+// gun allowed, the check is off.
+//
+//   import "std/anticheat/guns.ptc";
+//   on start {
+//     acAllowGun(GunModel.gun_rifle);
+//     acAllowGun(GunModel.gun_pistol);
+//   }
+
+import "std/anticheat/core.ptc";
+
+export var acGunEnabled = 1;
+export var acGunFrames = 10;
+export var acGunDrop = 1;
+export var acGunOtherWeight = 2;
+
+var acGunAllowed[];
+var acGunRules = 0;
+var acGunAt = 0;
+var acGunModel = "";
+
+export function acAllowGun(model) {
+  if (acGunAllowed[model] != 1) { acGunRules += 1; }
+  acGunAllowed[model] = 1;
+}
+
+function acGunCheck(who) {
+  if (acShouldSkip(who)) { return; }
+  acGunModel = "";
+  action(555, acGunModel, who);
+  if (acGunModel == "" || acGunAllowed[acGunModel] == 1) { return; }
+  acFlag(who, AC_GUN, acWeight(who, acStrikeLimit, acGunOtherWeight), "holds {acGunModel}, which the map does not give");
+  if (acGunDrop == 1 && acIsOwn(who)) { acDropGuns(who); }
+}
+
+every 1 {
+  if (acEnabled == 1 && acGunEnabled == 1 && acGunRules > 0 && acFrame >= acGunAt) {
+    acGunAt = acFrame + acGunFrames;
+    for (let index = 0; index < len(acPlayers); index += 1) { acGunCheck(acPlayers[index]); }
+  }
+}

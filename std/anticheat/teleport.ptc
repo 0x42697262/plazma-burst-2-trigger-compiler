@@ -1,0 +1,59 @@
+// Standard library: anti-cheat teleport check: a character that moves farther in one tick than
+// its speed allows. Guide: docs/anticheat.md.
+//
+// Each timer tick it reads every checked player's position (a probe region moved onto the
+// character, actions 80, 118, 119) and speed (427, 428). A move longer than
+// acTeleportMargin + (|speed x| + |speed y|) * acTeleportSpeedShare is a teleport. On the player's
+// own game the position is exact, so one teleport is a full violation; another game sees the
+// player through the network, where a late packet can look like a jump, so there it is one
+// strike (acTeleportOtherWeight).
+//
+// The map's own teleports look the same: call acExempt(slot, 10) in the trigger that moves the
+// player, or put a safe box (acAddSafeBox) around where it lands. Respawns and joins are already
+// exempt (acRespawnGrace, acJoinGrace). Vehicles move faster than their passengers' speed:
+// give vehicle areas a safe box.
+
+import "std/anticheat/core.ptc";
+
+export var acTeleportEnabled = 1;
+export var acTeleportMargin = 90;
+export var acTeleportSpeedShare = 3;
+export var acTeleportOtherWeight = 1;
+
+var acTpGeneration[];
+var acTpX[];
+var acTpY[];
+var acTpSpeedX = 0;
+var acTpSpeedY = 0;
+
+function acTpCheck(who) {
+  acMoveProbe(who);
+  let fresh = acTpGeneration[who] != acGeneration[who];
+  let lastX = acTpX[who];
+  let lastY = acTpY[who];
+  acTpGeneration[who] = acGeneration[who];
+  acTpX[who] = acPx;
+  acTpY[who] = acPy;
+  if (fresh) { return; }
+  if (acShouldSkip(who)) { return; }
+  action(427, acTpSpeedX, who);
+  action(428, acTpSpeedY, who);
+  let moveX = acPx - lastX;
+  let moveY = acPy - lastY;
+  if (moveX < 0) { moveX = -moveX; }
+  if (moveY < 0) { moveY = -moveY; }
+  let speedX = acTpSpeedX;
+  let speedY = acTpSpeedY;
+  if (speedX < 0) { speedX = -speedX; }
+  if (speedY < 0) { speedY = -speedY; }
+  let allowed = acTeleportMargin + (speedX + speedY) * acTeleportSpeedShare;
+  if (moveX + moveY > allowed) {
+    acFlag(who, AC_TELEPORT, acWeight(who, acStrikeLimit, acTeleportOtherWeight), "moved {moveX + moveY} in one tick, from {lastX},{lastY} to {acPx},{acPy}");
+  }
+}
+
+every 1 {
+  if (acEnabled == 1 && acTeleportEnabled == 1) {
+    for (let index = 0; index < len(acPlayers); index += 1) { acTpCheck(acPlayers[index]); }
+  }
+}

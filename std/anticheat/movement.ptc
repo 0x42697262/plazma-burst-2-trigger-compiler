@@ -1,0 +1,92 @@
+// Standard library: anti-cheat movement checks. Guide: docs/anticheat.md.
+//
+// The game moves a living character by its speed every tick and adds the gravity (0.5, trigger
+// action 5) to its vertical speed every tick, until something stops it. A jump starts at a
+// vertical speed of -8 (-10 without a gun), times the mobility, scale and jump multiplier
+// (frame2.js, the jump code). From that, three checks per player and timer tick:
+// - speed: the horizontal speed (action 427) stays above acMaxSpeedX for acSpeedFrames ticks;
+// - jump: a jump starts faster upwards than acMaxJumpSpeed;
+// - fly: the character keeps rising for acFlyFrames ticks while its upward speed does not slow
+//   down by at least a share of acGravity. That covers flying, a gravity that does not act on
+//   the player and a gravity lower than the map's. Hovering in place looks like standing and is
+//   not caught.
+//
+// Explosions, pushers, water and the map's own speed actions also move characters: give them
+// safe boxes (acAddSafeBox) or call acExempt(slot, frames) where the map pushes players. A map
+// that makes a player bigger, faster or able to fly says so: acSetMoveScale(slot, scale)
+// multiplies that player's speed and jump limits, acAllowFlight(slot, 1) turns the fly check
+// off for that player.
+//
+//   import "std/anticheat/movement.ptc";
+//   on start { acMaxSpeedX = 18; acGravity = 0.5; }
+
+import "std/anticheat/core.ptc";
+
+const AC_RISING = -0.5;
+const AC_STILL_FALLING = -1;
+const AC_GRAVITY_SHARE = 0.4;
+
+export var acMovementEnabled = 1;
+export var acMaxSpeedX = 25;
+export var acSpeedFrames = 15;
+export var acMaxJumpSpeed = 12;
+export var acGravity = 0.5;
+export var acFlyFrames = 8;
+
+var acMvGeneration[];
+var acMvLastVy[];
+var acMvFastFrames[];
+var acMvRiseFrames[];
+var acMvSpeedX = 0;
+var acMvSpeedY = 0;
+
+function acMvStart(who) {
+  acMvGeneration[who] = acGeneration[who];
+  acMvLastVy[who] = 0;
+  acMvFastFrames[who] = 0;
+  acMvRiseFrames[who] = 0;
+}
+
+function acMvCheck(who) {
+  if (acMvGeneration[who] != acGeneration[who]) { acMvStart(who); }
+  action(427, acMvSpeedX, who);
+  action(428, acMvSpeedY, who);
+  let lastVy = acMvLastVy[who];
+  acMvLastVy[who] = acMvSpeedY;
+  if (acShouldSkip(who)) {
+    acMvFastFrames[who] = 0;
+    acMvRiseFrames[who] = 0;
+    return;
+  }
+  let scale = acPlayerMoveScale(who);
+  let across = acMvSpeedX;
+  if (across < 0) { across = -across; }
+  if (across > acMaxSpeedX * scale) {
+    acMvFastFrames[who] += 1;
+    if (acMvFastFrames[who] >= acSpeedFrames) {
+      acMvFastFrames[who] = 0;
+      acFlag(who, AC_SPEED, 1, "horizontal speed {across}");
+    }
+  } else {
+    acMvFastFrames[who] = 0;
+  }
+  if (lastVy > AC_STILL_FALLING && acMvSpeedY < -acMaxJumpSpeed * scale) {
+    acFlag(who, AC_JUMP, 1, "jump speed {acMvSpeedY}");
+  }
+  let slowing = acMvSpeedY - lastVy;
+  if (!acPlayerMayFly(who) && acMvSpeedY < AC_RISING && lastVy < AC_RISING && slowing < acGravity * AC_GRAVITY_SHARE) {
+    acMvRiseFrames[who] += 1;
+    if (acMvRiseFrames[who] >= acFlyFrames) {
+      acMvRiseFrames[who] = 0;
+      acFlag(who, AC_FLY, 1, "rising at {acMvSpeedY} without slowing down");
+    }
+  } else {
+    acMvRiseFrames[who] = 0;
+  }
+}
+
+every 1 {
+  if (acEnabled == 1 && acMovementEnabled == 1) {
+    for (let index = 0; index < len(acPlayers); index += 1) { acMvCheck(acPlayers[index]); }
+  }
+}

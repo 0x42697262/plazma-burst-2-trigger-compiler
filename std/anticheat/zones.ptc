@@ -1,0 +1,50 @@
+// Standard library: anti-cheat forbidden zones: a living player inside a place no player can
+// reach (the inside of a wall, a closed room, outside the map). Guide: docs/anticheat.md.
+//
+// Mark those places with acForbidBox(left, top, width, height), in map units (the editor's x, y,
+// w, h of a region you draw there). Every acZoneFrames ticks, a living player whose position is
+// inside one of them gets a violation on its own game, and acZoneOtherWeight strikes on the
+// others.
+//
+//   import "std/anticheat/zones.ptc";
+//   on start {
+//     acForbidBox(400, -300, 200, 300);
+//     acForbidBox(-5000, 1000, 15000, 3000);
+//   }
+
+import "std/anticheat/core.ptc";
+
+export var acZoneEnabled = 1;
+export var acZoneFrames = 5;
+export var acZoneOtherWeight = 2;
+
+var acZoneLeft[];
+var acZoneTop[];
+var acZoneRight[];
+var acZoneBottom[];
+var acZoneAt = 0;
+
+export function acForbidBox(left, top, width, height) {
+  push(acZoneLeft, left);
+  push(acZoneTop, top);
+  push(acZoneRight, left + width);
+  push(acZoneBottom, top + height);
+}
+
+function acZoneCheck(who) {
+  if (acShouldSkip(who)) { return; }
+  acMoveProbe(who);
+  for (let index = 0; index < len(acZoneLeft); index += 1) {
+    if (acPx > acZoneLeft[index] && acPx < acZoneRight[index] && acPy > acZoneTop[index] && acPy < acZoneBottom[index]) {
+      acFlag(who, AC_ZONE, acWeight(who, acStrikeLimit, acZoneOtherWeight), "inside forbidden box {index} at {acPx},{acPy}");
+      return;
+    }
+  }
+}
+
+every 1 {
+  if (acEnabled == 1 && acZoneEnabled == 1 && len(acZoneLeft) > 0 && acFrame >= acZoneAt) {
+    acZoneAt = acFrame + acZoneFrames;
+    for (let index = 0; index < len(acPlayers); index += 1) { acZoneCheck(acPlayers[index]); }
+  }
+}

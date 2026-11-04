@@ -1,0 +1,93 @@
+// Standard library: anti-cheat trigger and variable checks: triggers started by hand, regions
+// used from afar and variables written from outside the map. Guide: docs/anticheat.md.
+//
+// Three tools:
+// - Bait triggers: adminGiveAllGuns, adminGodMode and debugUnlockAll are exported (uids
+//   #<prefix>_adminGiveAllGuns...) and nothing in the map runs them. Whoever starts one is
+//   reported: its initiator is the player who ran it, also when the run came over the network
+//   (the game makes the sender the initiator, F53).
+// - Bait variables: the plain names is_admin, godmode, infinite_ammo and vip_level hold 0 and
+//   nothing in the map writes them. A change means someone writes variables from outside the
+//   map; it is reported without a name, because a value from the network does not say who sent
+//   it. Shown text replaces variable names by their values (F9), so reports spell them with
+//   dashes.
+// - acGuardUse(x, y, radius): call it first in an exported function that a region starts. It
+//   returns 0, and gives a strike, when the player who used the region is more than radius map
+//   units from x, y. A map that starts the region for a player itself (action 499) calls
+//   acExempt(slot, frames) first:
+//
+//   export function openVault() {
+//     if (!acGuardUse(1200, -340, 150)) { return; }
+//     action(MovableTo, vaultDoor, vaultOpen);
+//   }
+//
+// Protect the map's own values with --tamper-check and protected var (docs/tamper-check.md):
+// it notices values the program did not write and triggers run out of order.
+
+import "std/anticheat/core.ptc";
+
+const AC_BAIT_CLEAN = 0;
+const AC_BAIT_CHECK_FRAMES = 30;
+
+export var acBaitEnabled = 1;
+export var acRemoteUseOtherWeight = 2;
+
+extern acBaitAdmin = "is_admin";
+extern acBaitGod = "godmode";
+extern acBaitAmmo = "infinite_ammo";
+extern acBaitVip = "vip_level";
+var acBaitAt = 0;
+
+on start {
+  acBaitAdmin = AC_BAIT_CLEAN;
+  acBaitGod = AC_BAIT_CLEAN;
+  acBaitAmmo = AC_BAIT_CLEAN;
+  acBaitVip = AC_BAIT_CLEAN;
+}
+
+function acBaitTriggered(label) {
+  if (acBaitEnabled != 1) { return; }
+  let who = initiator();
+  if (who < 0) { return; }
+  acFlagAlways(who, AC_BAIT_TRIGGER, acStrikeLimit, "ran the bait trigger {label}");
+}
+
+export function adminGiveAllGuns() { acBaitTriggered("adminGiveAllGuns"); }
+export function adminGodMode() { acBaitTriggered("adminGodMode"); }
+export function debugUnlockAll() { acBaitTriggered("debugUnlockAll"); }
+
+function acBaitReport(label, value) {
+  let message = "[anticheat] the bait variable {label} was changed to {value} on this game: someone is editing variables";
+  say(message, AC_COLOR);
+  acViolationCount += 1;
+  acLastViolationSlot = -1;
+  acLastViolationCode = AC_BAIT_VARIABLE;
+  acLastViolationText = message;
+}
+
+function acBaitCheck() {
+  if (acBaitAdmin != AC_BAIT_CLEAN) { acBaitReport("is-admin", acBaitAdmin); acBaitAdmin = AC_BAIT_CLEAN; }
+  if (acBaitGod != AC_BAIT_CLEAN) { acBaitReport("god-mode", acBaitGod); acBaitGod = AC_BAIT_CLEAN; }
+  if (acBaitAmmo != AC_BAIT_CLEAN) { acBaitReport("infinite-ammo", acBaitAmmo); acBaitAmmo = AC_BAIT_CLEAN; }
+  if (acBaitVip != AC_BAIT_CLEAN) { acBaitReport("vip-level", acBaitVip); acBaitVip = AC_BAIT_CLEAN; }
+}
+
+export function acGuardUse(centerX, centerY, radius) {
+  let who = initiator();
+  if (who < 0 || acIsExcused(who)) { return 1; }
+  acMoveProbe(who);
+  let awayX = acPx - centerX;
+  let awayY = acPy - centerY;
+  if (awayX < 0) { awayX = -awayX; }
+  if (awayY < 0) { awayY = -awayY; }
+  if (awayX <= radius && awayY <= radius) { return 1; }
+  acFlagAlways(who, AC_REMOTE_USE, acWeight(who, acStrikeLimit, acRemoteUseOtherWeight), "used a region at {centerX},{centerY} from {acPx},{acPy}");
+  return 0;
+}
+
+every 1 {
+  if (acEnabled == 1 && acBaitEnabled == 1 && acFrame >= acBaitAt) {
+    acBaitAt = acFrame + AC_BAIT_CHECK_FRAMES;
+    acBaitCheck();
+  }
+}
