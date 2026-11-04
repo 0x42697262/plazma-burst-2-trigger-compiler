@@ -1,0 +1,64 @@
+// Standard library: anti-cheat hooks for maps whose own triggers move, heal, revive, resize or
+// lift players. Each hook is an exported function with no parameters, so a trigger of the map,
+// also an old one, can call it with one action: "Execute trigger" (99) with the uid
+// #<prefix>_<hook>. It acts on the player-initiator (action 180), the player who started the
+// map's trigger. Guide: docs/anticheat.md.
+//
+// | Hook                   | Effect on the initiator                                      |
+// | acHookExempt           | no strikes for acHookFrames ticks (move, heal, launch)       |
+// | acHookExemptAll        | the same for every player (a round start, a map-wide event)  |
+// | acHookAllowRevive      | may stand up where it fell for acHookFrames ticks            |
+// | acHookAllowFlight      | the fly check is off for this player until acHookReset       |
+// | acHookSetMaxHp         | max hitpoints become acHookMaxHp until acHookReset           |
+// | acHookSetMoveScale     | speed and jump limits times acHookMoveScale until acHookReset |
+// | acHookReset            | back to the map-wide limits                                  |
+//
+// A trigger can change acHookFrames, acHookMaxHp or acHookMoveScale first with "Set variable"
+// (~<prefix>_acHookMaxHp~). Allowances belong to the login in the slot: a new player in the slot
+// starts with the map-wide limits.
+
+import "std/anticheat/core.ptc";
+
+export var acHookFrames = 30;
+export var acHookMaxHp = 0;
+export var acHookMoveScale = 1;
+
+export function acHookExempt() {
+  let who = initiator();
+  if (who < 0) { return; }
+  acExempt(who, acHookFrames);
+}
+
+export function acHookExemptAll() {
+  acExemptAll(acHookFrames);
+}
+
+export function acHookAllowRevive() {
+  let who = initiator();
+  if (who < 0) { return; }
+  acAllowRevive(who, acHookFrames);
+}
+
+export function acHookAllowFlight() {
+  let who = initiator();
+  if (who < 0) { return; }
+  acAllowFlight(who, 1);
+}
+
+export function acHookSetMaxHp() {
+  let who = initiator();
+  if (who < 0) { return; }
+  acSetMaxHp(who, acHookMaxHp);
+}
+
+export function acHookSetMoveScale() {
+  let who = initiator();
+  if (who < 0) { return; }
+  acSetMoveScale(who, acHookMoveScale);
+}
+
+export function acHookReset() {
+  let who = initiator();
+  if (who < 0) { return; }
+  acResetAllowances(who);
+}

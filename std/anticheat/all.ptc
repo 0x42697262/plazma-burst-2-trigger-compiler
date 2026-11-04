@@ -7,6 +7,7 @@
 //   std/anticheat/guns.ptc       held guns the map does not give (needs acAllowGun)
 //   std/anticheat/zones.ptc      players inside solid or closed places (needs acForbidBox)
 //   std/anticheat/triggers.ptc   bait triggers, bait variables, region use from afar (acGuardUse)
+//   std/anticheat/hooks.ptc      exempt and allow players from the map's own triggers, one action each
 //   std/anticheat/calibrate.ptc  while testing only: prints the values to set the limits from
 //
 // Guide, settings and what is not supported: docs/anticheat.md.
@@ -18,3 +19,4 @@ import "std/anticheat/zoom.ptc";
 import "std/anticheat/guns.ptc";
 import "std/anticheat/zones.ptc";
 import "std/anticheat/triggers.ptc";
+import "std/anticheat/hooks.ptc";
