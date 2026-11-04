@@ -1,0 +1,209 @@
+// Standard library: anti-cheat slot helpers, used by std/anticheat/core.ptc.
+// Some game actions read a character only by a fixed index written into the action (action 122
+// for hitpoints, 80 to move a region to a character, 184 and 185 for login and name, 60 to drop
+// guns). The game's character index is the player slot, so each function keeps one copy of the
+// action per slot, 0 to 31, behind "run the next action only if the slot is N" (action 123), the
+// way the compiler picks from object arrays. Generated: keep the four functions alike.
+
+const AC_PROBE_SIZE = 2;
+const AC_PROBE_HALF = 1;
+map { acProbe = Region("#acProbe", x: 0, y: 0, w: AC_PROBE_SIZE, h: AC_PROBE_SIZE); }
+
+var acName = "Empty";
+var acLogin = "";
+var acHp = 0;
+var acPx = 0;
+var acPy = 0;
+
+function acReadIdentity(who) {
+  acName = "Empty";
+  acLogin = "";
+  if (who < 16) {
+    action(123, who, 0); action(185, acName, "0");
+    action(123, who, 0); action(184, acLogin, "0");
+    action(123, who, 1); action(185, acName, "1");
+    action(123, who, 1); action(184, acLogin, "1");
+    action(123, who, 2); action(185, acName, "2");
+    action(123, who, 2); action(184, acLogin, "2");
+    action(123, who, 3); action(185, acName, "3");
+    action(123, who, 3); action(184, acLogin, "3");
+    action(123, who, 4); action(185, acName, "4");
+    action(123, who, 4); action(184, acLogin, "4");
+    action(123, who, 5); action(185, acName, "5");
+    action(123, who, 5); action(184, acLogin, "5");
+    action(123, who, 6); action(185, acName, "6");
+    action(123, who, 6); action(184, acLogin, "6");
+    action(123, who, 7); action(185, acName, "7");
+    action(123, who, 7); action(184, acLogin, "7");
+    action(123, who, 8); action(185, acName, "8");
+    action(123, who, 8); action(184, acLogin, "8");
+    action(123, who, 9); action(185, acName, "9");
+    action(123, who, 9); action(184, acLogin, "9");
+    action(123, who, 10); action(185, acName, "10");
+    action(123, who, 10); action(184, acLogin, "10");
+    action(123, who, 11); action(185, acName, "11");
+    action(123, who, 11); action(184, acLogin, "11");
+    action(123, who, 12); action(185, acName, "12");
+    action(123, who, 12); action(184, acLogin, "12");
+    action(123, who, 13); action(185, acName, "13");
+    action(123, who, 13); action(184, acLogin, "13");
+    action(123, who, 14); action(185, acName, "14");
+    action(123, who, 14); action(184, acLogin, "14");
+    action(123, who, 15); action(185, acName, "15");
+    action(123, who, 15); action(184, acLogin, "15");
+  } else {
+    action(123, who, 16); action(185, acName, "16");
+    action(123, who, 16); action(184, acLogin, "16");
+    action(123, who, 17); action(185, acName, "17");
+    action(123, who, 17); action(184, acLogin, "17");
+    action(123, who, 18); action(185, acName, "18");
+    action(123, who, 18); action(184, acLogin, "18");
+    action(123, who, 19); action(185, acName, "19");
+    action(123, who, 19); action(184, acLogin, "19");
+    action(123, who, 20); action(185, acName, "20");
+    action(123, who, 20); action(184, acLogin, "20");
+    action(123, who, 21); action(185, acName, "21");
+    action(123, who, 21); action(184, acLogin, "21");
+    action(123, who, 22); action(185, acName, "22");
+    action(123, who, 22); action(184, acLogin, "22");
+    action(123, who, 23); action(185, acName, "23");
+    action(123, who, 23); action(184, acLogin, "23");
+    action(123, who, 24); action(185, acName, "24");
+    action(123, who, 24); action(184, acLogin, "24");
+    action(123, who, 25); action(185, acName, "25");
+    action(123, who, 25); action(184, acLogin, "25");
+    action(123, who, 26); action(185, acName, "26");
+    action(123, who, 26); action(184, acLogin, "26");
+    action(123, who, 27); action(185, acName, "27");
+    action(123, who, 27); action(184, acLogin, "27");
+    action(123, who, 28); action(185, acName, "28");
+    action(123, who, 28); action(184, acLogin, "28");
+    action(123, who, 29); action(185, acName, "29");
+    action(123, who, 29); action(184, acLogin, "29");
+    action(123, who, 30); action(185, acName, "30");
+    action(123, who, 30); action(184, acLogin, "30");
+    action(123, who, 31); action(185, acName, "31");
+    action(123, who, 31); action(184, acLogin, "31");
+  }
+  return acName;
+}
+
+function acReadHp(who) {
+  acHp = 0;
+  if (who < 16) {
+    action(123, who, 0); action(VarSetCharHP, acHp, "0");
+    action(123, who, 1); action(VarSetCharHP, acHp, "1");
+    action(123, who, 2); action(VarSetCharHP, acHp, "2");
+    action(123, who, 3); action(VarSetCharHP, acHp, "3");
+    action(123, who, 4); action(VarSetCharHP, acHp, "4");
+    action(123, who, 5); action(VarSetCharHP, acHp, "5");
+    action(123, who, 6); action(VarSetCharHP, acHp, "6");
+    action(123, who, 7); action(VarSetCharHP, acHp, "7");
+    action(123, who, 8); action(VarSetCharHP, acHp, "8");
+    action(123, who, 9); action(VarSetCharHP, acHp, "9");
+    action(123, who, 10); action(VarSetCharHP, acHp, "10");
+    action(123, who, 11); action(VarSetCharHP, acHp, "11");
+    action(123, who, 12); action(VarSetCharHP, acHp, "12");
+    action(123, who, 13); action(VarSetCharHP, acHp, "13");
+    action(123, who, 14); action(VarSetCharHP, acHp, "14");
+    action(123, who, 15); action(VarSetCharHP, acHp, "15");
+  } else {
+    action(123, who, 16); action(VarSetCharHP, acHp, "16");
+    action(123, who, 17); action(VarSetCharHP, acHp, "17");
+    action(123, who, 18); action(VarSetCharHP, acHp, "18");
+    action(123, who, 19); action(VarSetCharHP, acHp, "19");
+    action(123, who, 20); action(VarSetCharHP, acHp, "20");
+    action(123, who, 21); action(VarSetCharHP, acHp, "21");
+    action(123, who, 22); action(VarSetCharHP, acHp, "22");
+    action(123, who, 23); action(VarSetCharHP, acHp, "23");
+    action(123, who, 24); action(VarSetCharHP, acHp, "24");
+    action(123, who, 25); action(VarSetCharHP, acHp, "25");
+    action(123, who, 26); action(VarSetCharHP, acHp, "26");
+    action(123, who, 27); action(VarSetCharHP, acHp, "27");
+    action(123, who, 28); action(VarSetCharHP, acHp, "28");
+    action(123, who, 29); action(VarSetCharHP, acHp, "29");
+    action(123, who, 30); action(VarSetCharHP, acHp, "30");
+    action(123, who, 31); action(VarSetCharHP, acHp, "31");
+  }
+  return acHp;
+}
+
+function acMoveProbe(who) {
+  if (who < 16) {
+    action(123, who, 0); action(MoveRegionToChar, acProbe, "0");
+    action(123, who, 1); action(MoveRegionToChar, acProbe, "1");
+    action(123, who, 2); action(MoveRegionToChar, acProbe, "2");
+    action(123, who, 3); action(MoveRegionToChar, acProbe, "3");
+    action(123, who, 4); action(MoveRegionToChar, acProbe, "4");
+    action(123, who, 5); action(MoveRegionToChar, acProbe, "5");
+    action(123, who, 6); action(MoveRegionToChar, acProbe, "6");
+    action(123, who, 7); action(MoveRegionToChar, acProbe, "7");
+    action(123, who, 8); action(MoveRegionToChar, acProbe, "8");
+    action(123, who, 9); action(MoveRegionToChar, acProbe, "9");
+    action(123, who, 10); action(MoveRegionToChar, acProbe, "10");
+    action(123, who, 11); action(MoveRegionToChar, acProbe, "11");
+    action(123, who, 12); action(MoveRegionToChar, acProbe, "12");
+    action(123, who, 13); action(MoveRegionToChar, acProbe, "13");
+    action(123, who, 14); action(MoveRegionToChar, acProbe, "14");
+    action(123, who, 15); action(MoveRegionToChar, acProbe, "15");
+  } else {
+    action(123, who, 16); action(MoveRegionToChar, acProbe, "16");
+    action(123, who, 17); action(MoveRegionToChar, acProbe, "17");
+    action(123, who, 18); action(MoveRegionToChar, acProbe, "18");
+    action(123, who, 19); action(MoveRegionToChar, acProbe, "19");
+    action(123, who, 20); action(MoveRegionToChar, acProbe, "20");
+    action(123, who, 21); action(MoveRegionToChar, acProbe, "21");
+    action(123, who, 22); action(MoveRegionToChar, acProbe, "22");
+    action(123, who, 23); action(MoveRegionToChar, acProbe, "23");
+    action(123, who, 24); action(MoveRegionToChar, acProbe, "24");
+    action(123, who, 25); action(MoveRegionToChar, acProbe, "25");
+    action(123, who, 26); action(MoveRegionToChar, acProbe, "26");
+    action(123, who, 27); action(MoveRegionToChar, acProbe, "27");
+    action(123, who, 28); action(MoveRegionToChar, acProbe, "28");
+    action(123, who, 29); action(MoveRegionToChar, acProbe, "29");
+    action(123, who, 30); action(MoveRegionToChar, acProbe, "30");
+    action(123, who, 31); action(MoveRegionToChar, acProbe, "31");
+  }
+  action(VarSetRegionX, acPx, acProbe);
+  action(VarSetRegionY, acPy, acProbe);
+  acPx += AC_PROBE_HALF;
+  acPy += AC_PROBE_HALF;
+}
+
+function acDropGuns(who) {
+  if (who < 16) {
+    action(123, who, 0); action(MakeCharDropGuns, "0", 0);
+    action(123, who, 1); action(MakeCharDropGuns, "1", 0);
+    action(123, who, 2); action(MakeCharDropGuns, "2", 0);
+    action(123, who, 3); action(MakeCharDropGuns, "3", 0);
+    action(123, who, 4); action(MakeCharDropGuns, "4", 0);
+    action(123, who, 5); action(MakeCharDropGuns, "5", 0);
+    action(123, who, 6); action(MakeCharDropGuns, "6", 0);
+    action(123, who, 7); action(MakeCharDropGuns, "7", 0);
+    action(123, who, 8); action(MakeCharDropGuns, "8", 0);
+    action(123, who, 9); action(MakeCharDropGuns, "9", 0);
+    action(123, who, 10); action(MakeCharDropGuns, "10", 0);
+    action(123, who, 11); action(MakeCharDropGuns, "11", 0);
+    action(123, who, 12); action(MakeCharDropGuns, "12", 0);
+    action(123, who, 13); action(MakeCharDropGuns, "13", 0);
+    action(123, who, 14); action(MakeCharDropGuns, "14", 0);
+    action(123, who, 15); action(MakeCharDropGuns, "15", 0);
+  } else {
+    action(123, who, 16); action(MakeCharDropGuns, "16", 0);
+    action(123, who, 17); action(MakeCharDropGuns, "17", 0);
+    action(123, who, 18); action(MakeCharDropGuns, "18", 0);
+    action(123, who, 19); action(MakeCharDropGuns, "19", 0);
+    action(123, who, 20); action(MakeCharDropGuns, "20", 0);
+    action(123, who, 21); action(MakeCharDropGuns, "21", 0);
+    action(123, who, 22); action(MakeCharDropGuns, "22", 0);
+    action(123, who, 23); action(MakeCharDropGuns, "23", 0);
+    action(123, who, 24); action(MakeCharDropGuns, "24", 0);
+    action(123, who, 25); action(MakeCharDropGuns, "25", 0);
+    action(123, who, 26); action(MakeCharDropGuns, "26", 0);
+    action(123, who, 27); action(MakeCharDropGuns, "27", 0);
+    action(123, who, 28); action(MakeCharDropGuns, "28", 0);
+    action(123, who, 29); action(MakeCharDropGuns, "29", 0);
+    action(123, who, 30); action(MakeCharDropGuns, "30", 0);
+    action(123, who, 31); action(MakeCharDropGuns, "31", 0);
+  }
+}

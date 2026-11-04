@@ -1,0 +1,62 @@
+// Standard library: anti-cheat calibration. Import it while testing your map, play it normally
+// (run, jump, fall, use your vehicles, pushers and teleports) and read the chat: every
+// acCalibrateFrames ticks it prints the highest values your own player reached since the map
+// started, when one of them grew:
+//
+//   [calibrate] speed x 14.2, jump -9.6, step 23, hp 130, zoom 100
+//
+// Set the limits a little above them: acMaxSpeedX above "speed x", acMaxJumpSpeed above the
+// size of "jump", acTeleportMargin above "step", acMaxHp to "hp", acMinZoom to "zoom". Remove
+// the import before you publish the map.
+
+import "std/anticheat/core.ptc";
+
+export var acCalibrateFrames = 150;
+
+var acCalSpeedX = 0;
+var acCalJump = 0;
+var acCalStep = 0;
+var acCalHp = 0;
+var acCalZoom = 0;
+var acCalLastX = 0;
+var acCalLastY = 0;
+var acCalStarted = 0;
+var acCalChanged = 0;
+var acCalPrintAt = 0;
+var acCalReadX = 0;
+var acCalReadY = 0;
+
+function acCalMeasure() {
+  let own = slot();
+  action(427, acCalReadX, own);
+  action(428, acCalReadY, own);
+  let across = acCalReadX;
+  if (across < 0) { across = -across; }
+  if (across > acCalSpeedX) { acCalSpeedX = across; acCalChanged = 1; }
+  if (acCalReadY < acCalJump) { acCalJump = acCalReadY; acCalChanged = 1; }
+  acMoveProbe(own);
+  if (acCalStarted == 1 && !acIsExempt(own)) {
+    let moveX = acPx - acCalLastX;
+    let moveY = acPy - acCalLastY;
+    if (moveX < 0) { moveX = -moveX; }
+    if (moveY < 0) { moveY = -moveY; }
+    if (moveX + moveY > acCalStep) { acCalStep = moveX + moveY; acCalChanged = 1; }
+  }
+  acCalStarted = 1;
+  acCalLastX = acPx;
+  acCalLastY = acPy;
+  let hitpoints = acReadHp(own);
+  if (hitpoints > acCalHp) { acCalHp = hitpoints; acCalChanged = 1; }
+  let zoom = 0;
+  action(369, zoom, 0);
+  if (zoom > 0 && (acCalZoom == 0 || zoom < acCalZoom)) { acCalZoom = zoom; acCalChanged = 1; }
+}
+
+every 1 {
+  acCalMeasure();
+  if (acFrame >= acCalPrintAt && acCalChanged == 1) {
+    acCalPrintAt = acFrame + acCalibrateFrames;
+    acCalChanged = 0;
+    say("[calibrate] speed x {acCalSpeedX}, jump {acCalJump}, step {acCalStep}, hp {acCalHp}, zoom {acCalZoom}");
+  }
+}

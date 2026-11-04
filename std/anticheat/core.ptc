@@ -1,0 +1,309 @@
+// Standard library: anti-cheat core. Every std/anticheat/*.ptc check imports it; import the
+// checks you want, or std/anticheat/all.ptc for all of them. Guide: std/anticheat/anticheat.md.
+//
+// What it does each timer tick (every 1):
+// - keeps acPlayers[], the slots it checks: your own slot in single player; in multiplayer every
+//   used slot below acSlots (acScope 2) or only yours (acScope 1);
+// - gives each slot a grace period while it is dying and after it respawns or joins
+//   (acRespawnGrace, acJoinGrace), and when the map calls acExempt(slot, frames);
+// - collects strikes from the checks (acFlag) and forgets one strike per acStrikeDecay frames;
+// - at acStrikeLimit strikes: reports the player in the chat and, when the player is the one
+//   playing on this game, applies acPunishment (0 report, 1 freeze, 2 kill); then ignores that
+//   player for acCooldown frames.
+//
+// Settings: change them in your own "on start" block, after the import:
+//   import "std/anticheat/all.ptc";
+//   on start { acSlots = 8; acPunishment = AC_PUNISH_FREEZE; acMaxHp = 200; }
+//
+// Every game runs its own triggers (game facts F53): a player can stop the checks on their own
+// game. With acScope 2 the other players' games check that player too, from the state the
+// network gives them; those reports show on the other games.
+
+const AC_MAX_SLOTS = 32;
+const AC_SCOPE_OWN = 1;
+const AC_SCOPE_ALL = 2;
+const AC_PUNISH_REPORT = 0;
+const AC_PUNISH_FREEZE = 1;
+const AC_PUNISH_KILL = 2;
+const AC_REFRESH_FRAMES = 30;
+const AC_COLOR = "#FF5555";
+const AC_SHARED_COLOR = "#FFAA55";
+const AC_EMPTY_SLOT = "Empty";
+const AC_FREEZE_MOBILITY = 0;
+const AC_KILL_DAMAGE = 100000;
+const AC_SEPARATOR = ", ";
+
+const AC_SPEED = 1;
+const AC_JUMP = 2;
+const AC_FLY = 3;
+const AC_TELEPORT = 4;
+const AC_HP_ABOVE_MAX = 5;
+const AC_HEAL = 6;
+const AC_GOD = 7;
+const AC_REVIVE = 8;
+const AC_ZOOM = 9;
+const AC_GUN = 10;
+const AC_ZONE = 11;
+const AC_BAIT_VARIABLE = 12;
+const AC_BAIT_TRIGGER = 13;
+const AC_REMOTE_USE = 14;
+const AC_GRAVITY = 15;
+
+export var acEnabled = 1;
+export var acSlots = 16;
+export var acScope = 2;
+export var acStrikeLimit = 3;
+export var acStrikeDecay = 150;
+export var acPunishment = 0;
+export var acPunishFrames = 150;
+export var acNormalMobility = 1;
+export var acShare = 1;
+export var acRespawnGrace = 90;
+export var acJoinGrace = 90;
+export var acCooldown = 90;
+
+export var acFrame = 0;
+export var acViolationCount = 0;
+export var acLastViolationSlot = -1;
+export var acLastViolationCode = 0;
+export var acLastViolationText = "";
+export var acReport = "";
+
+var acCodeNames[];
+var acPlayers[];
+var acGeneration[];
+var acSlotLogin[];
+var acExemptUntil[];
+var acStrikes[];
+var acStrikeCodes[];
+var acLastStrike[];
+var acViolations[];
+var acFrozenUntil[];
+var acCooldownUntil[];
+var acDying[];
+var acSafeLeft[];
+var acSafeTop[];
+var acSafeRight[];
+var acSafeBottom[];
+var acReportSeen = "";
+var acGenerationCounter = 0;
+var acRefreshAt = 0;
+var acSpectating = 0;
+
+import "std/anticheat/slots.ptc";
+
+on start {
+  push(acCodeNames, "");
+  push(acCodeNames, "speed");
+  push(acCodeNames, "jump");
+  push(acCodeNames, "fly");
+  push(acCodeNames, "teleport");
+  push(acCodeNames, "hp above max");
+  push(acCodeNames, "heal");
+  push(acCodeNames, "god mode");
+  push(acCodeNames, "revive");
+  push(acCodeNames, "zoom");
+  push(acCodeNames, "gun");
+  push(acCodeNames, "forbidden zone");
+  push(acCodeNames, "bait variable");
+  push(acCodeNames, "bait trigger");
+  push(acCodeNames, "remote use");
+  push(acCodeNames, "gravity");
+}
+
+function acCodeName(code) {
+  if (code > 0 && code < len(acCodeNames)) { return acCodeNames[code]; }
+  return "check {code}";
+}
+
+function acIsOwn(who) {
+  return who == slot();
+}
+
+function acIsExempt(who) {
+  return acExemptUntil[who] > acFrame;
+}
+
+export function acExempt(who, frames) {
+  let until = acFrame + frames;
+  if (acExemptUntil[who] > until) { return; }
+  acExemptUntil[who] = until;
+}
+
+export function acExemptAll(frames) {
+  for (let index = 0; index < len(acPlayers); index += 1) { acExempt(acPlayers[index], frames); }
+}
+
+function acStartSlot(who, login) {
+  acGenerationCounter += 1;
+  acGeneration[who] = acGenerationCounter;
+  acSlotLogin[who] = login;
+  acStrikes[who] = 0;
+  acStrikeCodes[who] = "";
+  acLastStrike[who] = acFrame;
+  acViolations[who] = 0;
+  acFrozenUntil[who] = 0;
+  acCooldownUntil[who] = 0;
+  acDying[who] = 0;
+  acExemptUntil[who] = acFrame + acJoinGrace;
+}
+
+function acTrack(who) {
+  acReadIdentity(who);
+  if (acName == AC_EMPTY_SLOT) { return; }
+  if (acGeneration[who] > 0) {
+    if (acSlotLogin[who] != acLogin) { acStartSlot(who, acLogin); }
+  } else {
+    acStartSlot(who, acLogin);
+  }
+  push(acPlayers, who);
+}
+
+function acRefreshPlayers() {
+  clear(acPlayers);
+  action(139, acSpectating, 0);
+  if (!multiplayer()) {
+    acTrack(slot());
+    return;
+  }
+  if (acScope == AC_SCOPE_OWN) {
+    if (acSpectating == 0) { acTrack(slot()); }
+    return;
+  }
+  let last = acSlots;
+  if (last > AC_MAX_SLOTS) { last = AC_MAX_SLOTS; }
+  for (let who = 0; who < last; who += 1) {
+    if (acIsOwn(who) && acSpectating == 1) { continue; }
+    acTrack(who);
+  }
+}
+
+function acWatchDeath(who) {
+  let dying = 0;
+  action(544, dying, who);
+  if (dying == 1) {
+    acDying[who] = 1;
+    acExempt(who, acRespawnGrace);
+  } else {
+    acDying[who] = 0;
+  }
+}
+
+function acDecay(who) {
+  if (acStrikes[who] > 0 && acFrame - acLastStrike[who] > acStrikeDecay) {
+    acStrikes[who] -= 1;
+    acLastStrike[who] = acFrame;
+    if (acStrikes[who] == 0) { acStrikeCodes[who] = ""; }
+  }
+}
+
+function acThaw(who) {
+  if (acFrozenUntil[who] > 0 && acFrozenUntil[who] <= acFrame) {
+    acFrozenUntil[who] = 0;
+    let mobility = acNormalMobility;
+    action(521, who, mobility);
+  }
+}
+
+function acPunish(who) {
+  if (!acIsOwn(who)) { return; }
+  if (acPunishment == AC_PUNISH_FREEZE) {
+    let still = AC_FREEZE_MOBILITY;
+    action(521, who, still);
+    acFrozenUntil[who] = acFrame + acPunishFrames;
+  } else if (acPunishment == AC_PUNISH_KILL) {
+    let none = 0;
+    let damage = AC_KILL_DAMAGE;
+    action(513, who, none);
+    action(529, who, damage);
+  }
+}
+
+function acReportViolation(who, code, detail) {
+  acReadIdentity(who);
+  let message = "[anticheat] {acName} ({acLogin}) slot {who}: {acStrikeCodes[who]} ({detail})";
+  say(message, AC_COLOR);
+  acViolationCount += 1;
+  acLastViolationSlot = who;
+  acLastViolationCode = code;
+  acLastViolationText = message;
+  if (acShare == 1 && acIsOwn(who) && multiplayer()) {
+    acReport = message .. " #" .. acViolationCount;
+    acReportSeen = acReport;
+    sync(acReport);
+  }
+}
+
+export function acFlag(who, code, weight, detail) {
+  if (acIsExempt(who)) { return; }
+  acFlagAlways(who, code, weight, detail);
+}
+
+export function acFlagAlways(who, code, weight, detail) {
+  if (acEnabled != 1) { return; }
+  if (acCooldownUntil[who] > acFrame) { return; }
+  let codeName = acCodeName(code);
+  if (!contains(acStrikeCodes[who], codeName)) {
+    if (acStrikeCodes[who] == "") { acStrikeCodes[who] = codeName; } else { acStrikeCodes[who] ..= AC_SEPARATOR .. codeName; }
+  }
+  acStrikes[who] += weight;
+  acLastStrike[who] = acFrame;
+  if (acStrikes[who] >= acStrikeLimit) {
+    acStrikes[who] = 0;
+    acViolations[who] += 1;
+    acCooldownUntil[who] = acFrame + acCooldown;
+    acReportViolation(who, code, detail);
+    acStrikeCodes[who] = "";
+    acPunish(who);
+  }
+}
+
+export function acAddSafeBox(left, top, width, height) {
+  push(acSafeLeft, left);
+  push(acSafeTop, top);
+  push(acSafeRight, left + width);
+  push(acSafeBottom, top + height);
+}
+
+function acInSafeBox(who) {
+  if (len(acSafeLeft) == 0) { return 0; }
+  acMoveProbe(who);
+  for (let index = 0; index < len(acSafeLeft); index += 1) {
+    if (acPx >= acSafeLeft[index] && acPx <= acSafeRight[index] && acPy >= acSafeTop[index] && acPy <= acSafeBottom[index]) { return 1; }
+  }
+  return 0;
+}
+
+function acShouldSkip(who) {
+  if (acIsExempt(who)) { return 1; }
+  if (acDying[who] == 1) { return 1; }
+  return acInSafeBox(who);
+}
+
+function acWeight(who, ownWeight, otherWeight) {
+  if (acIsOwn(who)) { return ownWeight; }
+  return otherWeight;
+}
+
+function acShowSharedReports() {
+  if (acReport == acReportSeen) { return; }
+  acReportSeen = acReport;
+  if (acReport != "") { say(acReport, AC_SHARED_COLOR); }
+}
+
+every 1 {
+  acFrame += 1;
+  if (acEnabled == 1) {
+    if (acFrame >= acRefreshAt) {
+      acRefreshAt = acFrame + AC_REFRESH_FRAMES;
+      acRefreshPlayers();
+    }
+    for (let index = 0; index < len(acPlayers); index += 1) {
+      let who = acPlayers[index];
+      acWatchDeath(who);
+      acDecay(who);
+      acThaw(who);
+    }
+    acShowSharedReports();
+  }
+}

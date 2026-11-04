@@ -1,0 +1,108 @@
+// Standard library: anti-cheat health checks. Guide: std/anticheat/anticheat.md.
+//
+// Per player and timer tick it reads the hitpoints (action 122):
+// - above max: more than acMaxHp (the editor's default for a player is 130; set yours);
+// - heal: hitpoints rose by more than acMaxHealStep in one tick. The game's own regeneration
+//   adds about 1 per tick and a healing gun about 15 per hit, so the default leaves room; call
+//   acExempt(slot, frames) where the map heals players itself;
+// - revive: a dying character stands up again within acReviveRadius of where it fell, while
+//   respawning puts it somewhere else. Off in cooperative matches (mode 2), where a teammate's
+//   defibrillator does the same (acReviveInCoop turns it on);
+// - refused damage (own player only, every acGodProbeFrames ticks): sets the player's hitpoints
+//   1 lower (action 513) and reads them back. The game always takes the lower value, so a value
+//   that stays means the character refuses damage. The hitpoints are put back right away, in
+//   the same tick: the player sees nothing.
+
+import "std/anticheat/core.ptc";
+
+const AC_GOD_PROBE_STEP = 1;
+const AC_HP_SLACK = 1;
+const AC_MODE_COOP = 2;
+
+export var acHealthEnabled = 1;
+export var acMaxHp = 130;
+export var acMaxHealStep = 50;
+export var acReviveRadius = 60;
+export var acReviveInCoop = 0;
+export var acGodProbeFrames = 90;
+export var acHealthOtherWeight = 2;
+
+var acHpGeneration[];
+var acHpLast[];
+var acHpWasDying[];
+var acHpFallX[];
+var acHpFallY[];
+var acHpProbeAt = 0;
+var acHpMode = 0;
+
+function acHpStart(who) {
+  acHpGeneration[who] = acGeneration[who];
+  acHpLast[who] = acReadHp(who);
+  acHpWasDying[who] = acDying[who];
+  acHpFallX[who] = 0;
+  acHpFallY[who] = 0;
+}
+
+function acHpWatchRevive(who) {
+  let dying = acDying[who];
+  let wasDying = acHpWasDying[who];
+  acHpWasDying[who] = dying;
+  if (dying == 1 && wasDying != 1) {
+    acMoveProbe(who);
+    acHpFallX[who] = acPx;
+    acHpFallY[who] = acPy;
+    return;
+  }
+  if (dying == 1 || wasDying != 1 || acHp <= 0) { return; }
+  if (acHpMode == AC_MODE_COOP && acReviveInCoop != 1) { return; }
+  acMoveProbe(who);
+  let moveX = acPx - acHpFallX[who];
+  let moveY = acPy - acHpFallY[who];
+  if (moveX < 0) { moveX = -moveX; }
+  if (moveY < 0) { moveY = -moveY; }
+  if (moveX + moveY < acReviveRadius) {
+    acFlagAlways(who, AC_REVIVE, acWeight(who, acStrikeLimit, acHealthOtherWeight), "stood up where it fell, at {acPx},{acPy}");
+  }
+}
+
+function acHpProbeGod(who) {
+  if (acDying[who] == 1 || acIsExempt(who)) { return; }
+  let before = acReadHp(who);
+  if (before <= AC_GOD_PROBE_STEP) { return; }
+  let lower = before - AC_GOD_PROBE_STEP;
+  action(513, who, lower);
+  let after = acReadHp(who);
+  action(513, who, before);
+  acHp = before;
+  if (after >= before) {
+    acFlag(who, AC_GOD, acStrikeLimit, "hitpoints {before} did not go down to {lower}");
+  }
+}
+
+function acHpCheck(who, probe) {
+  if (acHpGeneration[who] != acGeneration[who]) { acHpStart(who); }
+  let last = acHpLast[who];
+  let now = acReadHp(who);
+  acHpLast[who] = now;
+  acHpWatchRevive(who);
+  if (acShouldSkip(who)) { return; }
+  if (acMaxHp > 0 && now > acMaxHp + AC_HP_SLACK) {
+    acFlag(who, AC_HP_ABOVE_MAX, acWeight(who, acStrikeLimit, acHealthOtherWeight), "hitpoints {now} above {acMaxHp}");
+  }
+  if (last > 0 && now - last > acMaxHealStep) {
+    acFlag(who, AC_HEAL, 1, "hitpoints {last} to {now} in one tick");
+  }
+  if (probe && acIsOwn(who)) { acHpProbeGod(who); }
+}
+
+every 1 {
+  if (acEnabled == 1 && acHealthEnabled == 1) {
+    let probe = 0;
+    if (acGodProbeFrames > 0 && acFrame >= acHpProbeAt) {
+      probe = 1;
+      acHpProbeAt = acFrame + acGodProbeFrames;
+      action(177, acHpMode, 0);
+    }
+    for (let index = 0; index < len(acPlayers); index += 1) { acHpCheck(acPlayers[index], probe); }
+  }
+}

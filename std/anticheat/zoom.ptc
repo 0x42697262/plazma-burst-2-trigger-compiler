@@ -1,0 +1,46 @@
+// Standard library: anti-cheat zoom check: a camera zoomed out farther than the map allows
+// shows more of the map than the other players see. Guide: std/anticheat/anticheat.md.
+//
+// The camera belongs to each game, so only the own player is checked. Action 369 gives the
+// camera zoom in percent. The smallest allowed zoom is acMinZoom; 0 means: learn it acZoomLearnAt
+// ticks after the map starts, once the map's gamescale mark and start triggers have set it.
+// A zoom below acMinZoom * acZoomTolerance for acZoomFrames ticks is a strike, and with
+// acZoomRestore 1 the zoom is put back (action 370). A map that zooms out by itself should set
+// acMinZoom to its smallest zoom, or call acExempt(slot(), frames).
+
+import "std/anticheat/core.ptc";
+
+export var acZoomEnabled = 1;
+export var acMinZoom = 0;
+export var acZoomTolerance = 0.95;
+export var acZoomFrames = 15;
+export var acZoomRestore = 1;
+export var acZoomLearnAt = 30;
+
+var acZoomNow = 0;
+var acZoomOutFrames = 0;
+
+function acZoomCheck() {
+  let own = slot();
+  action(369, acZoomNow, 0);
+  if (acMinZoom <= 0) {
+    if (acFrame >= acZoomLearnAt) { acMinZoom = acZoomNow; }
+    return;
+  }
+  if (acIsExempt(own) || acZoomNow >= acMinZoom * acZoomTolerance) {
+    acZoomOutFrames = 0;
+    return;
+  }
+  acZoomOutFrames += 1;
+  if (acZoomOutFrames < acZoomFrames) { return; }
+  acZoomOutFrames = 0;
+  acFlag(own, AC_ZOOM, 1, "zoom {acZoomNow}% below {acMinZoom}%");
+  if (acZoomRestore == 1) {
+    let allowed = acMinZoom;
+    action(370, own, allowed);
+  }
+}
+
+every 1 {
+  if (acEnabled == 1 && acZoomEnabled == 1 && acSpectating != 1) { acZoomCheck(); }
+}
