@@ -348,7 +348,6 @@ These cannot be checked with trigger actions. Each entry says why.
 | Enemies and bots | In multiplayer, slots below `acSlots` are checked whatever they hold, so set `acSlots` to the number of `<player>` elements. In single player only the own player is checked |
 | Hitpoints above max on maps with different player maximums | `acMaxHp` is one number for all players; no action reads a character's max hitpoints. Set it to the highest, or 0 to turn the check off |
 | The trigger text output | `.txt` holds triggers only: add the timers, the `#acProbe` region and the Var Sync engine mark by hand, or use the XML output |
-| The web page | The web page bundles only the files directly in `std/`, not `std/anticheat/`. Use the command line, or copy the files next to your program and import them by relative path |
 
 Other limits:
 
