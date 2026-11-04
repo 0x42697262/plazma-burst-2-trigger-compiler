@@ -1,5 +1,5 @@
 // Standard library: anti-cheat teleport check: a character that moves farther in one tick than
-// its speed allows. Guide: std/anticheat/anticheat.md.
+// its speed allows. Guide: docs/anticheat.md.
 //
 // Each timer tick it reads every checked player's position (a probe region moved onto the
 // character, actions 80, 118, 119) and speed (427, 428). A move longer than

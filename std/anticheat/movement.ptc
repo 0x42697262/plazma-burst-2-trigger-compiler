@@ -1,4 +1,4 @@
-// Standard library: anti-cheat movement checks. Guide: std/anticheat/anticheat.md.
+// Standard library: anti-cheat movement checks. Guide: docs/anticheat.md.
 //
 // The game moves a living character by its speed every tick and adds the gravity (0.5, trigger
 // action 5) to its vertical speed every tick, until something stops it. A jump starts at a

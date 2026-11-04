@@ -1,5 +1,5 @@
 // Standard library: anti-cheat core. Every std/anticheat/*.ptc check imports it; import the
-// checks you want, or std/anticheat/all.ptc for all of them. Guide: std/anticheat/anticheat.md.
+// checks you want, or std/anticheat/all.ptc for all of them. Guide: docs/anticheat.md.
 //
 // What it does each timer tick (every 1):
 // - keeps acPlayers[], the slots it checks: your own slot in single player; in multiplayer every

@@ -1,4 +1,4 @@
-// Standard library: anti-cheat health checks. Guide: std/anticheat/anticheat.md.
+// Standard library: anti-cheat health checks. Guide: docs/anticheat.md.
 //
 // Per player and timer tick it reads the hitpoints (action 122):
 // - above max: more than acMaxHp (the editor's default for a player is 130; set yours);

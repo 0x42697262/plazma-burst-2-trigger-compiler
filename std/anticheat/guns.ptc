@@ -1,5 +1,5 @@
 // Standard library: anti-cheat gun check: a player holding a gun model the map never hands out.
-// Guide: std/anticheat/anticheat.md.
+// Guide: docs/anticheat.md.
 //
 // List the gun models your map hands out (the map's guns, the hero gun engine marks, gun
 // triggers) with acAllowGun. Every acGunFrames ticks the held gun's model of each player is read

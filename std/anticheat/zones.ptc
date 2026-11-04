@@ -1,5 +1,5 @@
 // Standard library: anti-cheat forbidden zones: a living player inside a place no player can
-// reach (the inside of a wall, a closed room, outside the map). Guide: std/anticheat/anticheat.md.
+// reach (the inside of a wall, a closed room, outside the map). Guide: docs/anticheat.md.
 //
 // Mark those places with acForbidBox(left, top, width, height), in map units (the editor's x, y,
 // w, h of a region you draw there). Every acZoneFrames ticks, a living player whose position is

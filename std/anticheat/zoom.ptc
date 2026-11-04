@@ -1,5 +1,5 @@
 // Standard library: anti-cheat zoom check: a camera zoomed out farther than the map allows
-// shows more of the map than the other players see. Guide: std/anticheat/anticheat.md.
+// shows more of the map than the other players see. Guide: docs/anticheat.md.
 //
 // The camera belongs to each game, so only the own player is checked. Action 369 gives the
 // camera zoom in percent. The smallest allowed zoom is acMinZoom; 0 means: learn it acZoomLearnAt

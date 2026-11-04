@@ -1,5 +1,5 @@
 // Standard library: anti-cheat trigger and variable checks: triggers started by hand, regions
-// used from afar and variables written from outside the map. Guide: std/anticheat/anticheat.md.
+// used from afar and variables written from outside the map. Guide: docs/anticheat.md.
 //
 // Three tools:
 // - Bait triggers: adminGiveAllGuns, adminGodMode and debugUnlockAll are exported (uids

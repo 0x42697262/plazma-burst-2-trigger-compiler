@@ -9,7 +9,7 @@
 //   std/anticheat/triggers.ptc   bait triggers, bait variables, region use from afar (acGuardUse)
 //   std/anticheat/calibrate.ptc  while testing only: prints the values to set the limits from
 //
-// Guide, settings and what is not supported: std/anticheat/anticheat.md.
+// Guide, settings and what is not supported: docs/anticheat.md.
 
 import "std/anticheat/movement.ptc";
 import "std/anticheat/teleport.ptc";
