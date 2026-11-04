@@ -5,6 +5,9 @@ jumping, healing or zooming in ways the game itself never allows. It reports the
 and can punish them. Pick the checks you want by importing their files, or import
 `std/anticheat/all.ptc` for all of them.
 
+This page is the reference. For a step-by-step start, one check at a time, then mixed, then all
+of them, read the [anti-cheat tutorial](anticheat-tutorial.md).
+
 ```ptc
 import "std/anticheat/movement.ptc";
 import "std/anticheat/health.ptc";
@@ -35,8 +38,8 @@ Compile it into your map with `--into map.xml` as usual. The XML output already 
 the probe region `#acProbe` and the Var Sync engine mark (reports are synced). The trigger
 text output does not have them: add the listed timers, the region and the mark by hand.
 
-Facts come from the game client (build v1769098419, the build `docs/game-facts.md` was checked
-on). F-numbers point to `docs/game-facts.md`.
+Facts come from the game client (build v1769098419, the build [game-facts.md](game-facts.md) was
+checked on). F-numbers such as (F53) point to [game-facts.md](game-facts.md).
 
 ## How it works
 
@@ -229,7 +232,7 @@ These cannot be checked with trigger actions. Each entry says why.
 | Hovering in place | A character held still in the air has a vertical speed of 0, like a character standing on the ground, and no action tells whether a character stands on something |
 | Faster horizontal flying below `acMaxSpeedX` | Flying sideways at a normal speed reads like running; only the rise and speed limits apply |
 | Seeing hidden information (positions, names, distances, map uids) | Reading values on one's own game changes nothing the map can see. Keep secrets out of reach instead: spawn hidden things late, use `secret const` and `--obfuscate` |
-| Reading the map file (triggers, passwords, logic) | Every game downloads the whole map. Use `secret const`, `std/hash.ptc` and `--obfuscate` (docs/passwords.md, docs/obfuscation.md) |
+| Reading the map file (triggers, passwords, logic) | Every game downloads the whole map. Use `secret const`, `std/hash.ptc` and `--obfuscate` ([passwords.md](passwords.md), [obfuscation.md](obfuscation.md)) |
 | Walls changed only on one game | Walls have no uid and no action reads them. `zones.ptc` catches a player inside a place you marked, not the changed wall |
 | A game that stops its own triggers | A player can stop or change the map's triggers on their own game (F53). Their own reports and punishments stop with them; only the other games' checks of that player remain |
 | Kicking or banning | No action removes a chosen player from a match. Action 311 removes only the killer of a death event. Punishments are freeze and kill, on the player's own game |
