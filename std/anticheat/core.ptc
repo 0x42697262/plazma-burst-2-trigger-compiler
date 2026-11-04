@@ -11,6 +11,13 @@
 //   playing on this game, applies acPunishment (0 report, 1 freeze, 2 kill); then ignores that
 //   player for acCooldown frames.
 //
+// The map tells the library what it does to players itself:
+// - acExempt(slot, frames): the map is about to move, heal, launch or revive the player; no
+//   strikes for that player for frames ticks (the revive check included);
+// - allowances that last until changed or until another login takes the slot:
+//   acSetMaxHp(slot, hitpoints), acAllowFlight(slot, 1), acSetMoveScale(slot, scale) for a
+//   bigger or faster player, acAllowRevive(slot, frames); acResetAllowances(slot) clears them.
+//
 // Settings: change them in your own "on start" block, after the import:
 //   import "std/anticheat/all.ptc";
 //   on start { acSlots = 8; acPunishment = AC_PUNISH_FREEZE; acMaxHp = 200; }
@@ -31,6 +38,7 @@ const AC_SHARED_COLOR = "#FFAA55";
 const AC_EMPTY_SLOT = "Empty";
 const AC_FREEZE_MOBILITY = 0;
 const AC_KILL_DAMAGE = 100000;
+const AC_NORMAL_SCALE = 1;
 const AC_SEPARATOR = ", ";
 
 const AC_SPEED = 1;
@@ -60,6 +68,7 @@ export var acNormalMobility = 1;
 export var acShare = 1;
 export var acRespawnGrace = 90;
 export var acJoinGrace = 90;
+export var acMaxHp = 130;
 export var acCooldown = 90;
 
 export var acFrame = 0;
@@ -74,6 +83,13 @@ var acPlayers[];
 var acGeneration[];
 var acSlotLogin[];
 var acExemptUntil[];
+var acExcusedUntil[];
+var acAllowanceSet[];
+var acAllowanceLogin[];
+var acMaxHpOf[];
+var acFlightOf[];
+var acMoveScaleOf[];
+var acReviveUntil[];
 var acStrikes[];
 var acStrikeCodes[];
 var acLastStrike[];
@@ -124,10 +140,82 @@ function acIsExempt(who) {
   return acExemptUntil[who] > acFrame;
 }
 
-export function acExempt(who, frames) {
+function acIsExcused(who) {
+  return acExcusedUntil[who] > acFrame;
+}
+
+function acGrace(who, frames) {
   let until = acFrame + frames;
   if (acExemptUntil[who] > until) { return; }
   acExemptUntil[who] = until;
+}
+
+export function acExempt(who, frames) {
+  acGrace(who, frames);
+  let until = acFrame + frames;
+  if (acExcusedUntil[who] > until) { return; }
+  acExcusedUntil[who] = until;
+}
+
+function acAllowanceHolds(who) {
+  if (acAllowanceSet[who] != 1) { return 0; }
+  return acAllowanceLogin[who] == acSlotLogin[who];
+}
+
+function acClaimAllowance(who) {
+  if (acAllowanceHolds(who)) { return; }
+  acReadIdentity(who);
+  acAllowanceSet[who] = 1;
+  acAllowanceLogin[who] = acLogin;
+  acMaxHpOf[who] = 0;
+  acFlightOf[who] = 0;
+  acMoveScaleOf[who] = AC_NORMAL_SCALE;
+  acReviveUntil[who] = 0;
+}
+
+export function acSetMaxHp(who, hitpoints) {
+  acClaimAllowance(who);
+  acMaxHpOf[who] = hitpoints;
+}
+
+export function acAllowFlight(who, allowed) {
+  acClaimAllowance(who);
+  acFlightOf[who] = allowed;
+}
+
+export function acSetMoveScale(who, scale) {
+  acClaimAllowance(who);
+  acMoveScaleOf[who] = scale;
+}
+
+export function acAllowRevive(who, frames) {
+  acClaimAllowance(who);
+  acReviveUntil[who] = acFrame + frames;
+}
+
+export function acResetAllowances(who) {
+  acAllowanceSet[who] = 0;
+}
+
+function acPlayerMaxHp(who) {
+  if (acAllowanceHolds(who) && acMaxHpOf[who] > 0) { return acMaxHpOf[who]; }
+  return acMaxHp;
+}
+
+function acPlayerMoveScale(who) {
+  if (acAllowanceHolds(who)) { return acMoveScaleOf[who]; }
+  return AC_NORMAL_SCALE;
+}
+
+function acPlayerMayFly(who) {
+  if (acAllowanceHolds(who)) { return acFlightOf[who] == 1; }
+  return 0;
+}
+
+function acPlayerMayRevive(who) {
+  if (acIsExcused(who)) { return 1; }
+  if (acAllowanceHolds(who)) { return acReviveUntil[who] > acFrame; }
+  return 0;
 }
 
 export function acExemptAll(frames) {
@@ -146,6 +234,7 @@ function acStartSlot(who, login) {
   acCooldownUntil[who] = 0;
   acDying[who] = 0;
   acExemptUntil[who] = acFrame + acJoinGrace;
+  acExcusedUntil[who] = 0;
 }
 
 function acTrack(who) {
@@ -183,7 +272,7 @@ function acWatchDeath(who) {
   action(544, dying, who);
   if (dying == 1) {
     acDying[who] = 1;
-    acExempt(who, acRespawnGrace);
+    acGrace(who, acRespawnGrace);
   } else {
     acDying[who] = 0;
   }

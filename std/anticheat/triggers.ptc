@@ -13,7 +13,8 @@
 //   dashes.
 // - acGuardUse(x, y, radius): call it first in an exported function that a region starts. It
 //   returns 0, and gives a strike, when the player who used the region is more than radius map
-//   units from x, y:
+//   units from x, y. A map that starts the region for a player itself (action 499) calls
+//   acExempt(slot, frames) first:
 //
 //   export function openVault() {
 //     if (!acGuardUse(1200, -340, 150)) { return; }
@@ -73,7 +74,7 @@ function acBaitCheck() {
 
 export function acGuardUse(centerX, centerY, radius) {
   let who = initiator();
-  if (who < 0) { return 1; }
+  if (who < 0 || acIsExcused(who)) { return 1; }
   acMoveProbe(who);
   let awayX = acPx - centerX;
   let awayY = acPy - centerY;
