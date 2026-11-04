@@ -25,8 +25,12 @@ what the library cannot check.
    1. [The full import](#31-the-full-import)
    2. [Reacting to violations](#32-reacting-to-violations)
    3. [Your own check](#33-your-own-check)
-4. [Adding it to an existing map](#part-4-adding-it-to-an-existing-map)
-5. [When honest players get reported](#part-5-when-honest-players-get-reported)
+4. [Maps that change players themselves](#part-4-maps-that-change-players-themselves)
+   1. [A new map tells the library](#41-a-new-map-tells-the-library)
+   2. [A saw map: hooks in old triggers](#42-a-saw-map-hooks-in-old-triggers)
+   3. [A zombie co-op map](#43-a-zombie-co-op-map)
+5. [Adding it to an existing map](#part-5-adding-it-to-an-existing-map)
+6. [When honest players get reported](#part-6-when-honest-players-get-reported)
 
 ## 0. Before you start
 
@@ -417,7 +421,7 @@ on start {
 }
 ```
 
-The whole library adds about 200 triggers and 2000 actions. If your map has many variables,
+The whole library adds about 240 triggers and 2300 actions. If your map has many variables,
 compile with `--direct-index`:
 
 ```
@@ -504,7 +508,196 @@ on start {
 `acStrikeLimit` as the weight makes one time enough for a violation. Use 1 for a rule that honest
 players can break by accident.
 
-## Part 4: adding it to an existing map
+## Part 4: maps that change players themselves
+
+Many maps teleport, heal, resize, lift or revive players on purpose. The checks only see the
+result, and a map's teleport looks just like a cheater's: no action tells which trigger moved a
+player. So the map tells the library, at the moment it acts:
+
+- `acExempt(slot, ticks)` for a moment: a teleport, a heal, a launch;
+- an allowance for a state that lasts: `acSetMaxHp`, `acAllowFlight`, `acSetMoveScale`,
+  `acAllowRevive` (until `acResetAllowances`, or until another login takes the slot);
+- a safe box for a place: a trap room, a teleport exit, a lift.
+
+The reference has the table of which checks respect what
+([Map changes or cheats](anticheat.md#map-changes-or-cheats)).
+
+### 4.1 A new map tells the library
+
+A map with power-ups: a giant potion, a jetpack, a boss who gets 1000 hitpoints. Each function
+tells the library before it changes the player.
+
+<!-- file: ac-powerups.ptc -->
+```ptc
+import "std/anticheat/movement.ptc";
+import "std/anticheat/teleport.ptc";
+import "std/anticheat/health.ptc";
+
+const GIANT_SCALE = 2;
+const BOSS_HP = 1000;
+
+export function giantPotion() {
+  let who = initiator();
+  acSetMoveScale(who, GIANT_SCALE);        // twice the speed and jump limits from now on
+  let size = GIANT_SCALE;
+  action(533, who, size);                  // the map makes the player twice as big
+}
+
+export function jetpackOn() {
+  acAllowFlight(initiator(), 1);           // the jetpack timers push this player up
+}
+
+export function jetpackOff() {
+  acAllowFlight(initiator(), 0);
+}
+
+export function becomeBoss() {
+  let who = initiator();
+  acExempt(who, 5);                        // the jump to 1000 hitpoints is not a heal
+  acSetMaxHp(who, BOSS_HP);                // and 1000 is this player's new maximum
+  action(498, who, BOSS_HP);
+}
+
+export function powerUpsEnd() {
+  let who = initiator();
+  acResetAllowances(who);
+  let size = 1;
+  action(533, who, size);
+}
+
+on start {
+  acSlots = 8;
+}
+```
+
+- Tell the library in the same trigger that changes the player. Nothing runs between two actions
+  of one trigger (F55 in [game-facts.md](game-facts.md)), so the checks never see the change
+  without the allowance.
+- Allowances belong to the player's login. When someone else takes the slot, they start with the
+  map-wide limits.
+
+### 4.2 A saw map: hooks in old triggers
+
+A saw map from before the library: its traps teleport players into rooms and back. Its triggers
+cannot call `acExempt(slot, ticks)`, since a trigger in the editor has no way to pass arguments.
+`hooks.ptc` adds triggers without parameters that act on the player who started the map's
+trigger (the initiator):
+
+<!-- file: saw.ptc -->
+```ptc
+import "std/anticheat/movement.ptc";
+import "std/anticheat/teleport.ptc";
+import "std/anticheat/health.ptc";
+import "std/anticheat/hooks.ptc";
+
+on start {
+  acSlots = 10;
+  acHookFrames = 20;
+  acAddSafeBox(3000, -900, 800, 400);      // the crusher room: players get thrown around
+}
+```
+
+Compiled with `--into saw-map.xml`, the program's hooks get the uids `#saw_acHookExempt`,
+`#saw_acHookAllowRevive` and so on. In the editor, open each trap trigger that moves a player and
+put one action before the move: "Execute trigger" with `#saw_acHookExempt`. As trigger text:
+
+```
+uid: #trigger*12
+enabled: true
+maxcalls: -1
+
+ExecTrigger( "#saw_acHookExempt", "0" );
+TeleportInitiatorFromTo( "#region*5", "#region*9" );
+```
+
+Or rewrite those triggers from the program instead of the editor. A `map { }` block with
+`--into` replaces a trigger's actions; copy the original actions and settings and add the hook
+first:
+
+<!-- file: saw-rewrite.ptc -->
+```ptc
+import "std/anticheat/teleport.ptc";
+import "std/anticheat/hooks.ptc";
+
+map {
+  Trigger("#trigger*12", maxcalls: Infinite) {
+    action(ExecTrigger, @acHookExempt);
+    action(TeleportInitiatorFromTo, "#region*5", "#region*9");
+  }
+}
+
+on start {
+  acSlots = 10;
+}
+```
+
+To find the triggers that need a hook, look for the actions that move, heal, resize or revive
+players. The reference lists them, with a `grep` line that prints their uids
+([Finding the triggers that change players](anticheat.md#finding-the-triggers-that-change-players)).
+
+Hooks act on the initiator. A trigger started by a timer, or by another player's action, has the
+wrong initiator or none. Give those places a safe box, or use `acHookExemptAll`.
+
+### 4.3 A zombie co-op map
+
+Humans who die stand up again where they fell, as zombies, on the other team, with more
+hitpoints, a little bigger and faster. Without the library knowing, that is a revive, hitpoints
+above max, a heal and speed all at once. This map turns players itself, so it tells the library
+for each zombie:
+
+<!-- file: ac-zombies.ptc -->
+```ptc
+import "std/anticheat/movement.ptc";
+import "std/anticheat/health.ptc";
+import "std/anticheat/zoom.ptc";
+import "std/anticheat/triggers.ptc";
+
+const ZOMBIE_HP = 400;
+const ZOMBIE_SCALE = 1.3;
+const ZOMBIE_REVIVE_TICKS = 60;
+var zombies[];
+
+function turnIntoZombie(who) {
+  acAllowRevive(who, ZOMBIE_REVIVE_TICKS);   // standing up in place is the map's doing
+  acExempt(who, 30);                         // so is the jump in hitpoints
+  acSetMaxHp(who, ZOMBIE_HP);
+  acSetMoveScale(who, ZOMBIE_SCALE);
+  action(507, who, Team.BlueTeam);
+  action(498, who, ZOMBIE_HP);               // then the map's own revive actions
+  zombies[who] = 1;
+}
+
+export function cure() {
+  let who = initiator();
+  acResetAllowances(who);
+  zombies[who] = 0;
+}
+
+every 15 {
+  for player p {
+    let dying = 0;
+    action(544, dying, p);
+    if (dying == 1 && zombies[p] != 1) { turnIntoZombie(p); }
+  }
+}
+
+on start {
+  acSlots = 12;
+  acMaxHp = 130;                             // humans
+  acReviveInCoop = 1;                        // check revives even in co-op: the map allows its own
+}
+```
+
+- `acReviveInCoop = 1` turns the revive check on in co-op matches. That only works because the
+  map allows each of its own revives first. Without that, leave it at 0.
+- The checks that no map mechanic can trip still apply to everyone, zombies included: refused
+  damage, the bait triggers and variables, zoom.
+
+The same map made before the library would use hooks in its resurrection trigger, when that
+trigger is started by the zombie itself: set `~<prefix>_acHookMaxHp~` to 400 with "Set variable",
+then "Execute trigger" `#<prefix>_acHookAllowRevive` and `#<prefix>_acHookSetMaxHp`.
+
+## Part 5: adding it to an existing map
 
 The library needs nothing from the map: it reads players by slot and brings its own probe
 region. To add it to a map you already have:
@@ -517,21 +710,21 @@ region. To add it to a map you already have:
    `--replace`.
 4. Replace the map with `out/ac-map.xml`, and play it with `calibrate.ptc` first.
 
-The old map's own triggers do not know about the library, so they cannot call `acExempt`. Give its
-teleporters, pushers, lifts, water and vehicles safe boxes instead (`acAddSafeBox`). Leave out the
-checks that do not fit: a map that hands out random guns should not import `guns.ptc`.
+The old map's own triggers do not know about the library. Tell it what they do with hooks
+([4.2](#42-a-saw-map-hooks-in-old-triggers)) or safe boxes (`acAddSafeBox`). Leave out the checks
+that do not fit: a map that hands out random guns should not import `guns.ptc`.
 
-## Part 5: when honest players get reported
+## Part 6: when honest players get reported
 
 | Report | Usual cause | Fix |
 |---|---|---|
-| `speed` | explosions, pushers, vehicles, a map with higher mobility | raise `acMaxSpeedX`; safe boxes over pushers and vehicle routes |
+| `speed` | explosions, pushers, vehicles, a map with higher mobility, bigger players | `acSetMoveScale` for resized players; raise `acMaxSpeedX`; safe boxes over pushers and vehicle routes |
 | `jump` | rocket jumps, jump pads, higher mobility or scale | raise `acMaxJumpSpeed`; `acExempt` in jump pad triggers |
-| `fly` | lifts, upward pushers, water | safe boxes over them; set `acGravity` to the map's gravity |
+| `fly` | lifts, upward pushers, water, flight powers | safe boxes over them; `acAllowFlight` for flight powers; set `acGravity` to the map's gravity |
 | `teleport` | the map's teleporters, vehicles, lag (seen from another game) | `acExempt` in the teleport trigger; safe boxes; raise `acTeleportMargin` |
-| `hp above max` | `acMaxHp` lower than the map's players, triggers that raise max hitpoints | set `acMaxHp` to the highest maximum, or 0 |
+| `hp above max` | `acMaxHp` lower than the map's players, triggers that raise max hitpoints | `acSetMaxHp` for players the map raises; `acMaxHp` for everyone else |
 | `heal` | the map's healing triggers, medkits | `acExempt` before healing; raise `acMaxHealStep` |
-| `revive` | revives in a map that is not a co-op match | leave `acReviveInCoop` at 0, or raise `acReviveRadius` |
+| `revive` | the map revives players itself | `acAllowRevive` / `acExempt` / `acHookAllowRevive` before it; `acReviveRadius = 0` turns the check off |
 | `zoom` | the map's own zoom-out | set `acMinZoom` to the map's smallest zoom |
 | `gun` | a gun model missing from the list | add it with `acAllowGun` |
 | `forbidden zone` | a box touching the walkable area | shrink the box |
