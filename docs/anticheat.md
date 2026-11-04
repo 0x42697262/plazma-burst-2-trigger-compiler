@@ -31,8 +31,9 @@ on start {
 | `guns.ptc` | held guns the map does not give |
 | `zones.ptc` | players inside solid or closed places |
 | `triggers.ptc` | bait triggers, bait variables, region use from afar |
+| `hooks.ptc` | triggers with no parameters that exempt or allow the player who started a map trigger |
 | `calibrate.ptc` | while testing: prints the values to set the limits from |
-| `all.ptc` | every check except `calibrate.ptc` |
+| `all.ptc` | every check and `hooks.ptc`, not `calibrate.ptc` |
 
 Compile it into your map with `--into map.xml` as usual. The XML output already has the timers,
 the probe region `#acProbe` and the Var Sync engine mark (reports are synced). The trigger
@@ -70,6 +71,9 @@ checked on). F-numbers such as (F53) point to [game-facts.md](game-facts.md).
   - for `acJoinGrace` ticks after a player shows up in a slot;
   - when the map calls `acExempt(slot, ticks)` or `acExemptAll(ticks)`;
   - inside safe boxes (`acAddSafeBox(left, top, width, height)`).
+
+  The map's own changes to players are covered in
+  [Map changes or cheats](#map-changes-or-cheats).
 - Some actions read a character only by a fixed index written into the action: hitpoints (122),
   position (80), name (185), login (184) and drop guns (60). The character index is the player
   slot, so `slots.ptc` keeps one guarded copy of each action per slot, 0 to 31.
@@ -90,6 +94,9 @@ player:
   strike. This catches flying, a gravity that does not act on the player, and a gravity lower
   than the map's.
 
+A player the map made bigger or faster has its speed and jump limits multiplied by its move scale
+(`acSetMoveScale`), and a player the map lets fly (`acAllowFlight`) skips the rise check.
+
 ### Teleport (`teleport.ptc`)
 
 Each tick the probe region is moved onto the character (action 80) and its position read
@@ -101,13 +108,16 @@ a violation on the player's own game, `acTeleportOtherWeight` strikes on the oth
 
 Each tick, for each player, the hitpoints are read (action 122):
 
-- **Above max:** more than `acMaxHp` (+1) is a violation on the own game, 2 strikes elsewhere.
+- **Above max:** more than the player's maximum (+1) is a violation on the own game, 2 strikes
+  elsewhere. The maximum is the one the map set for that player with `acSetMaxHp`, or else
+  `acMaxHp`.
 - **Heal:** a rise of more than `acMaxHealStep` in one tick is a strike. The game's regeneration
   gives about 1 per tick and a healing gun about 15 per hit.
 - **Revive:** when a dying character stands up again, its position is compared with where it
   fell. Respawning puts it somewhere else; within `acReviveRadius` it was stood up in place. Off
   in co-op matches (action 177 gives 2), where a teammate can revive players
-  (`acReviveInCoop = 1` turns it on).
+  (`acReviveInCoop = 1` turns it on). Skipped while the map exempts the player (`acExempt`) or
+  allows a revive (`acAllowRevive`); `acReviveRadius = 0` turns it off.
 - **Refused damage**, own player only, every `acGodProbeFrames` ticks: the hitpoints are set 1
   lower (action 513) and read back. The game always takes a lower value, so a value that stays
   the same means the character refuses damage, which is a violation. The old hitpoints are put
@@ -147,7 +157,98 @@ whose position is strictly inside one is a violation on the own game, 2 strikes 
   does not carry its sender (F53).
 - **`acGuardUse(x, y, radius)`:** call it first in an exported function that a region starts. It
   reads the initiator's position, and when that is more than `radius` from `x, y` on either
-  axis, it gives a strike and returns 0, so the function can stop.
+  axis, it gives a strike and returns 0, so the function can stop. A player the map exempts
+  (`acExempt`) passes.
+
+## Map changes or cheats
+
+A trigger cannot see what another trigger did: no action tells which trigger ran or what started
+it (F52, F54). The checks only see the result, and a map that teleports, heals, resizes, lifts or
+revives a player leaves the same result as a cheat. So the library tells them apart only when the
+map tells it, at the moment it acts. There are three ways, from most to least exact:
+
+1. **Exemptions**, for a moment: the map's trigger calls `acExempt(slot, ticks)` (or
+   `acExemptAll(ticks)`) right before it moves, heals, launches or revives a player.
+2. **Allowances**, for a state that lasts: a zombie with 500 hitpoints, a flight power, a giant
+   player. They hold until the map changes them, or until another login takes the slot:
+
+   | Function | Effect on that player |
+   |---|---|
+   | `acSetMaxHp(slot, hitpoints)` | its maximum for the above-max check |
+   | `acAllowFlight(slot, 1)` | no rise check (0 turns it back on) |
+   | `acSetMoveScale(slot, scale)` | speed and jump limits times `scale` |
+   | `acAllowRevive(slot, ticks)` | may stand up where it fell during `ticks` |
+   | `acResetAllowances(slot)` | the map-wide limits again |
+
+3. **Safe boxes** (`acAddSafeBox`), for places: teleport exits, trap rooms, pushers, lifts, water,
+   vehicle routes. They need no change to the map's triggers, but nobody inside one is checked by
+   the position and speed checks.
+
+Checks that no map mechanic can trip need none of this: refused damage (the probe's write and
+read run with no other trigger in between), the bait triggers and variables, and `acGuardUse`.
+Guns, zones and zoom only need the right setup (`acAllowGun`, boxes away from walkable areas,
+`acMinZoom`).
+
+### What each check respects
+
+| Check | Death and join grace | `acExempt` | Safe boxes | Allowances |
+|---|---|---|---|---|
+| Speed, jump | yes | yes | yes | `acSetMoveScale` |
+| Rising against gravity | yes | yes | yes | `acAllowFlight` |
+| Teleport | yes | yes | yes | |
+| Hitpoints above max | yes | yes | yes | `acSetMaxHp` |
+| Heal | yes | yes | yes | |
+| Revive | no (it starts during death) | yes | no | `acAllowRevive` |
+| Refused damage | yes | yes | no | |
+| Zoom | yes | yes | no (the camera has no place) | |
+| Guns | yes | yes | yes | |
+| Zones | yes | yes | yes | |
+| `acGuardUse` | no | yes | no | |
+| Bait triggers | no | no | no | nothing in a map runs them |
+| Bait variables | no | no | no | not tied to a player |
+
+### Hooks for old maps (`hooks.ptc`)
+
+A map made before the library cannot call `acExempt(slot, ticks)`: its triggers have no way to
+pass arguments. `hooks.ptc` exports functions without parameters that act on the
+player-initiator (action 180), the player who started the map's trigger. Add one action to the
+map's trigger, "Execute trigger" (99) with the hook's uid, before the action that changes the
+player:
+
+| Hook uid | Effect on the initiator |
+|---|---|
+| `#<prefix>_acHookExempt` | no strikes for `acHookFrames` ticks (30) |
+| `#<prefix>_acHookExemptAll` | the same for every player |
+| `#<prefix>_acHookAllowRevive` | may stand up where it fell for `acHookFrames` ticks |
+| `#<prefix>_acHookAllowFlight` | no rise check until `acHookReset` |
+| `#<prefix>_acHookSetMaxHp` | its maximum becomes `acHookMaxHp` |
+| `#<prefix>_acHookSetMoveScale` | speed and jump limits times `acHookMoveScale` |
+| `#<prefix>_acHookReset` | the map-wide limits again |
+
+A trigger can change `acHookFrames`, `acHookMaxHp` or `acHookMoveScale` first with "Set variable"
+on `~<prefix>_acHookMaxHp~`. A hook run by a timer has no initiator and does nothing, except
+`acHookExemptAll`.
+
+### Finding the triggers that change players
+
+Look for these action numbers in the map's triggers (`actions_N_type` in the XML, or the
+`op<N>`/alias names after `npm run convert`):
+
+| The map… | Actions | What to add |
+|---|---|---|
+| moves players | 14, 30, 31, 70, 279, 351, 371, 402, 556, 557, 558, 559 | `acExempt` / `acHookExempt`, or a safe box at the exit |
+| sets or heals hitpoints | 4, 23, 48, 59, 254, 255, 256, 404, 464, 465, 498, 511, 513 | `acExempt` before a heal; `acSetMaxHp` when it raises the maximum |
+| resizes players | 220, 221, 533 | `acSetMoveScale` |
+| changes speed, mobility or jumps | 61, 88, 297, 429, 430, 521, 541 | `acSetMoveScale`, `acAllowFlight` for lasting upward pushes, or `acExempt` for a launch |
+| changes gravity | 5 | `acGravity` to the new value |
+| changes the zoom | 51, 222, 368, 370 | `acMinZoom` to the smallest |
+| revives or turns dead players into others (team change and hitpoints on a dying player) | 33, 505, 506, 507 with the hitpoint actions | `acAllowRevive` / `acHookAllowRevive` |
+
+To list the uids of triggers that use one of them, for example the movers:
+
+```
+grep -o '<trigger [^>]*>' map.xml | grep -E 'type="(14|30|31|70|279|351|371|402|556|557|558|559)"' | grep -o 'uid="[^"]*"'
+```
 
 ## Settings
 
@@ -168,6 +269,7 @@ file order. Every setting is an `export var`, so the host map can also read or c
 | `acNormalMobility` | 1 | core | mobility given back after a freeze |
 | `acShare` | 1 | core | sync own violations so every game shows them |
 | `acRespawnGrace`, `acJoinGrace` | 90, 90 | core | grace ticks after dying and after joining |
+| `acMaxHp` | 130 | core | the map's player max hitpoints, for players without `acSetMaxHp` (0: off) |
 | `acMovementEnabled` | 1 | movement | 0 turns the movement checks off |
 | `acMaxSpeedX` | 25 | movement | horizontal speed limit (calibrate) |
 | `acSpeedFrames` | 15 | movement | ticks above the limit per strike |
@@ -178,7 +280,6 @@ file order. Every setting is an `export var`, so the host map can also read or c
 | `acTeleportMargin`, `acTeleportSpeedShare` | 90, 3 | teleport | allowed move per tick: margin + (\|vx\| + \|vy\|) × share |
 | `acTeleportOtherWeight` | 1 | teleport | strikes when seen through the network |
 | `acHealthEnabled` | 1 | health | 0 turns the health checks off |
-| `acMaxHp` | 130 | health | the map's player max hitpoints (0: off) |
 | `acMaxHealStep` | 50 | health | hitpoints gained per tick before it counts as a heal |
 | `acReviveRadius`, `acReviveInCoop` | 60, 0 | health | revive distance; 1 checks co-op matches too |
 | `acGodProbeFrames` | 90 | health | ticks between refused-damage probes (0: off) |
@@ -189,10 +290,13 @@ file order. Every setting is an `export var`, so the host map can also read or c
 | `acGunEnabled`, `acGunFrames`, `acGunDrop`, `acGunOtherWeight` | 1, 10, 1, 2 | guns | on, check interval, drop all guns of an own violator, strikes elsewhere |
 | `acZoneEnabled`, `acZoneFrames`, `acZoneOtherWeight` | 1, 5, 2 | zones | on, check interval, strikes elsewhere |
 | `acBaitEnabled`, `acRemoteUseOtherWeight` | 1, 2 | triggers | bait triggers and variables on; region-use strikes elsewhere |
+| `acHookFrames`, `acHookMaxHp`, `acHookMoveScale` | 30, 0, 1 | hooks | what the hooks give the initiator |
 | `acCalibrateFrames` | 150 | calibrate | ticks between prints |
 
 Functions:
-- `acExempt(slot, ticks)`, `acExemptAll(ticks)`: grace periods.
+- `acExempt(slot, ticks)`, `acExemptAll(ticks)`: grace periods the map gives.
+- `acSetMaxHp(slot, hitpoints)`, `acAllowFlight(slot, allowed)`, `acSetMoveScale(slot, scale)`,
+  `acAllowRevive(slot, ticks)`, `acResetAllowances(slot)`: per-player allowances.
 - `acAddSafeBox(left, top, width, height)`, `acForbidBox(left, top, width, height)`: map areas.
 - `acAllowGun(model)`: guns the map hands out.
 - `acGuardUse(x, y, radius)`: region use from afar.
@@ -214,7 +318,7 @@ and set the limits a little above what it prints. Then:
 
 ## Cost
 
-All checks together add about 200 triggers and 2000 actions to the map. Every timer tick, each
+All checks together add about 240 triggers and 2300 actions to the map. Every timer tick, each
 checked player costs about 150 actions. An array with a changing index scans every variable of
 the map (F37), so compile with `--direct-index` when the map has many variables. A map with 8
 players runs a little over 1000 actions per tick, well inside a frame (about 1 µs per action,
@@ -226,6 +330,8 @@ These cannot be checked with trigger actions. Each entry says why.
 
 | Not supported | Why |
 |---|---|
+| Telling a map's change from a cheat by itself | No action tells which trigger ran or what started it (F52, F54); the map has to say so with exemptions, allowances or safe boxes (see [Map changes or cheats](#map-changes-or-cheats)) |
+| Reading a character's scale, mobility or jump multiplier | No action reads them: the map reports them with `acSetMoveScale` |
 | Fire rate, pellets per shot, spread, recoil | No action reads a held gun's settings. Action 334 (frames since a gun's last shot) works only for guns placed in the map, by their fixed index, and no action tells which player holds which of them |
 | Bullet damage, speed, lifetime, penetration | No action reads projectiles. A stronger hit only shows as lost hitpoints, which explosions also cause |
 | Dropping guns where the map forbids it | No action tells a drop apart from switching to an empty slot; action 555 only reads the held gun |
