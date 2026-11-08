@@ -63,8 +63,12 @@ select option, select optgroup { background: var(--bg); color: var(--text); }
   background: var(--bar); backdrop-filter: saturate(180%) blur(24px); -webkit-backdrop-filter: saturate(180%) blur(24px); border-radius: 10px; box-shadow: var(--shadow);
 }
 .menu button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 10px; background: transparent; color: var(--text); text-align: left; }
-.menu button:hover, .menu button:focus-visible { background: var(--accent); color: var(--accent-text); outline: none; }
+.menu button:not(:disabled):hover, .menu button:focus-visible { background: var(--accent); color: var(--accent-text); outline: none; }
+.menu button:disabled { color: var(--muted); cursor: default; }
 .menu small { font-size: 11px; opacity: 0.7; }
+.menu-separator { height: 1px; margin: 4px 6px; background: var(--line); }
+.menu-heading { display: flex; align-items: center; gap: 6px; padding: 4px 10px 2px; font-size: 11px; font-weight: 600; color: var(--muted); }
+.soon { border-radius: 10px; padding: 0 7px; background: var(--selected); color: var(--accent); font-size: 10px; font-weight: 600; }
 
 .palette {
   position: fixed; z-index: 1000; background: var(--bar); backdrop-filter: saturate(180%) blur(24px); -webkit-backdrop-filter: saturate(180%) blur(24px);
