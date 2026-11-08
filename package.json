@@ -12,6 +12,7 @@
     "snapshot-opcodes": "node src/tools/snapshot-opcodes/cli.ts",
     "compile": "node src/cli/cli.ts",
     "convert": "node src/convert/cli.ts",
+    "site": "node src/site/cli.ts",
     "emit-sample": "node src/tools/emit-sample/cli.ts",
     "live-check": "node src/tools/live-check/cli.ts",
     "actions-doc": "node src/tools/actions-doc/cli.ts",
