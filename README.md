@@ -35,6 +35,9 @@ The website editor cannot import XML into an open map; it can only replace the w
 2. `npm run compile -- game.ptc --into downloaded-map.xml`
 3. Replace the map with `out/game-map.xml`.
 
+From the terminal, `npm run site` does steps 1 and 3 for you: `login` once, then
+`pull <map id>` and `push out/game-map.xml <map id>` ([docs/site.md](docs/site.md)).
+
 The compiler refuses uids that the map already uses, adds or updates the objects of `map { }`
 blocks, refuses declared objects the map lacks, and warns when the map uses one of the program's
 variables that is not `export var`. To update a
@@ -113,6 +116,7 @@ simulator runs.
 |---|---|
 | `npm run verify` | lint, type check, tests |
 | `npm run convert -- <map.xml>` | turns a saved map into `.ptc` source ([docs/convert.md](docs/convert.md)); `--check` compiles it again and compares with the map |
+| `npm run site -- <command>` | signs in to plazmaburst2.com, lists, pulls, pushes and creates maps ([docs/site.md](docs/site.md)) |
 | `npm run live-check` | runs `examples/live/*` in the real game and compares every variable with the simulator (`-- --direct-index`, `-- --pcode`, `-- --obfuscate` or `-- --tamper-check <mode>` compiles them that way; `-- --only <name>` picks some) |
 | `npm run web` | builds the web page into `site/` |
 | `npm run lsp` | starts the language server on stdio |

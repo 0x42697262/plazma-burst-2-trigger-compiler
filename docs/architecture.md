@@ -19,6 +19,7 @@ source ──parse──► AST ──generate──► IR ──loop guard─�
 | Simulator | `src/sim/` | The game's trigger runner for the actions the compiler uses, with load-time conversion (F18) and XML escaping (F26) |
 | CLI | `src/cli/` | `npm run compile` |
 | Map converter | `src/convert/` | `npm run convert`: saved map XML to `.ptc` (`map-file.ts` reads elements, `convert.ts` plans and writes the source, `names.ts` makes names); `check.ts` compiles the source again and `compare.ts` lists the differences from the map ([convert.md](convert.md)) |
+| Website maps | `src/site/` | `npm run site`: signs in to plazmaburst2.com with cookies, lists, downloads, replaces and creates maps (`client.ts` requests, `protocol.ts` cookies and page parsing, `session.ts` the saved sign-in) ([site.md](site.md)) |
 | Language service | `src/service/` | Diagnostics, completion, hover, definitions, references, symbols; shared by the language server and the web page |
 | Reference | `src/reference/` | One model of everything the language and the game offer (actions with categories and colors, parameter kinds, map objects and properties, values, engine marks, builtins, keywords), with links and search; read by the web page's sidebar and `actions-doc` |
 | Language server | `src/lsp/`, `bin/ptc-lsp.js` | LSP over stdio for any editor; Neovim files in `editors/nvim/` |
