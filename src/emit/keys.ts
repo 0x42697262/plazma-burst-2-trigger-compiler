@@ -15,6 +15,8 @@ export const ELEMENT_ATTRIBUTE = /([A-Za-z0-9_]+)="([^"]*)"/g;
 export const REGION_TAG = 'region';
 export const TRIGGER_TAG = 'trigger';
 export const TIMER_TAG = 'timer';
+export const IMAGE_TAG = 'image';
+export const IMAGE_ID_ATTRIBUTE = 'id';
 export const TRUE_TEXT = 'true';
 export const ACTION_ATTRIBUTE = /^actions_\d+_/;
 export const ACTION_FIELDS = 3;

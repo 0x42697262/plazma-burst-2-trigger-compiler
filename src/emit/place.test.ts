@@ -39,6 +39,43 @@ describe('map object placement', () => {
     assert.deepEqual(placement.walls, ['<box x="0" y="0" w="10" h="10" m="0" />']);
   });
 
+  it('replaces every image with the same custom id even when the element text differs', () => {
+    const host = [
+      '<door uid="#d" x="0" y="0" />',
+      '<image uid="#old" width="50" id="7" height="80" />',
+      '<image id="7" width="100" height="100" />',
+      '<image id="9" width="1" height="1" />',
+      '',
+    ].join('\n');
+    const image = object({ constructorName: 'Image', tag: 'image', set: [['id', '7'], ['width', '40']] });
+    const kept = placeObjects([image], { host, staging: STAGING, previousWalls: [], replacing: false });
+    assert.equal(kept.host, host);
+    const placement = placeObjects([image], { host, staging: STAGING, previousWalls: ['<image id="7" width="10" height="10" />'], replacing: true });
+    assert.equal(placement.host, '<door uid="#d" x="0" y="0" />\n<image id="9" width="1" height="1" />\n');
+    assert.deepEqual(placement.walls, ['<image id="7" width="40" height="100" />']);
+    assert.equal(placement.xml, '<image id="7" width="40" height="100" />\n');
+  });
+
+  it('replaces walls and backgrounds with the same rectangle when the element text differs', () => {
+    const host = [
+      '<box uid="#old" m="0" h="10" w="200" y="0" x="-1000" />',
+      '<box x="5" y="5" w="10" h="10" m="0" />',
+      '<bg h="1200" w="2000" y="-1000" x="-1000" m="9" c="" a="-1" u="0" v="0" f="0" s="true" />',
+      '<door uid="#d" x="0" y="0" />',
+      '',
+    ].join('\n');
+    const wall = object({ constructorName: 'Wall', tag: 'box', set: [['x', '-1000'], ['y', '0'], ['w', '200'], ['h', '10']] });
+    const background = object({ constructorName: 'Background', tag: 'bg', set: [['x', '-1000'], ['y', '-1000'], ['w', '2000'], ['h', '1200']] });
+    const kept = placeObjects([wall, background], { host, staging: STAGING, previousWalls: [], replacing: false });
+    assert.equal(kept.host, host);
+    const placement = placeObjects([wall, background], { host, staging: STAGING, previousWalls: [], replacing: true });
+    assert.equal(placement.host, '<box x="5" y="5" w="10" h="10" m="0" />\n<door uid="#d" x="0" y="0" />\n');
+    assert.deepEqual(placement.walls, [
+      '<box x="-1000" y="0" w="200" h="10" m="0" />',
+      '<bg x="-1000" y="-1000" w="2000" h="1200" m="0" c="" a="-1" u="0" v="0" f="0" s="true" />',
+    ]);
+  });
+
   it('writes trigger actions, replaces them in place, and keeps them when the code gives none', () => {
     const actions = [{ opcode: 102, targetA: '~n~', targetB: '1' }, { opcode: 99, targetA: '#f', targetB: '0' }];
     const created = placeObjects([object({ constructorName: 'Trigger', tag: 'trigger', uid: '#t', set: [['x', '0'], ['y', '0'], ['maxcalls', '-1']], actions })], {

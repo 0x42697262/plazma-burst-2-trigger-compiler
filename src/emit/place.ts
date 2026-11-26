@@ -4,7 +4,7 @@ import { DEFAULT_SIZE, ENGINE_MARK_TAG, MARK_ARGUMENT, POSITION_ATTRIBUTES, SIZE
 import type { Region } from '../sim/simulator.ts';
 import { escapeXml } from './xml-emitter.ts';
 import type { Position } from './xml-emitter.ts';
-import { ACTION_ATTRIBUTE, ACTION_FIELDS, ELEMENT_ATTRIBUTE, ELEMENT_PARTS, MAP_ELEMENT, REGION_TAG, TIMER_TAG, TRIGGER_TAG, TRUE_TEXT, XML_LINE_END } from './keys.ts';
+import { ACTION_ATTRIBUTE, ACTION_FIELDS, ELEMENT_ATTRIBUTE, ELEMENT_PARTS, IMAGE_ID_ATTRIBUTE, IMAGE_TAG, MAP_ELEMENT, REGION_TAG, TIMER_TAG, TRIGGER_TAG, TRUE_TEXT, XML_LINE_END } from './keys.ts';
 import { ENGINE_MARK, TRIGGER_ATTRIBUTE } from './attributes.ts';
 import { FIRST_ACTION_NUMBER } from './constants.ts';
 import type { Action, Program, Timer, Trigger } from '../program/types.ts';
@@ -91,6 +91,18 @@ function updateElement(element: Element, changes: readonly Attribute[], actions:
   return { text: elementText(element.tag, attributes) + lineEnd, changed };
 }
 
+const AREA_MATCH: readonly string[] = Object.freeze([POSITION_ATTRIBUTES.x, POSITION_ATTRIBUTES.y, SIZE_ATTRIBUTES.w, SIZE_ATTRIBUTES.h]);
+
+const attributeOf = (element: Element, name: string): string | undefined => element.attributes.find(([attribute]) => attribute === name)?.[1];
+
+const sameUnkeyed = (host: Element, claim: Element): boolean => {
+  if (host.tag !== claim.tag) return false;
+  if (host.tag === IMAGE_TAG) return attributeOf(host, IMAGE_ID_ATTRIBUTE) !== undefined && attributeOf(host, IMAGE_ID_ATTRIBUTE) === attributeOf(claim, IMAGE_ID_ATTRIBUTE);
+  const rules = tagRules(host.tag);
+  if (rules?.place && rules.rect) return AREA_MATCH.every((name) => attributeOf(claim, name) !== undefined && attributeOf(host, name) === attributeOf(claim, name));
+  return claim.attributes.every(([name, value]) => attributeOf(host, name) === value);
+};
+
 export function placeObjects(objects: readonly MapObject[], options: PlaceOptions): Placement {
   let stagingIndex = 0;
   const staging = (): Position => options.staging(stagingIndex++);
@@ -103,19 +115,55 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
     const xml = objects.map((object) => {
       const text = createElement(object, staging);
       if (object.uid !== null) created.push(object.uid);
+      else if (object.mark === null) walls.push(text);
       return text + XML_LINE_END;
     }).join('');
     if (created.length > 0) notes.push(TEXT.writtenWithoutMap(created));
-    return { host: null, xml, notes, problems, walls: [], declaresVarSync };
+    return { host: null, xml, notes, problems, walls, declaresVarSync };
   }
-  const pendingWalls = options.replacing ? [...options.previousWalls] : [];
-  const elements: Element[] = [];
-  const removed = new Set<number>();
+  const allElements: Element[] = [];
   let position = 0;
   for (const match of options.host.matchAll(MAP_ELEMENT)) {
     const element = parseElement(match[0], position);
     position += 1;
-    if (element === null) continue;
+    if (element !== null) allElements.push(element);
+  }
+  const byUid = new Map<string, Element>();
+  const marks = new Map<string, Element[]>();
+  for (const element of allElements) {
+    const uid = attributeOf(element, UID_ATTRIBUTE_NAME);
+    if (uid !== undefined && !byUid.has(uid)) byUid.set(uid, element);
+    const mark = element.tag === ENGINE_MARK_TAG ? attributeOf(element, MARK_ARGUMENT) : undefined;
+    if (mark !== undefined) marks.set(mark, [...(marks.get(mark) ?? []), element]);
+  }
+  let pendingWalls = options.replacing ? [...options.previousWalls] : [];
+  const recordedWalls = pendingWalls.length === 0;
+  const claims: Element[] = [];
+  if (options.replacing) {
+    let probeIndex = 0;
+    const probeStaging = (): Position => options.staging(probeIndex++);
+    for (const object of objects) {
+      if (object.uid !== null) {
+        if (byUid.get(object.uid) === undefined) createElement(object, probeStaging);
+      } else if (object.mark !== null) {
+        if ((marks.get(object.mark) ?? []).length === 0) createElement(object, probeStaging);
+      } else {
+        const text = createElement(object, probeStaging);
+        const claim = parseElement(text, claims.length);
+        if (claim !== null) claims.push(claim);
+        if (recordedWalls) pendingWalls.push(text);
+      }
+    }
+  }
+  const elements: Element[] = [];
+  const removed = new Set<number>();
+  for (const element of allElements) {
+    if (claims.some((claim) => sameUnkeyed(element, claim))) {
+      const listed = pendingWalls.indexOf(element.text.trim());
+      if (listed >= 0) pendingWalls.splice(listed, 1);
+      removed.add(element.index);
+      continue;
+    }
     const wall = pendingWalls.indexOf(element.text.trim());
     if (wall >= 0) {
       pendingWalls.splice(wall, 1);
@@ -124,12 +172,12 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
     }
     elements.push(element);
   }
-  const byUid = new Map<string, Element>();
-  const marks = new Map<string, Element[]>();
+  byUid.clear();
+  marks.clear();
   for (const element of elements) {
-    const uid = element.attributes.find(([name]) => name === UID_ATTRIBUTE_NAME)?.[1];
+    const uid = attributeOf(element, UID_ATTRIBUTE_NAME);
     if (uid !== undefined && !byUid.has(uid)) byUid.set(uid, element);
-    const mark = element.tag === ENGINE_MARK_TAG ? element.attributes.find(([name]) => name === MARK_ARGUMENT)?.[1] : undefined;
+    const mark = element.tag === ENGINE_MARK_TAG ? attributeOf(element, MARK_ARGUMENT) : undefined;
     if (mark !== undefined) marks.set(mark, [...(marks.get(mark) ?? []), element]);
   }
   const replaced = new Map<number, string>();

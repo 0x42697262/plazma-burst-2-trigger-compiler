@@ -1,6 +1,6 @@
 # Actions
 
-All 531 trigger actions of the game, generated from the editor's action list
+All 532 trigger actions of the game, generated from the editor's action list
 (`src/opcodes/snapshot.json`) by `npm run actions-doc`; do not edit by hand.
 
 Every action can be used:
@@ -418,7 +418,7 @@ needs the Var Sync engine mark (F30).
 |---|---|---|---|---|---|
 | -1 | `op-1` | nochange | nochange | Do nothing |  |
 
-## Region (37)
+## Region (38)
 
 | # | Text name | A | B | Description | Notes |
 |---|---|---|---|---|---|
@@ -448,6 +448,7 @@ needs the Var Sync engine mark (F30).
 | 323 | `op323` | region | gun | Move Region 'A' to Gun 'B' |  |
 | 353 | `op353` | region | character | Move Region 'A' to lower body of player 'B' |  |
 | 396 | `op396` | region | nochange | Move region 'A' to game camera |  |
+| 424 | `op424` | region | string | Move region 'A' to lower body of Character slot-value variable 'B' |  |
 | 440 | `op440` | region | character | Initiate region 'A' using character 'B' as initiator |  |
 | 480 | `op480` | region | string | Move region 'A' relative to current position along variable 'B' X |  |
 | 481 | `op481` | region | string | Move region 'A' relative to current position along variable 'B' Y |  |

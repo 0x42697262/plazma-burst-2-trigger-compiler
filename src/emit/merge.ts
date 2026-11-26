@@ -18,6 +18,26 @@ export function removeOwned(mapXml: string, owns: (uid: string) => boolean): str
   });
 }
 
+const ELEMENT_NAME = /^<([A-Za-z][\w-]*)/;
+const CLEANED_ELEMENTS: ReadonlySet<string> = new Set(['trigger', 'timer']);
+
+export type Cleaned = { xml: string; triggers: number; timers: number };
+
+/** Removes the map's triggers and timers whose uid is not in `keep` (the map { } block's uids). Elements without a uid stay. */
+export function removeUnlisted(mapXml: string, keep: ReadonlySet<string>): Cleaned {
+  let triggers = 0;
+  let timers = 0;
+  const xml = mapXml.replace(MAP_ELEMENT, (element) => {
+    const name = ELEMENT_NAME.exec(element)?.[1];
+    const uid = UID_ATTRIBUTE_ONE.exec(element)?.[1];
+    if (name === undefined || !CLEANED_ELEMENTS.has(name) || uid === undefined || keep.has(uid)) return element;
+    if (name === 'trigger') triggers += 1;
+    else timers += 1;
+    return '';
+  });
+  return { xml, triggers, timers };
+}
+
 export function replaceInMap(mapXml: string, compiledXml: string, owns: (uid: string) => boolean): string {
   return appendToMap(removeOwned(mapXml, owns), compiledXml);
 }

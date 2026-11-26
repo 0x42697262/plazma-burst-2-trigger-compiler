@@ -1,4 +1,4 @@
-export const ACTION_COUNT = 531;
+export const ACTION_COUNT = 532;
 
 export const OPCODE = Object.freeze({
   showText: 42,

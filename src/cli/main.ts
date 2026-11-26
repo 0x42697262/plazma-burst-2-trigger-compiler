@@ -8,7 +8,7 @@ import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
-import { appendToMap, removeOwned } from '../emit/merge.ts';
+import { appendToMap, removeOwned, removeUnlisted } from '../emit/merge.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames, describeLegend, seededPrefix } from '../compiler/names.ts';
 import { isRandomSeed, randomSeed, resolveSeed } from '../obfuscate/random.ts';
@@ -115,6 +115,8 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const into = lastValue(parsed, FLAG.into);
     const replacing = parsed.flags.has(FLAG.replace);
     if (replacing && into === null) throw new UsageError(TEXT.replaceNeedsInto);
+    const cleaning = parsed.flags.has(FLAG.clean);
+    if (cleaning && into === null) throw new UsageError(TEXT.cleanNeedsInto);
     const hostMap = into === null ? null : fs.readFileSync(into, FILE_ENCODING);
     const options = optionsOf(parsed, hostMap);
     const source = fs.readFileSync(file, FILE_ENCODING);
@@ -151,7 +153,11 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const buildPath = base + OUTPUT.build;
     const recorded = replacing ? readBuildRecord(buildPath) : { uids: [], walls: [] };
     const recordedUids = new Set(recorded.uids);
-    const host = hostMap === null ? null : replacing ? removeOwned(hostMap, (uid) => recordedUids.has(uid) || names.ownsUid(uid)) : hostMap;
+    const replacedHost = hostMap === null ? null : replacing ? removeOwned(hostMap, (uid) => recordedUids.has(uid) || names.ownsUid(uid)) : hostMap;
+    const mapBlockUids = new Set(result.mapObjects.flatMap((object) => (object.uid === null ? [] : [object.uid])));
+    const cleaned = replacedHost === null || !cleaning ? null : removeUnlisted(replacedHost, mapBlockUids);
+    if (cleaned !== null) output.out(TEXT.cleaned(cleaned.triggers, cleaned.timers));
+    const host = cleaned === null ? replacedHost : cleaned.xml;
     const placement = placeObjects(result.mapObjects, {
       host, staging: (index) => stagingPosition(index, result.program, layout), previousWalls: recorded.walls, replacing,
     });

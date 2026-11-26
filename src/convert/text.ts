@@ -11,6 +11,7 @@ export const TEXT = Object.freeze({
     uidsRenamed: (count: number): string => `${count} object(s) repeated a uid and got their own (the map's references kept pointing to the first one).`,
     functions: (count: number): string => `${count} trigger(s) became functions.`,
     rawTriggers: (count: number): string => `${count} trigger(s) stay raw: disabled, switched on or off by other triggers, with unusual call counts or actions, or picked by position.`,
+    executeTriggers: (count: number): string => `${count} execute trigger(s) became calls in on start.`,
     startTimers: (count: number): string => `${count} start timer(s) became on start (wait(n) resumes n or n - 1 frames later).`,
     everyTimers: (count: number): string => `${count} repeating timer(s) became every blocks.`,
     unknownTag: (tag: string): string => `<${tag}> has no constructor and is left out.`,

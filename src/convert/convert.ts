@@ -10,7 +10,7 @@ import {
   ARGUMENT_SEPARATOR, ATTRIBUTE_NAME, BOOL_KIND, CALLS_SUFFIX, COPY_SUFFIX, DONE_SUFFIX, ESCAPES, FALSE_TEXT, IDENTIFIER, IN_FRONT_MODELS, IN_FRONT_VALUE, INDENT, LINE_END,
   NO_VALUE_KIND, NONE, ONCE, QUOTE, REFERENCE_ATTRIBUTES, STOPPING_DESCRIPTION, STYLE, TAG, TIMER_KIND, TRIGGER_KIND, TRUE_TEXT, UID_MARK, UNLIMITED, UNREAD_ATTRIBUTES,
 } from './keys.ts';
-import { SHOW_TEXT, SWITCH_BY_INDEX, SWITCH_TO_TRIGGER, TRIGGER_STATE_ACTIONS } from './constants.ts';
+import { SHOW_TEXT, SWITCH_TO_TRIGGER, TRIGGER_STATE_ACTIONS } from './constants.ts';
 import { TEXT } from './text.ts';
 
 export type Style = (typeof STYLE)[keyof typeof STYLE];
@@ -46,6 +46,7 @@ class Converter {
   private readonly finalUid = new Map<number, string>();
   private readonly firstByUid = new Map<string, MapElement>();
   private readonly functions = new Map<string, string>();
+  private readonly executeStarts = new Map<number, string>();
   private readonly names = new Map<number, string>();
   private readonly plans = new Map<number, Plan>();
   private positional = false;
@@ -113,7 +114,6 @@ class Converter {
   private usesPositions(): boolean {
     for (const element of this.elements) {
       for (const action of element.actions) {
-        if (action.type === SWITCH_BY_INDEX) return true;
         const kinds = opcodeKinds(action);
         if ([action.targetA, action.targetB].some((value, side) => kinds[side] === TRIGGER_KIND && value !== NONE && !value.startsWith(UID_MARK))) return true;
       }
@@ -128,7 +128,7 @@ class Converter {
   private canBeFunction(element: MapElement, stateTargets: ReadonlySet<string>): boolean {
     const uid = uidOf(element);
     if (this.positional || uid === undefined || this.firstByUid.get(uid) !== element || stateTargets.has(uid)) return false;
-    if (attributeOf(element, ATTRIBUTE_NAME.enabled) === FALSE_TEXT || attributeOf(element, ATTRIBUTE_NAME.execute) === TRUE_TEXT) return false;
+    if (attributeOf(element, ATTRIBUTE_NAME.enabled) === FALSE_TEXT) return false;
     const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
     if (calls !== UNLIMITED && !(isWholeNumber(calls) && Number(calls) >= 1)) return false;
     return element.actions.every((action) => opcodeByNumber(action.type) !== null);
@@ -154,10 +154,21 @@ class Converter {
         this.plans.set(element.index, { kind: 'function', element, name });
       } else {
         this.plans.set(element.index, { kind: 'rawTrigger', element, uid: this.finalUid.get(element.index) ?? '' });
+        // In positional maps, keep the Trigger object in its original map position,
+        // but also compile execute=true actions into a startup helper. This preserves
+        // numeric trigger indexes while honoring automatic match-start execution.
+        const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
+        const executable = attributeOf(element, ATTRIBUTE_NAME.execute) === TRUE_TEXT
+          && attributeOf(element, ATTRIBUTE_NAME.enabled) !== FALSE_TEXT
+          && (calls === UNLIMITED || (isWholeNumber(calls) && Number(calls) >= 1))
+          && element.actions.every((action) => opcodeByNumber(action.type) !== null);
+        if (this.positional && executable) this.executeStarts.set(element.index, this.namer.fromUid(uidOf(element) ?? '', true));
       }
     }
     const raw = [...this.plans.values()].filter((plan) => plan.kind === 'rawTrigger').length;
     if (this.functions.size > 0) this.notes.push(TEXT.notes.functions(this.functions.size));
+    const executeTriggers = [...this.plans.values()].filter((plan) => plan.kind === 'function' && attributeOf(plan.element, ATTRIBUTE_NAME.execute) === TRUE_TEXT).length;
+    if (executeTriggers > 0) this.notes.push(TEXT.notes.executeTriggers(executeTriggers));
     if (raw > 0) this.notes.push(TEXT.notes.rawTriggers(raw));
   }
 
@@ -300,6 +311,9 @@ class Converter {
     for (const [name, raw] of element.attributes) {
       if (handled.has(name)) continue;
       handled.add(name);
+      // `onserver` is editor metadata on PB2 triggers, not a PTC trigger property.
+      // Ignore it without emitting an unknown-attribute warning.
+      if (element.tag === TAG.trigger && name === 'onserver') continue;
       if (unread.includes(name)) {
         this.expect(element, name, TEXT.reasons.unread);
         continue;
@@ -376,6 +390,13 @@ class Converter {
       if (calls === ONCE) guards.push(TEXT.variable(plan.name + DONE_SUFFIX));
       else if (calls !== UNLIMITED) guards.push(TEXT.variable(plan.name + CALLS_SUFFIX));
     }
+    for (const [index, name] of this.executeStarts) {
+      const element = this.elements[index];
+      if (!element) continue;
+      const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
+      if (calls === ONCE) guards.push(TEXT.variable(name + DONE_SUFFIX));
+      else if (calls !== UNLIMITED) guards.push(TEXT.variable(name + CALLS_SUFFIX));
+    }
     if (guards.length > 0) lines.push(...guards, '');
     lines.push(TEXT.mapOpen);
     for (const plan of plans) {
@@ -383,9 +404,14 @@ class Converter {
       else if (plan.kind === 'skipped') lines.push(INDENT + TEXT.comment(TEXT.skipped(plan.element.tag, plan.reason)));
     }
     lines.push(TEXT.blockClose);
+    const executeAtStart = plans.filter((plan): plan is Extract<Plan, { kind: 'function' }> =>
+      plan.kind === 'function' && attributeOf(plan.element, ATTRIBUTE_NAME.execute) === TRUE_TEXT,
+    );
     const starts = plans.filter((plan): plan is Extract<Plan, { kind: 'startTimer' }> => plan.kind === 'startTimer').sort((first, second) => first.delay - second.delay);
-    if (starts.length > 0) {
+    if (executeAtStart.length > 0 || this.executeStarts.size > 0 || starts.length > 0) {
       lines.push('', TEXT.startOpen);
+      for (const plan of executeAtStart) lines.push(INDENT + TEXT.callFunction(plan.name));
+      for (const name of this.executeStarts.values()) lines.push(INDENT + TEXT.callFunction(name));
       let waited = 0;
       for (const plan of starts) {
         if (plan.delay > waited) lines.push(INDENT + TEXT.wait(plan.delay - waited));
@@ -398,6 +424,10 @@ class Converter {
       if (plan.kind === 'everyTimer') lines.push('', TEXT.every(plan.delay, plan.functionName));
     }
     for (const plan of plans) if (plan.kind === 'function') lines.push('', ...this.functionLines(plan));
+    for (const [index, name] of this.executeStarts) {
+      const element = this.elements[index];
+      if (element) lines.push('', ...this.functionLines({ kind: 'function', element, name }));
+    }
     return lines.join(LINE_END) + LINE_END;
   }
 }

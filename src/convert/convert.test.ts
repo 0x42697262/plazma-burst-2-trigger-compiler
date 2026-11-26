@@ -45,7 +45,31 @@ describe('map conversion', () => {
     assert.match(conversion.source, /action\(ExecTrigger, @trigger2, 0\);/);
   });
 
-  it('keeps triggers raw when other triggers switch them, when disabled, and when a map picks triggers by position', () => {
+  it('runs execute=true triggers from on start', () => {
+    const conversion = roundTrip(lines(
+      '<trigger uid="#trigger*auto" enabled="true" execute="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Started" actions_1_targetB="0" />',
+      '<trigger uid="#trigger*normal" enabled="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Normal" actions_1_targetB="0" />',
+    ));
+    assert.deepEqual(conversion.plans.map((plan) => plan.kind), ['function', 'function']);
+    assert.match(conversion.source, /on start \{\n {2}triggerAuto\(\);\n\}/);
+    assert.match(conversion.source, /function triggerAuto\(\) \{/);
+    assert.doesNotMatch(conversion.source, /execute:/);
+  });
+
+  it('runs execute=true triggers at start without moving them when positional references exist', () => {
+    const conversion = roundTrip(lines(
+      '<trigger uid="#trigger*auto" enabled="true" execute="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Started" actions_1_targetB="0" />',
+      '<trigger uid="#trigger*index" enabled="true" maxcalls="-1" actions_1_type="362" actions_1_targetA="1" actions_1_targetB="0" />',
+    ));
+    assert.equal(conversion.positional, true);
+    assert.deepEqual(conversion.plans.map((plan) => plan.kind), ['rawTrigger', 'rawTrigger']);
+    assert.match(conversion.source, /Trigger\("#trigger\*auto"\) \{/);
+    assert.match(conversion.source, /on start \{\n {2}triggerAuto\(\);\n\}/);
+    assert.match(conversion.source, /function triggerAuto\(\) \{/);
+    assert.match(conversion.source, /say\("Started", 0\);/);
+  });
+
+  it('keeps triggers raw when other triggers switch them or when disabled, but allows variable-based trigger IDs', () => {
     const switched = roundTrip(lines(
       '<trigger uid="#trigger*1" enabled="true" maxcalls="-1" actions_1_type="19" actions_1_targetA="#trigger*2" actions_1_targetB="0" />',
       '<trigger uid="#trigger*2" enabled="false" maxcalls="1" actions_1_type="42" actions_1_targetA="off" actions_1_targetB="0" />',
@@ -58,7 +82,8 @@ describe('map conversion', () => {
       '<trigger uid="#trigger*2" enabled="true" maxcalls="1" actions_1_type="42" actions_1_targetA="two" actions_1_targetB="0" />',
       '<timer uid="#timer*1" enabled="true" maxcalls="1" target="#trigger*2" delay="1" />',
     ));
-    assert.deepEqual(positional.plans.map((plan) => plan.kind), ['rawTrigger', 'rawTrigger', 'rawTimer']);
+    assert.equal(positional.positional, false);
+    assert.deepEqual(positional.plans.map((plan) => plan.kind), ['function', 'function', 'startTimer']);
     assert.deepEqual(roundTrip('<trigger uid="#trigger*1" maxcalls="-1" actions_1_type="42" actions_1_targetA="a" actions_1_targetB="0" />', true).plans.map((plan) => plan.kind), ['rawTrigger']);
   });
 

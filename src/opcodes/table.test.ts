@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { OPCODES, opcodeByName, opcodeByNumber, textName } from './table.ts';
+import { OPCODES, opcodeByName, opcodeByNumber, takesVariableName, textName } from './table.ts';
 import { ACTION_COUNT } from './constants.ts';
 
 describe('opcode table', () => {
@@ -14,6 +14,10 @@ describe('opcode table', () => {
       { alias: 'ExecTrigger', paramA: 'trigger', paramB: 'nochange' },
     );
     assert.equal(opcodeByNumber(363)?.alias, null);
+    assert.deepEqual(
+      { paramA: opcodeByNumber(424)?.paramA, paramB: opcodeByNumber(424)?.paramB },
+      { paramA: 'region', paramB: 'string' },
+    );
     assert.equal(opcodeByNumber(123)?.alias, 'next if VarA == ValueB');
   });
 
@@ -29,6 +33,8 @@ describe('opcode table', () => {
   it('marks the actions whose B is template-replaced', () => {
     const marked = [...OPCODES.values()].filter((opcode) => opcode.templateReplacedB).map((opcode) => opcode.number);
     assert.deepEqual(marked.sort((first, second) => first - second), [295, 325, 326, 350, 352]);
+    assert.equal(opcodeByNumber(424)?.description.includes("variable 'B'"), true);
+    assert.equal(takesVariableName(opcodeByNumber(424)!, 'B'), true);
   });
 
   it('marks the actions whose A is template-replaced', () => {
