@@ -19,7 +19,9 @@ map** (or the × on the map's name).
   at least 1, uses only listed actions, and its uid appears nowhere except where a trigger goes
   (actions that run it, region `use_target`, `ondeath`, song `callback`, timer `target`). Its name
   comes from the uid (`#trigger*stop` → `stop`, `#trigger*1` → `trigger1`). `maxcalls 1` becomes a
-  `fooDone` guard, `maxcalls N` a `fooCalls` counter. References to it become `@foo`.
+  `fooDone` guard, `maxcalls N` a `fooCalls` counter. References to it become `@foo`. A trigger
+  with `execute="true"`, which the game runs at map start, becomes a function called first in
+  `on start`; its comment says `run by on start (execute)`.
 - Every other trigger stays a raw `Trigger(uid) { action(...); }` block with its own uid, and keeps
   `-1` actions in the middle so skip-next actions still skip the same one. Triggers turned on, off
   or given calls by other triggers (19, 20, 21, 22), disabled ones, and ones named in text are raw.
@@ -28,7 +30,9 @@ map** (or the × on the map's name).
   A timer whose target can stop itself (a "continue only if" action or 363) stays raw, so that it
   cannot cut the rest of `on start` short. Every other timer stays `Timer(...)`.
 - `--raw` keeps every trigger and timer raw. A map that picks triggers **by position** (action 362,
-  or a number where a trigger goes) is always converted this way (F6).
+  or a number where a trigger goes) is always converted this way (F6). Its `execute` triggers stay
+  `Trigger(uid, execute: true)`, so the game runs them at start, once.
+- A trigger's `onserver` attribute is dropped: the game never reads it (F58).
 - Text is decoded once (`&quot;` → `"`), and the compiler encodes it again, so the game reads the
   same characters (F26).
 
@@ -46,7 +50,22 @@ map** (or the × on the map's name).
 | Values the editor would not make (`w: "0"`, `upg: "10"`, `flare: "0"`) are quoted | A quoted value is written exactly as typed |
 | Functions get the program's trigger uids and run through the compiler's call code | They are compiled |
 | A start timer moves into `on start`: `wait(n)` resumes after n or n - 1 frames | `wait` timing |
+| An `execute` trigger becomes a call at the top of `on start` | The game runs `execute` triggers at map start |
 | A trigger that nothing runs is left out, with a compiler warning | Unused functions are dropped |
+
+## Putting the program back into the map
+
+Compiling the source `--into` the map it came from adds the functions' triggers beside the map's
+own ones, so a converted trigger, `execute` trigger or start timer would run twice. `--clean`
+(with `--into`) first removes the map's triggers and timers whose uid is not in the `map { }`
+block, which are the ones the source replaced; raw ones are in the block and stay:
+
+```sh
+npm run convert -- map.xml
+npm run compile -- out/map.ptc --into map.xml --replace --clean
+```
+
+The remaining triggers move up, so check a map that picks triggers by position.
 
 ## `--check`
 
@@ -71,4 +90,4 @@ runs them when that folder exists). `examples/convert/convert-map.xml` is conver
   if that trigger became a function, the built uid no longer finds it. Use `--raw` for such maps.
 - `--check` compares structure, not behavior: two maps can match and still differ in timing
   within one frame (functions run through the compiler's entry and return code).
-- Unlisted actions are written by number (`action(424, 1, 2)`) and are not checked.
+- Unlisted actions are written by number (`action(412, 1, 2)`) and are not checked.

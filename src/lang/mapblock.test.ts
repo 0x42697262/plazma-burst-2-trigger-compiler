@@ -184,9 +184,9 @@ describe('map blocks', () => {
   });
 
   it('keeps actions the editor does not list in map triggers, and makes images', () => {
-    const result = compileSource('map { Trigger("#t") { action(424, "a", 5); } Image(id: 7, width: "0"); }', 't');
-    assert.deepEqual(result.mapObjects[0]?.actions, [{ opcode: 424, targetA: 'a', targetB: '5' }]);
-    assert.ok(result.warnings.some((warning) => warning.includes("action 424 is not in the editor's action list")));
+    const result = compileSource('map { Trigger("#t") { action(412, "a", 5); } Image(id: 7, width: "0"); }', 't');
+    assert.deepEqual(result.mapObjects[0]?.actions, [{ opcode: 412, targetA: 'a', targetB: '5' }]);
+    assert.ok(result.warnings.some((warning) => warning.includes("action 412 is not in the editor's action list")));
     assert.deepEqual(attributes(result.mapObjects[1]), { id: '7', width: '0' });
   });
 });

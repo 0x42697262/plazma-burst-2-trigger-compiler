@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { emitXml, escapeXml } from './xml-emitter.ts';
 import { emitText, emitTriggerText, isWritableAsText, joinTextBlocks } from './trigger-text-emitter.ts';
-import { appendToMap, removeOwned, replaceInMap } from './merge.ts';
+import { appendToMap, removeOwned, removeUnlisted, replaceInMap } from './merge.ts';
 import { EmitError } from './check.ts';
 import { action, trigger } from '../program/build.ts';
 import { HELLO } from '../samples/hello.fixture.ts';
@@ -149,5 +149,26 @@ describe('replace in map', () => {
   it('removes whole lines on a CRLF map, leaving no blank lines', () => {
     const crlf = '<player x="0" y="0" />\r\n<trigger uid="#p:start" x="0" y="0" />\r\n<door uid="#g" x="0" y="0" />\r\n';
     assert.equal(removeOwned(crlf, owns), '<player x="0" y="0" />\r\n<door uid="#g" x="0" y="0" />\r\n');
+  });
+
+  it('removes with --clean only the triggers and timers whose uid the map { } block does not list', () => {
+    const map = [
+      '<door uid="#gone" x="0" y="0" />',
+      '<trigger uid="#kept" x="0" y="0" />',
+      '<trigger uid="#old" x="0" y="0" />',
+      '<trigger x="0" y="0" />',
+      '<timer uid="#tick" x="0" y="0" target="#old" />',
+      '<timer uid="#kept-timer" x="0" y="0" target="#kept" />',
+      '',
+    ].join('\r\n');
+    const cleaned = removeUnlisted(map, new Set(['#kept', '#kept-timer']));
+    assert.deepEqual({ triggers: cleaned.triggers, timers: cleaned.timers }, { triggers: 1, timers: 1 });
+    assert.equal(cleaned.xml, [
+      '<door uid="#gone" x="0" y="0" />',
+      '<trigger uid="#kept" x="0" y="0" />',
+      '<trigger x="0" y="0" />',
+      '<timer uid="#kept-timer" x="0" y="0" target="#kept" />',
+      '',
+    ].join('\r\n'));
   });
 });

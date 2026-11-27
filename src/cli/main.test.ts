@@ -204,6 +204,46 @@ describe('compile CLI', () => {
     assert.match(lines.err.at(-1) ?? '', /--replace needs --into/);
   });
 
+  it('removes the map triggers and timers the program replaces with --clean', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'c.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(host, [
+      '<door uid="#gate1" x="0" y="0" />',
+      '<trigger uid="#old*1" x="0" y="0" enabled="true" maxcalls="1" execute="true" />',
+      '<trigger uid="#kept" x="0" y="0" enabled="true" maxcalls="1" />',
+      '<timer uid="#oldtimer" x="0" y="0" enabled="true" maxcalls="1" target="#old*1" delay="10" />',
+      '',
+    ].join('\n'));
+    fs.writeFileSync(source, 'map {\n  Trigger("#kept") { action(42, "kept", "#ffffff"); }\n}\non start { say("new"); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--prefix', 'p', '--out', folder, '--into', host, '--clean'], output), 0, lines.err.join('\n'));
+    const merged = fs.readFileSync(path.join(folder, 'c-map.xml'), 'utf8');
+    assert.ok(merged.includes('#gate1') && merged.includes('#kept'));
+    assert.ok(!merged.includes('#old*1') && !merged.includes('#oldtimer'));
+    assert.ok(lines.out.some((line) => line.includes('--clean removed 1 trigger(s) and 1 timer(s)')));
+    assert.equal(main([source, '--out', folder, '--clean'], output), 1);
+    assert.match(lines.err.at(-1) ?? '', /--clean needs --into/);
+  });
+
+  it('keeps one copy of the program when --clean and --replace update a map again', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'r.ptc');
+    const host = path.join(folder, 'host.xml');
+    fs.writeFileSync(host, '<door uid="#gate1" x="0" y="0" />\n<trigger uid="#old" x="0" y="0" enabled="true" maxcalls="1" execute="true" />\n');
+    fs.writeFileSync(source, 'on start { say("v1"); }\n');
+    const { lines, output } = capture();
+    assert.equal(main([source, '--prefix', 'r', '--out', folder, '--into', host, '--replace', '--clean'], output), 0, lines.err.join('\n'));
+    fs.copyFileSync(path.join(folder, 'r-map.xml'), host);
+    fs.writeFileSync(source, 'on start { say("v2"); }\n');
+    assert.equal(main([source, '--prefix', 'r', '--out', folder, '--into', host, '--replace', '--clean'], output), 0, lines.err.join('\n'));
+    const merged = fs.readFileSync(path.join(folder, 'r-map.xml'), 'utf8');
+    assert.ok(merged.includes('#gate1') && !merged.includes('#old'));
+    assert.ok(merged.includes('"v2"') && !merged.includes('"v1"'));
+    assert.equal(merged.match(/uid="#r:start"/g)?.length, 1);
+    assert.ok(lines.out.some((line) => line.includes('--clean removed 0 trigger(s) and 0 timer(s) whose uid the map { } block does not list')));
+  });
+
   it('builds element names without scanning variables with --direct-index', () => {
     const folder = tempFolder();
     const source = path.join(folder, 'd.ptc');

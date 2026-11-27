@@ -1,4 +1,4 @@
-import { MAP_ELEMENT, TRAILING_LINE_END, UID_ATTRIBUTE, UID_ATTRIBUTE_ONE, XML_LINE_END } from './keys.ts';
+import { ELEMENT_NAME, MAP_ELEMENT, TIMER_TAG, TRAILING_LINE_END, TRIGGER_TAG, UID_ATTRIBUTE, UID_ATTRIBUTE_ONE, XML_LINE_END } from './keys.ts';
 import { TEXT } from './text.ts';
 import { EmitError } from './check.ts';
 
@@ -16,6 +16,24 @@ export function removeOwned(mapXml: string, owns: (uid: string) => boolean): str
     const uid = UID_ATTRIBUTE_ONE.exec(element)?.[1];
     return uid !== undefined && owns(uid) ? '' : element;
   });
+}
+
+const CLEANED_ELEMENTS: ReadonlySet<string> = new Set([TRIGGER_TAG, TIMER_TAG]);
+
+export type Cleaned = { xml: string; triggers: number; timers: number };
+
+export function removeUnlisted(mapXml: string, keep: ReadonlySet<string>): Cleaned {
+  let triggers = 0;
+  let timers = 0;
+  const xml = mapXml.replace(MAP_ELEMENT, (element) => {
+    const name = ELEMENT_NAME.exec(element)?.[1];
+    const uid = UID_ATTRIBUTE_ONE.exec(element)?.[1];
+    if (name === undefined || !CLEANED_ELEMENTS.has(name) || uid === undefined || keep.has(uid)) return element;
+    if (name === TRIGGER_TAG) triggers += 1;
+    else timers += 1;
+    return '';
+  });
+  return { xml, triggers, timers };
 }
 
 export function replaceInMap(mapXml: string, compiledXml: string, owns: (uid: string) => boolean): string {

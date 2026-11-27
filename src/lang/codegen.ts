@@ -1,4 +1,4 @@
-import { OPCODE } from '../opcodes/constants.ts';
+import { CALLBACK_ACTIONS, OPCODE } from '../opcodes/constants.ts';
 import { opcodeByName, opcodeByNumber } from '../opcodes/table.ts';
 import { labelOperand, literal, textOperand, variable } from '../compiler/ir.ts';
 import type { Condition, ExportedVariable, Instruction, Module, ObjectDeclaration, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
@@ -184,6 +184,7 @@ export class Generator {
   private readonly directIndex: boolean;
   private readonly compileTimeFunctions: ReadonlySet<string>;
   private readonly referencedFunctions: ReadonlySet<string>;
+  private readonly callbackFunctions = new Set<string>();
   private readonly textConstants = new Map<string, string>();
   private readonly globals = new Map<string, SymbolEntry>();
   private readonly functions = new Map<string, FunctionInfo>();
@@ -332,6 +333,7 @@ export class Generator {
       if (this.used.has(declaration.name)) sections.push(section);
       else if (declaration.location.file === undefined && !this.compileTimeFunctions.has(declaration.name)) this.warnings.push(TEXT.where(declaration.location.line, TEXT.unusedFunction(declaration.name)));
     }
+    this.markCallbacks(sections);
     this.setTextConstants(sections);
     const hostNames = file.declarations.flatMap((declaration) => (declaration.kind === 'extern' ? [declaration.hostName] : []));
     const tamper = this.tamperCheck && file.declarations.some((declaration) => declaration.kind === 'on' && declaration.event === EVENT.tamper) ? LABEL.tamper : null;
@@ -426,6 +428,17 @@ export class Generator {
     const name = this.names.internalVariable(hint);
     this.textConstants.set(name, text);
     return name;
+  }
+
+  private markCallbacks(sections: Instruction[][]): void {
+    for (const section of sections) {
+      const [head] = section;
+      if (head?.kind !== 'label' || head.entry || !this.callbackFunctions.has(head.label)) continue;
+      section[0] = { ...head, entry: true };
+      if (!this.usesStack) continue;
+      const pointer = textOperand(this.names.internalVariable(STACK_POINTER));
+      section.splice(1, 0, { kind: 'action', opcode: OPCODE.setIfUndefined, targetA: pointer, targetB: textOperand(FALSE_TEXT), location: this.location });
+    }
   }
 
   private setTextConstants(sections: Instruction[][]): void {
@@ -1536,6 +1549,7 @@ export class Generator {
     if (expression.kind === 'reference') {
       if (!this.functions.has(expression.name)) fail(expression.location, TEXT.unknownFunction(expression.name));
       if (kind !== TRIGGER_KIND) fail(expression.location, TEXT.referenceNotTrigger(opcode.number, side, kind));
+      if (CALLBACK_ACTIONS.has(opcode.number)) this.callbackFunctions.add(expression.name);
       return labelOperand(expression.name);
     }
     if (expression.kind === 'named' && expression.paramKind !== kind && (expectsObject || !LOOSE_VALUE_KINDS.has(kind))) {

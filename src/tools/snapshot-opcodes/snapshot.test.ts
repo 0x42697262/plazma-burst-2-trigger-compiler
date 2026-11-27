@@ -34,9 +34,18 @@ describe('snapshot-opcodes', () => {
         '-1': { a: 'nochange', b: 'nochange', desc: 'Nothing' },
         99: { alias: 'ExecTrigger', a: 'trigger', b: 'nochange', desc: 'Execute' },
         363: { a: 'trigger', b: 'nochange', desc: 'Switch' },
+        424: { a: 'region', b: 'string', desc: 'Region › Move region \'A\' to lower body of Character slot-value variable \'B\'' },
       },
       values: {},
     });
+  });
+
+  it('adds the actions the game runs but the editor does not list, unless the editor lists them itself', () => {
+    const table = readOpcodeTable(SAMPLE);
+    assert.ok(table);
+    assert.equal(toSnapshot(table).actions[424]?.b, 'string');
+    const listed = { ...table, actions: { ...table.actions, 424: { desc: 'Editor text', a: 'region', b: 'string' } } };
+    assert.equal(toSnapshot(listed).actions[424]?.desc, 'Editor text');
   });
 
   it('keeps the parameter table, the mark pairs and the editor rules of each map element', () => {

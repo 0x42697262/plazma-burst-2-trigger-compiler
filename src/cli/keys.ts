@@ -15,6 +15,7 @@ export const FLAG = Object.freeze({
   directIndex: '--direct-index',
   target: '--target',
   replace: '--replace',
+  clean: '--clean',
   nameSeed: '--name-seed',
   obfuscate: '--obfuscate',
   obfuscateSeed: '--obfuscate-seed',

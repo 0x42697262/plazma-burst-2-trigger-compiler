@@ -45,6 +45,40 @@ describe('map conversion', () => {
     assert.match(conversion.source, /action\(ExecTrigger, @trigger2, 0\);/);
   });
 
+  it('runs execute=true triggers from on start', () => {
+    const conversion = roundTrip(lines(
+      '<trigger uid="#trigger*auto" enabled="true" execute="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Started" actions_1_targetB="0" />',
+      '<trigger uid="#trigger*normal" enabled="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Normal" actions_1_targetB="0" />',
+    ));
+    assert.deepEqual(conversion.plans.map((plan) => plan.kind), ['function', 'function']);
+    assert.match(conversion.source, /on start \{\n {2}auto\(\);\n\}/);
+    assert.match(conversion.source, /\/\/ #trigger\*auto, run by on start \(execute\)\nfunction auto\(\) \{/);
+    assert.match(conversion.source, /\/\/ #trigger\*normal, not run by anything in the map\nfunction normal\(\) \{/);
+    assert.doesNotMatch(conversion.source, /execute:/);
+  });
+
+  it('leaves execute=true triggers to the game in a map that picks triggers by position', () => {
+    const conversion = roundTrip(lines(
+      '<trigger uid="#trigger*auto" enabled="true" execute="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Started" actions_1_targetB="0" />',
+      '<trigger uid="#trigger*index" enabled="true" maxcalls="-1" actions_1_type="362" actions_1_targetA="1" actions_1_targetB="0" />',
+    ));
+    assert.equal(conversion.positional, true);
+    assert.deepEqual(conversion.plans.map((plan) => plan.kind), ['rawTrigger', 'rawTrigger']);
+    assert.match(conversion.source, /Trigger\("#trigger\*auto", execute: true\) \{/);
+    assert.doesNotMatch(conversion.source, /on start/);
+    assert.doesNotMatch(conversion.source, /function /);
+    assert.equal(conversion.source.match(/"Started"/g)?.length, 1, 'the actions are in the map once');
+  });
+
+  it('converts triggers with onserver and checks them again without a difference', () => {
+    for (const onserver of ['false', 'true']) {
+      const trigger = `<trigger uid="#trigger*1" x="0" y="0" enabled="true" maxcalls="1" onserver="${onserver}" actions_1_type="42" actions_1_targetA="hi" actions_1_targetB="0" />`;
+      assert.deepEqual(roundTrip(trigger).plans.map((plan) => plan.kind), ['function'], onserver);
+      assert.deepEqual(roundTrip(trigger, true).plans.map((plan) => plan.kind), ['rawTrigger'], onserver);
+      assert.doesNotMatch(roundTrip(trigger, true).source, /onserver/, 'no note about an unknown attribute');
+    }
+  });
+
   it('keeps triggers raw when other triggers switch them, when disabled, and when a map picks triggers by position', () => {
     const switched = roundTrip(lines(
       '<trigger uid="#trigger*1" enabled="true" maxcalls="-1" actions_1_type="19" actions_1_targetA="#trigger*2" actions_1_targetB="0" />',
@@ -84,7 +118,7 @@ describe('map conversion', () => {
       '<decor uid="#decor*1" x="0" y="0" model="text" at="1" addx="3" text="a &lt;b&gt; &quot;c&quot;" />',
       '<lamp uid="#light*1" x="0" y="0" flare="0" />',
       '<widget uid="#w" />',
-      '<trigger uid="#trigger*1" enabled="true" maxcalls="1" actions_1_type="424" actions_1_targetA="1" actions_1_targetB="2" />',
+      '<trigger uid="#trigger*1" enabled="true" maxcalls="1" actions_1_type="412" actions_1_targetA="1" actions_1_targetB="2" />',
     ));
     assert.match(conversion.source, /Wall\(0, 0, "0", "-20"\);/);
     assert.match(conversion.source, /upg: "10"/);
@@ -93,7 +127,7 @@ describe('map conversion', () => {
     assert.match(conversion.source, /f: "1"/);
     assert.match(conversion.source, /flare: "0"/);
     assert.match(conversion.source, /\/\/ <widget> left out/);
-    assert.match(conversion.source, /Trigger\("#trigger\*1"\) \{\n {4}action\(424, 1, 2\);/);
+    assert.match(conversion.source, /Trigger\("#trigger\*1"\) \{\n {4}action\(412, 1, 2\);/);
   });
 
   it('reports differences the source does not explain', () => {

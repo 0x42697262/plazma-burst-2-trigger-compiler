@@ -348,7 +348,7 @@ symbols (`gate`, `slots`); other names stay local to the block.
 | `--into`, uid missing | added like above | added |
 | `--into`, uid present, same tag | `set` attributes rewritten in place, `initial` ignored; changes printed | (no identity) |
 | `--into`, uid present, other tag | error (as today) | — |
-| `--into --replace` | as above | walls recorded in `.build.json` by the previous build are removed first, then added again |
+| `--into --replace` | as above | walls recorded in `.build.json` by the previous build, and the map's walls and backgrounds with the same rectangle (images: the same `id`), are removed first, then added again |
 
 - Rewriting an element keeps its other attributes and their order (`src/emit/merge.ts`, new
   `updateElement`). Values go through `escapeXml` and the number-text rule (F36).

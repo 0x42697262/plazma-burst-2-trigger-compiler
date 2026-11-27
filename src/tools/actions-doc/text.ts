@@ -1,7 +1,7 @@
 export const TEXT = Object.freeze({
   title: '# Actions',
   intro: [
-    'All 531 trigger actions of the game, generated from the editor\'s action list',
+    'All 532 trigger actions of the game, generated from the editor\'s action list',
     '(`src/opcodes/snapshot.json`) by `npm run actions-doc`; do not edit by hand.',
     '',
     'Every action can be used:',

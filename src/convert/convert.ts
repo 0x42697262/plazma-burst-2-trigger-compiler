@@ -128,7 +128,7 @@ class Converter {
   private canBeFunction(element: MapElement, stateTargets: ReadonlySet<string>): boolean {
     const uid = uidOf(element);
     if (this.positional || uid === undefined || this.firstByUid.get(uid) !== element || stateTargets.has(uid)) return false;
-    if (attributeOf(element, ATTRIBUTE_NAME.enabled) === FALSE_TEXT || attributeOf(element, ATTRIBUTE_NAME.execute) === TRUE_TEXT) return false;
+    if (attributeOf(element, ATTRIBUTE_NAME.enabled) === FALSE_TEXT) return false;
     const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
     if (calls !== UNLIMITED && !(isWholeNumber(calls) && Number(calls) >= 1)) return false;
     return element.actions.every((action) => opcodeByNumber(action.type) !== null);
@@ -158,6 +158,8 @@ class Converter {
     }
     const raw = [...this.plans.values()].filter((plan) => plan.kind === 'rawTrigger').length;
     if (this.functions.size > 0) this.notes.push(TEXT.notes.functions(this.functions.size));
+    const executeTriggers = [...this.plans.values()].filter((plan) => plan.kind === 'function' && attributeOf(plan.element, ATTRIBUTE_NAME.execute) === TRUE_TEXT).length;
+    if (executeTriggers > 0) this.notes.push(TEXT.notes.executeTriggers(executeTriggers));
     if (raw > 0) this.notes.push(TEXT.notes.rawTriggers(raw));
   }
 
@@ -337,7 +339,9 @@ class Converter {
   private functionLines(plan: Extract<Plan, { kind: 'function' }>): string[] {
     const { element, name } = plan;
     const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
-    const lines = [TEXT.functionComment(uidOf(element) ?? '', this.callers(uidOf(element) ?? '')), TEXT.functionOpen(name)];
+    const startCaller = attributeOf(element, ATTRIBUTE_NAME.execute) === TRUE_TEXT ? [TEXT.executeCaller] : [];
+    const callers = [...startCaller, this.callers(uidOf(element) ?? '')].filter((caller) => caller !== '').join(ARGUMENT_SEPARATOR);
+    const lines = [TEXT.functionComment(uidOf(element) ?? '', callers), TEXT.functionOpen(name)];
     if (calls === ONCE) lines.push(...TEXT.onceGuard(name + DONE_SUFFIX).map((line) => INDENT + line));
     else if (calls !== UNLIMITED) lines.push(...TEXT.countGuard(name + CALLS_SUFFIX, calls).map((line) => INDENT + line));
     for (const action of element.actions) {
@@ -383,9 +387,13 @@ class Converter {
       else if (plan.kind === 'skipped') lines.push(INDENT + TEXT.comment(TEXT.skipped(plan.element.tag, plan.reason)));
     }
     lines.push(TEXT.blockClose);
+    const executeAtStart = plans.filter((plan): plan is Extract<Plan, { kind: 'function' }> =>
+      plan.kind === 'function' && attributeOf(plan.element, ATTRIBUTE_NAME.execute) === TRUE_TEXT,
+    );
     const starts = plans.filter((plan): plan is Extract<Plan, { kind: 'startTimer' }> => plan.kind === 'startTimer').sort((first, second) => first.delay - second.delay);
-    if (starts.length > 0) {
+    if (executeAtStart.length > 0 || starts.length > 0) {
       lines.push('', TEXT.startOpen);
+      for (const plan of executeAtStart) lines.push(INDENT + TEXT.callFunction(plan.name));
       let waited = 0;
       for (const plan of starts) {
         if (plan.delay > waited) lines.push(INDENT + TEXT.wait(plan.delay - waited));

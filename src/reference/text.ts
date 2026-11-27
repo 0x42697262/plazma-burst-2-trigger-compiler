@@ -100,7 +100,7 @@ export const REFERENCE_TEXT = Object.freeze({
   notes: Object.freeze({ simulated: 'sim', skips: 'skips', replacesA: 'replaces A', replacesB: 'replaces B', avoided: 'avoid', sync: 'needs var_sync' }),
   roots: Object.freeze({
     root: ['Reference', 'Everything the language and the game offer. Click a name to follow it.'],
-    actions: ['Actions', 'The 531 trigger actions of the game, by the editor\'s categories. action(name or number, a, b).'],
+    actions: ['Actions', 'The 532 trigger actions of the game, by the editor\'s categories. action(name or number, a, b).'],
     objects: ['Map objects', 'Constructors of map { } blocks and their properties.'],
     values: ['Values', 'Named values from the editor\'s lists: Group.Name, or the short name where a property takes the list.'],
     kinds: ['Parameter kinds', 'What each action parameter takes.'],
