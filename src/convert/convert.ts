@@ -10,7 +10,7 @@ import {
   ARGUMENT_SEPARATOR, ATTRIBUTE_NAME, BOOL_KIND, CALLS_SUFFIX, COPY_SUFFIX, DONE_SUFFIX, ESCAPES, FALSE_TEXT, IDENTIFIER, IN_FRONT_MODELS, IN_FRONT_VALUE, INDENT, LINE_END,
   NO_VALUE_KIND, NONE, ONCE, QUOTE, REFERENCE_ATTRIBUTES, STOPPING_DESCRIPTION, STYLE, TAG, TIMER_KIND, TRIGGER_KIND, TRUE_TEXT, UID_MARK, UNLIMITED, UNREAD_ATTRIBUTES,
 } from './keys.ts';
-import { SHOW_TEXT, SWITCH_TO_TRIGGER, TRIGGER_STATE_ACTIONS } from './constants.ts';
+import { SHOW_TEXT, SWITCH_BY_INDEX, SWITCH_TO_TRIGGER, TRIGGER_STATE_ACTIONS } from './constants.ts';
 import { TEXT } from './text.ts';
 
 export type Style = (typeof STYLE)[keyof typeof STYLE];
@@ -114,6 +114,7 @@ class Converter {
   private usesPositions(): boolean {
     for (const element of this.elements) {
       for (const action of element.actions) {
+        if (action.type === SWITCH_BY_INDEX) return true;
         const kinds = opcodeKinds(action);
         if ([action.targetA, action.targetB].some((value, side) => kinds[side] === TRIGGER_KIND && value !== NONE && !value.startsWith(UID_MARK))) return true;
       }
