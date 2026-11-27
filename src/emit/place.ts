@@ -103,6 +103,18 @@ const sameUnkeyed = (host: Element, claim: Element): boolean => {
   return claim.attributes.every(([name, value]) => attributeOf(host, name) === value);
 };
 
+function keyedElements(elements: readonly Element[]): { byUid: Map<string, Element>; marks: Map<string, Element[]> } {
+  const byUid = new Map<string, Element>();
+  const marks = new Map<string, Element[]>();
+  for (const element of elements) {
+    const uid = attributeOf(element, UID_ATTRIBUTE_NAME);
+    if (uid !== undefined && !byUid.has(uid)) byUid.set(uid, element);
+    const mark = element.tag === ENGINE_MARK_TAG ? attributeOf(element, MARK_ARGUMENT) : undefined;
+    if (mark !== undefined) marks.set(mark, [...(marks.get(mark) ?? []), element]);
+  }
+  return { byUid, marks };
+}
+
 export function placeObjects(objects: readonly MapObject[], options: PlaceOptions): Placement {
   let stagingIndex = 0;
   const staging = (): Position => options.staging(stagingIndex++);
@@ -128,30 +140,27 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
     position += 1;
     if (element !== null) allElements.push(element);
   }
-  const byUid = new Map<string, Element>();
-  const marks = new Map<string, Element[]>();
-  for (const element of allElements) {
-    const uid = attributeOf(element, UID_ATTRIBUTE_NAME);
-    if (uid !== undefined && !byUid.has(uid)) byUid.set(uid, element);
-    const mark = element.tag === ENGINE_MARK_TAG ? attributeOf(element, MARK_ARGUMENT) : undefined;
-    if (mark !== undefined) marks.set(mark, [...(marks.get(mark) ?? []), element]);
-  }
+  const before = keyedElements(allElements);
   const pendingWalls = options.replacing ? [...options.previousWalls] : [];
-  const recordedWalls = pendingWalls.length === 0;
+  const nothingRecorded = pendingWalls.length === 0;
   const claims: Element[] = [];
+  const prepared = new Map<MapObject, string>();
+  const prepare = (object: MapObject): string => {
+    const text = createElement(object, staging);
+    prepared.set(object, text);
+    return text;
+  };
   if (options.replacing) {
-    let probeIndex = 0;
-    const probeStaging = (): Position => options.staging(probeIndex++);
     for (const object of objects) {
       if (object.uid !== null) {
-        if (byUid.get(object.uid) === undefined) createElement(object, probeStaging);
+        if (!before.byUid.has(object.uid)) prepare(object);
       } else if (object.mark !== null) {
-        if ((marks.get(object.mark) ?? []).length === 0) createElement(object, probeStaging);
+        if ((before.marks.get(object.mark) ?? []).length === 0) prepare(object);
       } else {
-        const text = createElement(object, probeStaging);
+        const text = prepare(object);
         const claim = parseElement(text, claims.length);
         if (claim !== null) claims.push(claim);
-        if (recordedWalls) pendingWalls.push(text);
+        if (nothingRecorded) pendingWalls.push(text);
       }
     }
   }
@@ -172,14 +181,7 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
     }
     elements.push(element);
   }
-  byUid.clear();
-  marks.clear();
-  for (const element of elements) {
-    const uid = attributeOf(element, UID_ATTRIBUTE_NAME);
-    if (uid !== undefined && !byUid.has(uid)) byUid.set(uid, element);
-    const mark = element.tag === ENGINE_MARK_TAG ? attributeOf(element, MARK_ARGUMENT) : undefined;
-    if (mark !== undefined) marks.set(mark, [...(marks.get(mark) ?? []), element]);
-  }
+  const { byUid, marks } = keyedElements(elements);
   const replaced = new Map<number, string>();
   const added: string[] = [];
   const update = (object: MapObject, element: Element): void => {
@@ -189,7 +191,7 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
     notes.push(TEXT.changed(nameOf(object), changed));
   };
   const create = (object: MapObject): string => {
-    const text = createElement(object, staging);
+    const text = prepared.get(object) ?? createElement(object, staging);
     added.push(text + XML_LINE_END);
     return text;
   };
