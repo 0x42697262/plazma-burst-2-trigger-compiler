@@ -65,8 +65,9 @@ Both give the same kind of name, used as an argument of `action(...)`:
   Each `--into` build writes a `.build.json` next to the output listing the uids and walls it
   added; `--replace` reads the previous one, so the update is exact even when the names changed
   between builds.
-- `--clean` (with `--into`) also removes the map's triggers and timers whose uid is not in the
-  `map { }` block, and prints how many. It is for a map converted by `npm run convert`: its
+- `--clean` (with `--into`) also gives the map's objects with a repeated uid or none the uid
+  `npm run convert` gave them, then removes the map's triggers and timers whose uid is not in the
+  `map { }` block, and prints how many of each. It is for a map converted by `npm run convert`: its
   functions, `execute` triggers and start timers would otherwise run beside the compiled ones
   ([convert.md](convert.md)).
 - `--name-seed <s>` derives the name prefix from a seed instead of the file name, so the triggers

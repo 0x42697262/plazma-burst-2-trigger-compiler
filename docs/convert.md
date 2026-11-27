@@ -57,8 +57,11 @@ map** (or the × on the map's name).
 
 Compiling the source `--into` the map it came from adds the functions' triggers beside the map's
 own ones, so a converted trigger, `execute` trigger or start timer would run twice. `--clean`
-(with `--into`) first removes the map's triggers and timers whose uid is not in the `map { }`
-block, which are the ones the source replaced; raw ones are in the block and stay:
+(with `--into`) first gives the map's objects with a repeated uid or none the uid the converter
+gave them (`#door*1`, `#trigger*2`), so the `map { }` block finds and updates them instead of adding
+copies; the game resolves a uid to its first object (F18), so nothing that refers to them changes.
+Then it removes the map's triggers and timers whose uid is not in the `map { }` block, which are
+the ones the source replaced; raw ones are in the block and stay:
 
 ```sh
 npm run convert -- map.xml

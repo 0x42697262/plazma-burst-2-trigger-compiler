@@ -5,7 +5,7 @@ export const TEXT = Object.freeze({
     '  --out <dir>       output folder (default: out)',
     '  --into <map.xml>  also write the map with the triggers appended and the map { } objects added or updated',
     '  --replace         with --into, remove this program\'s old triggers, timers, walls and backgrounds from the map first (updates it in place)',
-    '  --clean           with --into, also remove the map\'s own triggers and timers that the program replaces (every trigger or timer whose uid is not in the map { } block), so no old copy runs beside the compiled one',
+    '  --clean           with --into, give repeated or missing uids the ones npm run convert gives, and also remove the map\'s own triggers and timers that the program replaces (every trigger or timer whose uid is not in the map { } block), so no old copy runs beside the compiled one',
     '  --name-seed <s>   derive the name prefix from a seed (reproducible, source-independent names; use with --replace to update in place)',
     '  --obfuscate       shorten names, encode texts, route jumps through computed indexes and add an integrity check (about 3x slower; see docs/obfuscation.md)',
     '  --obfuscate-seed <s>  seed for --obfuscate (implies it): the same seed gives the same build, a new seed changes every generated name; random picks a new one and prints it',
