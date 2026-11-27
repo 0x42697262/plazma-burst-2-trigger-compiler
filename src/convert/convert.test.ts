@@ -56,17 +56,17 @@ describe('map conversion', () => {
     assert.doesNotMatch(conversion.source, /execute:/);
   });
 
-  it('runs execute=true triggers at start without moving them when positional references exist', () => {
+  it('leaves execute=true triggers to the game in a map that picks triggers by position', () => {
     const conversion = roundTrip(lines(
       '<trigger uid="#trigger*auto" enabled="true" execute="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Started" actions_1_targetB="0" />',
       '<trigger uid="#trigger*index" enabled="true" maxcalls="-1" actions_1_type="362" actions_1_targetA="1" actions_1_targetB="0" />',
     ));
     assert.equal(conversion.positional, true);
     assert.deepEqual(conversion.plans.map((plan) => plan.kind), ['rawTrigger', 'rawTrigger']);
-    assert.match(conversion.source, /Trigger\("#trigger\*auto"\) \{/);
-    assert.match(conversion.source, /on start \{\n {2}triggerAuto\(\);\n\}/);
-    assert.match(conversion.source, /function triggerAuto\(\) \{/);
-    assert.match(conversion.source, /say\("Started", 0\);/);
+    assert.match(conversion.source, /Trigger\("#trigger\*auto", execute: true\) \{/);
+    assert.doesNotMatch(conversion.source, /on start/);
+    assert.doesNotMatch(conversion.source, /function /);
+    assert.equal(conversion.source.match(/"Started"/g)?.length, 1, 'the actions are in the map once');
   });
 
   it('keeps triggers raw when other triggers switch them, when disabled, and when a map picks triggers by position', () => {

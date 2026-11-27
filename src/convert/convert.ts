@@ -46,7 +46,6 @@ class Converter {
   private readonly finalUid = new Map<number, string>();
   private readonly firstByUid = new Map<string, MapElement>();
   private readonly functions = new Map<string, string>();
-  private readonly executeStarts = new Map<number, string>();
   private readonly names = new Map<number, string>();
   private readonly plans = new Map<number, Plan>();
   private positional = false;
@@ -155,15 +154,6 @@ class Converter {
         this.plans.set(element.index, { kind: 'function', element, name });
       } else {
         this.plans.set(element.index, { kind: 'rawTrigger', element, uid: this.finalUid.get(element.index) ?? '' });
-        // In positional maps, keep the Trigger object in its original map position,
-        // but also compile execute=true actions into a startup helper. This preserves
-        // numeric trigger indexes while honoring automatic match-start execution.
-        const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
-        const executable = attributeOf(element, ATTRIBUTE_NAME.execute) === TRUE_TEXT
-          && attributeOf(element, ATTRIBUTE_NAME.enabled) !== FALSE_TEXT
-          && (calls === UNLIMITED || (isWholeNumber(calls) && Number(calls) >= 1))
-          && element.actions.every((action) => opcodeByNumber(action.type) !== null);
-        if (this.positional && executable) this.executeStarts.set(element.index, this.namer.fromUid(uidOf(element) ?? '', true));
       }
     }
     const raw = [...this.plans.values()].filter((plan) => plan.kind === 'rawTrigger').length;
@@ -391,13 +381,6 @@ class Converter {
       if (calls === ONCE) guards.push(TEXT.variable(plan.name + DONE_SUFFIX));
       else if (calls !== UNLIMITED) guards.push(TEXT.variable(plan.name + CALLS_SUFFIX));
     }
-    for (const [index, name] of this.executeStarts) {
-      const element = this.elements[index];
-      if (!element) continue;
-      const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
-      if (calls === ONCE) guards.push(TEXT.variable(name + DONE_SUFFIX));
-      else if (calls !== UNLIMITED) guards.push(TEXT.variable(name + CALLS_SUFFIX));
-    }
     if (guards.length > 0) lines.push(...guards, '');
     lines.push(TEXT.mapOpen);
     for (const plan of plans) {
@@ -409,10 +392,9 @@ class Converter {
       plan.kind === 'function' && attributeOf(plan.element, ATTRIBUTE_NAME.execute) === TRUE_TEXT,
     );
     const starts = plans.filter((plan): plan is Extract<Plan, { kind: 'startTimer' }> => plan.kind === 'startTimer').sort((first, second) => first.delay - second.delay);
-    if (executeAtStart.length > 0 || this.executeStarts.size > 0 || starts.length > 0) {
+    if (executeAtStart.length > 0 || starts.length > 0) {
       lines.push('', TEXT.startOpen);
       for (const plan of executeAtStart) lines.push(INDENT + TEXT.callFunction(plan.name));
-      for (const name of this.executeStarts.values()) lines.push(INDENT + TEXT.callFunction(name));
       let waited = 0;
       for (const plan of starts) {
         if (plan.delay > waited) lines.push(INDENT + TEXT.wait(plan.delay - waited));
@@ -425,10 +407,6 @@ class Converter {
       if (plan.kind === 'everyTimer') lines.push('', TEXT.every(plan.delay, plan.functionName));
     }
     for (const plan of plans) if (plan.kind === 'function') lines.push('', ...this.functionLines(plan));
-    for (const [index, name] of this.executeStarts) {
-      const element = this.elements[index];
-      if (element) lines.push('', ...this.functionLines({ kind: 'function', element, name }));
-    }
     return lines.join(LINE_END) + LINE_END;
   }
 }
