@@ -48,7 +48,10 @@ console or the host map can read.
 | `watchdog` | a check timer every 150 frames (about 5 seconds, F50) records a heartbeat; the program's fastest `every` block (at most 75 frames) counts its runs between heartbeats; other entries (`on join`, `on chat`, exported functions) check that the last heartbeat is less than a minute old | the check timer turned off (partner counts too high), the partner timer turned off (no runs between heartbeats), all timers turned off (old heartbeat) | soft |
 
 The entries that the game or a host map calls (`on start`, `every`, `on join`, `on chat`,
-`export function`, functions used as `@f`) take no token: the game calls them. Region, death and chat
+`export function`, functions given as `@f` to a map object or to an action that the game calls back
+later: 81, 82, 156, 228, 288, 289, 324, 439, F59) take no token: the game calls them. A function
+given as `@f` to an action that only turns it on or off or sets its calls (19 to 22) keeps its token
+check, because that action does not run it. Region, death and chat
 triggers get no entry check: the game offers no action that tells which event started a trigger, and
 the initiator and chat values are never cleared (F54).
 
