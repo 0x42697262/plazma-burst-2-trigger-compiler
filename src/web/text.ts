@@ -66,6 +66,7 @@ export const TEXT = Object.freeze({
     kindLabel: (kind: string): string => kind,
   }),
   compileFirst: 'Compile first.',
+  fixFirst: 'Nothing to download: the build has problems (see Problems)',
   copied: 'Copied.',
   chat: (line: string): string => `chat: ${line}`,
   variable: (name: string, value: string): string => `${name} = ${value}`,

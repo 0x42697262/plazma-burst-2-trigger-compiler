@@ -422,13 +422,21 @@ function renderChips(current: Options): void {
   }));
 }
 
+const rebuildShown = (): Build => {
+  const current = compile();
+  show(current.result || shown === OUTPUT.problems ? shown : OUTPUT.problems);
+  return current;
+};
 const copyOutput = (): void => {
+  if (shown !== OUTPUT.problems && shown !== OUTPUT.run) rebuildShown();
   void navigator.clipboard.writeText(shown === OUTPUT.problems ? output.textContent ?? '' : outputText(shown)).then(() => say(TEXT.copied));
 };
 const downloadOutput = (): void => {
-  if (!last?.result) return say(TEXT.compileFirst);
-  const [text, suffix, type] = shown === OUTPUT.text ? [last.text, DOWNLOAD_NAMES.text, MIME.text] : shown === OUTPUT.map && hostMap !== null
-    ? [last.map, DOWNLOAD_NAMES.map, MIME.xml] : [last.xml, DOWNLOAD_NAMES.xml, MIME.xml];
+  const current = rebuildShown();
+  if (!current.result) return say(TEXT.fixFirst);
+  if (shown === OUTPUT.map && hostMap !== null && current.map === '') return say(TEXT.mapFailed);
+  const [text, suffix, type] = shown === OUTPUT.text ? [current.text, DOWNLOAD_NAMES.text, MIME.text] : shown === OUTPUT.map && hostMap !== null
+    ? [current.map, DOWNLOAD_NAMES.map, MIME.xml] : [current.xml, DOWNLOAD_NAMES.xml, MIME.xml];
   const link = document.createElement(TAG.link);
   link.href = URL.createObjectURL(new Blob([text], { type }));
   link.download = baseName() + suffix;
@@ -465,6 +473,13 @@ const freeConvertedName = (base: string): string => {
     const file = workspace.workspacePath(TEXT.convertedName(base, number));
     if (workspace.get(file) === null) return file;
   }
+};
+const useHostMap = (name: string, xml: string): void => {
+  hostMap = xml;
+  hostMapName.textContent = TEXT.hostMapChosen(name);
+  hostMapName.title = name;
+  hostMapChip.hidden = false;
+  mapForget.hidden = false;
 };
 const convertChosenMap = (name: string, xml: string): void => {
   const conversion = convertMap(xml, { style: STYLE.functions, label: name });
@@ -511,11 +526,7 @@ hostMapInput.addEventListener(EVENT.change, (event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
   void file.text().then((text) => {
-    hostMap = text;
-    hostMapName.textContent = TEXT.hostMapChosen(file.name);
-    hostMapName.title = file.name;
-    hostMapChip.hidden = false;
-    mapForget.hidden = false;
+    useHostMap(file.name, text);
     compile();
     show(OUTPUT.map);
     scheduleBlueprint();
