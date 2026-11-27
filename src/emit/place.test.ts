@@ -18,6 +18,15 @@ describe('map object placement', () => {
     ].join('\n'));
   });
 
+  it('lists the walls of a build without a map, so a later --replace can remove them', () => {
+    const placement = placeObjects([
+      object({ uid: '#d', set: [['x', '0'], ['y', '0']] }),
+      object({ constructorName: 'Wall', tag: 'box', set: [['x', '5'], ['y', '5'], ['w', '20'], ['h', '20']] }),
+      object({ constructorName: 'EngineMark', tag: 'inf', mark: 'sky', set: [['mark', 'sky'], ['forteam', '4']] }),
+    ], { host: null, staging: STAGING, previousWalls: [], replacing: false });
+    assert.deepEqual(placement.walls, ['<box x="5" y="5" w="20" h="20" m="0" />']);
+  });
+
   it('rewrites only what the code sets, keeping the other attributes and their order', () => {
     const host = '<door uid="#d" x="9" maxspeed="10" vis="true" foo="bar" />\n<inf mark="sky" forteam="4" />\n';
     const placement = placeObjects([
