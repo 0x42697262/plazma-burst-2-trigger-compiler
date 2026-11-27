@@ -51,8 +51,9 @@ describe('map conversion', () => {
       '<trigger uid="#trigger*normal" enabled="true" maxcalls="1" actions_1_type="42" actions_1_targetA="Normal" actions_1_targetB="0" />',
     ));
     assert.deepEqual(conversion.plans.map((plan) => plan.kind), ['function', 'function']);
-    assert.match(conversion.source, /on start \{\n {2}triggerAuto\(\);\n\}/);
-    assert.match(conversion.source, /function triggerAuto\(\) \{/);
+    assert.match(conversion.source, /on start \{\n {2}auto\(\);\n\}/);
+    assert.match(conversion.source, /\/\/ #trigger\*auto, run by on start \(execute\)\nfunction auto\(\) \{/);
+    assert.match(conversion.source, /\/\/ #trigger\*normal, not run by anything in the map\nfunction normal\(\) \{/);
     assert.doesNotMatch(conversion.source, /execute:/);
   });
 

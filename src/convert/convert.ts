@@ -342,7 +342,9 @@ class Converter {
   private functionLines(plan: Extract<Plan, { kind: 'function' }>): string[] {
     const { element, name } = plan;
     const calls = attributeOf(element, ATTRIBUTE_NAME.maxcalls) ?? ONCE;
-    const lines = [TEXT.functionComment(uidOf(element) ?? '', this.callers(uidOf(element) ?? '')), TEXT.functionOpen(name)];
+    const startCaller = attributeOf(element, ATTRIBUTE_NAME.execute) === TRUE_TEXT ? [TEXT.executeCaller] : [];
+    const callers = [...startCaller, this.callers(uidOf(element) ?? '')].filter((caller) => caller !== '').join(ARGUMENT_SEPARATOR);
+    const lines = [TEXT.functionComment(uidOf(element) ?? '', callers), TEXT.functionOpen(name)];
     if (calls === ONCE) lines.push(...TEXT.onceGuard(name + DONE_SUFFIX).map((line) => INDENT + line));
     else if (calls !== UNLIMITED) lines.push(...TEXT.countGuard(name + CALLS_SUFFIX, calls).map((line) => INDENT + line));
     for (const action of element.actions) {

@@ -41,6 +41,7 @@ export const TEXT = Object.freeze({
   describe: (description: string): string => ` // ${description.split(' › ').pop() ?? description}`,
   say: (text: string, color: string): string => `say(${text}, ${color});`,
   sayColor: /^([0-4]|#[0-9A-Fa-f]{6})$/,
+  executeCaller: 'on start (execute)',
   functionComment: (uid: string, callers: string): string => (callers === '' ? `// ${uid}, not run by anything in the map` : `// ${uid}, run by ${callers}`),
   functionOpen: (name: string): string => `function ${name}() {`,
   onceGuard: (variable: string): string[] => [`if (${variable} == 1) { return; }`, `${variable} = 1;`],
