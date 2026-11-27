@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { main, prefixFromFile } from './main.ts';
+import { convertMap } from '../convert/convert.ts';
 
 const folders: string[] = [];
 const tempFolder = (): string => {
@@ -224,6 +225,31 @@ describe('compile CLI', () => {
     assert.ok(lines.out.some((line) => line.includes('--clean removed 1 trigger(s) and 1 timer(s)')));
     assert.equal(main([source, '--out', folder, '--clean'], output), 1);
     assert.match(lines.err.at(-1) ?? '', /--clean needs --into/);
+  });
+
+  it('puts a converted map with repeated and missing uids back with --clean, one copy of each object', () => {
+    const folder = tempFolder();
+    const source = path.join(folder, 'u.ptc');
+    const host = path.join(folder, 'host.xml');
+    const map = [
+      '<door uid="#door" x="0" y="0" />',
+      '<door uid="#door" x="50" y="0" />',
+      '<trigger uid="#trigger" x="0" y="0" enabled="false" maxcalls="1" actions_1_type="42" actions_1_targetA="raw" actions_1_targetB="0" />',
+      '<trigger uid="#trigger" x="0" y="0" enabled="true" execute="true" maxcalls="1" actions_1_type="42" actions_1_targetA="exec" actions_1_targetB="0" />',
+      '<trigger x="0" y="0" enabled="true" maxcalls="1" actions_1_type="42" actions_1_targetA="plain" actions_1_targetB="0" />',
+      '',
+    ].join('\n');
+    fs.writeFileSync(host, map);
+    fs.writeFileSync(source, convertMap(map, { style: 'raw', label: 'host.xml' }).source);
+    const { lines, output } = capture();
+    for (let build = 0; build < 2; build += 1) {
+      assert.equal(main([source, '--prefix', 'u', '--out', folder, '--into', host, '--replace', '--clean'], output), 0, lines.err.join('\n'));
+      fs.copyFileSync(path.join(folder, 'u-map.xml'), host);
+      const merged = fs.readFileSync(host, 'utf8');
+      assert.equal(merged.match(/<door /g)?.length, 2, `build ${build}: doors`);
+      for (const text of ['raw', 'exec', 'plain']) assert.equal(merged.match(new RegExp(`targetA="${text}"`, 'g'))?.length, 1, `build ${build}: ${text}`);
+    }
+    assert.ok(lines.out.some((line) => line.includes('--clean gave 3 object(s) the uid npm run convert gave them')));
   });
 
   it('keeps one copy of the program when --clean and --replace update a map again', () => {

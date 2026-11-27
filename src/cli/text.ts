@@ -39,6 +39,7 @@ export const TEXT = Object.freeze({
   badPosition: (value: string): string => `--at needs two whole numbers like 1000,-500, got "${value}".`,
   replaceNeedsInto: '--replace needs --into <map.xml>.',
   cleanNeedsInto: '--clean needs --into <map.xml>.',
+  cleanedUids: (count: number): string => `--clean gave ${count} object(s) the uid npm run convert gave them (a repeated uid or none)`,
   cleaned: (triggers: number, timers: number): string => `--clean removed ${triggers} trigger(s) and ${timers} timer(s) whose uid the map { } block does not list`,
   tamperSeed: (seed: string): string => `Tamper check seed: ${seed} (give --tamper-seed ${seed} to build the same again)`,
   tamperFindings: (findings: string, last: string): string => `Tamper check: findings are counted in ${findings}, the last kind in ${last}`,

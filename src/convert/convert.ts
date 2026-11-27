@@ -6,9 +6,10 @@ import { checkValue } from '../objects/value-check.ts';
 import { attributeOf, parseMap, uidOf } from './map-file.ts';
 import type { MapAction, MapElement } from './map-file.ts';
 import { Namer } from './names.ts';
+import { convertedUids } from './uids.ts';
 import {
-  ARGUMENT_SEPARATOR, ATTRIBUTE_NAME, BOOL_KIND, CALLS_SUFFIX, COPY_SUFFIX, DONE_SUFFIX, ESCAPES, FALSE_TEXT, IDENTIFIER, IN_FRONT_MODELS, IN_FRONT_VALUE, INDENT, LINE_END,
-  NO_VALUE_KIND, NONE, ONCE, QUOTE, REFERENCE_ATTRIBUTES, STOPPING_DESCRIPTION, STYLE, TAG, TIMER_KIND, TRIGGER_KIND, TRUE_TEXT, UID_MARK, UNLIMITED, UNREAD_ATTRIBUTES,
+  ARGUMENT_SEPARATOR, ATTRIBUTE_NAME, BOOL_KIND, CALLS_SUFFIX, DONE_SUFFIX, ESCAPES, FALSE_TEXT, IDENTIFIER, IN_FRONT_MODELS, IN_FRONT_VALUE, INDENT, LINE_END,
+  NO_VALUE_KIND, NONE, ONCE, QUOTE, REFERENCE_ATTRIBUTES, STOPPING_DESCRIPTION, STYLE, TAG, TIMER_KIND, TRIGGER_KIND, TRUE_TEXT, UID_CHANGE, UID_MARK, UNLIMITED, UNREAD_ATTRIBUTES,
 } from './keys.ts';
 import { SHOW_TEXT, SWITCH_BY_INDEX, SWITCH_TO_TRIGGER, TRIGGER_STATE_ACTIONS } from './constants.ts';
 import { TEXT } from './text.ts';
@@ -72,37 +73,13 @@ class Converter {
   }
 
   private assignUids(): void {
-    const used = new Set<string>();
+    const { uids, firstByUid, changes } = convertedUids(this.elements);
+    for (const [uid, element] of firstByUid) this.firstByUid.set(uid, element);
+    for (const [index, uid] of uids) this.finalUid.set(index, uid);
     for (const element of this.elements) {
-      for (const [, value] of element.attributes) used.add(value);
-      for (const action of element.actions) used.add(action.targetA).add(action.targetB);
-    }
-    const counters = new Map<string, number>();
-    const fresh = (base: string, separator: string): string => {
-      let number = counters.get(base) ?? 1;
-      while (used.has(base + separator + String(number))) number++;
-      counters.set(base, number + 1);
-      const uid = base + separator + String(number);
-      used.add(uid);
-      return uid;
-    };
-    for (const element of this.elements) {
-      const constructorName = constructorForTag(element.tag);
-      const needsUid = constructorName !== null && CONSTRUCTORS[constructorName]?.positional.includes(UID_ARGUMENT) === true;
-      const uid = uidOf(element);
-      if (uid !== undefined && !this.firstByUid.has(uid)) this.firstByUid.set(uid, element);
-      if (!needsUid) continue;
-      if (uid === undefined || uid === '' || !uid.startsWith(UID_MARK)) {
-        const made = fresh(UID_MARK + element.tag, COPY_SUFFIX);
-        this.finalUid.set(element.index, made);
-        this.expect(element, ATTRIBUTE_NAME.uid, TEXT.reasons.uidAdded);
-      } else if (this.firstByUid.get(uid) !== element) {
-        const made = fresh(uid, COPY_SUFFIX);
-        this.finalUid.set(element.index, made);
-        this.expect(element, ATTRIBUTE_NAME.uid, TEXT.reasons.uidRenamed);
-      } else {
-        this.finalUid.set(element.index, uid);
-      }
+      const change = changes.get(element.index);
+      if (change === undefined) continue;
+      this.expect(element, ATTRIBUTE_NAME.uid, change === UID_CHANGE.added ? TEXT.reasons.uidAdded : TEXT.reasons.uidRenamed);
     }
     const added = this.expectations.filter((entry) => entry.reason === TEXT.reasons.uidAdded).length;
     const renamed = this.expectations.filter((entry) => entry.reason === TEXT.reasons.uidRenamed).length;

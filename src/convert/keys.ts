@@ -1,5 +1,10 @@
 export const ELEMENT = /<([A-Za-z][\w-]*)\b([^>]*?)\s*\/>/g;
 export const ATTRIBUTE = /([A-Za-z0-9_]+)="([^"]*)"/g;
+export const UID_IN_ELEMENT = /\buid="[^"]*"/;
+export const ELEMENT_TAG_START = /^(<[A-Za-z][\w-]*)/;
+export const AFTER_TAG = '$1 ';
+export const uidAttribute = (uid: string): string => `uid="${uid}"`;
+export const UID_CHANGE = Object.freeze({ added: 'added', renamed: 'renamed' } as const);
 export const ACTION_ATTRIBUTE = /^actions_(\d+)_(type|targetA|targetB)$/;
 export const ENTITIES: readonly (readonly [string, string])[] = Object.freeze([['&quot;', '"'], ['&lt;', '<'], ['&gt;', '>'], ['&#10;', '\n'], ['&#13;', '\r'], ['&amp;', '&']]);
 export const TAG = Object.freeze({ trigger: 'trigger', timer: 'timer', inf: 'inf', decor: 'decor', region: 'region', player: 'player', enemy: 'enemy', song: 'song' });
