@@ -160,6 +160,17 @@ describe('map conversion', () => {
     assert.equal(conversion.source, fs.readFileSync('examples/live/convert-map.ptc', 'utf8'));
   });
 
+  it('lets triggers become functions in a map whose 362 jumps read trigger uids, and writes that live example', () => {
+    const xml = fs.readFileSync('examples/convert/switch-index.xml', 'utf8');
+    const conversion = convertMap(xml, { style: 'functions', label: 'switch-index.xml' });
+    assert.deepEqual(checkConversion(conversion, 'test').report.unexpected, []);
+    assert.equal(conversion.positional, false);
+    assert.deepEqual(conversion.plans.map((plan) => plan.kind), ['function', 'function', 'function', 'function', 'rawTrigger', 'rawTrigger', 'rawTrigger', 'rawTrigger']);
+    assert.equal(conversion.source, fs.readFileSync('examples/live/switch-index.ptc', 'utf8'));
+    const spoiled = xml.replace('actions_11_targetB="#trigger*finish"', 'actions_11_targetB="7"');
+    assert.equal(convert(spoiled).positional, true, 'a number in the variable is a position');
+  });
+
   it('rebuilds every map in the game repository', { skip: !fs.existsSync(MAPS) }, () => {
     for (const file of fs.readdirSync(MAPS).filter((name) => name.endsWith('.xml'))) {
       const xml = fs.readFileSync(path.join(MAPS, file), 'utf8');

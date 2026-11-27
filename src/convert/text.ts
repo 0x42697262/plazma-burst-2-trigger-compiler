@@ -7,6 +7,7 @@ export const TEXT = Object.freeze({
   comment: (text: string): string => `// ${text}`,
   notes: Object.freeze({
     positional: 'The map picks triggers by their position (action 362 or a number where a trigger goes), so every trigger and timer stays raw, in order.',
+    provenSwitches: (count: number): string => `${count} jump(s) by action 362 read a trigger uid that the game turns into the trigger's number at load, so they stay right when triggers move (F18).`,
     uidsAdded: (count: number): string => `${count} object(s) had no uid and got one (#tag*N, unused anywhere in the map).`,
     uidsRenamed: (count: number): string => `${count} object(s) repeated a uid and got their own (the map's references kept pointing to the first one).`,
     functions: (count: number): string => `${count} trigger(s) became functions.`,

@@ -1,0 +1,70 @@
+// switch-index.xml, converted to source by npm run convert.
+// Map objects are in the map { } block, in the map's order. Triggers became functions where that keeps their meaning;
+// the others stay raw Trigger blocks. Quoted values are written exactly as the map had them.
+// 2 jump(s) by action 362 read a trigger uid that the game turns into the trigger's number at load, so they stay right when triggers move (F18).
+// 4 trigger(s) became functions.
+// 1 execute trigger(s) became calls in on start.
+// 4 trigger(s) stay raw: disabled, switched on or off by other triggers, with unusual call counts or actions, or picked by position.
+
+var setupDone;
+var helloDone;
+
+map {
+  skin1 = Trigger("#skin*1", x: 240, y: 0, maxcalls: Infinite) {
+    action(VarAddValue, "~switchindex_sum~", 1);
+  }
+  skin2 = Trigger("#skin*2", x: 300, y: 0, maxcalls: Infinite) {
+    action(VarAddValue, "~switchindex_sum~", 10);
+  }
+  skin3 = Trigger("#skin*3", x: 360, y: 0, maxcalls: Infinite) {
+    action(VarAddValue, "~switchindex_sum~", 100);
+  }
+  triggerFinish = Trigger("#trigger*finish", x: 420, y: 0) {
+    action(VarAddValue, "~switchindex_sum~", 1000);
+    action(ShowText, "sum ~switchindex_sum~", "#fff000");
+  }
+}
+
+on start {
+  setup();
+}
+
+// #trigger*setup, run by on start (execute)
+function setup() {
+  if (setupDone == 1) { return; }
+  setupDone = 1;
+  action(ExecTrigger, @hello, 0);
+  action(354, "~switchindex_skins~", 0); // Create array at variable 'A'
+  action(352, "~switchindex_skins~", "#skin*1"); // Add element 'B'(can be variable) to array 'A'
+  action(352, "~switchindex_skins~", "#skin*2"); // Add element 'B'(can be variable) to array 'A'
+  action(352, "~switchindex_skins~", "#skin*3"); // Add element 'B'(can be variable) to array 'A'
+  action(ExecTrigger, @chat, 0);
+  action(VarSetValue, "~switchindex_choice~", 1);
+  action(ExecTrigger, @choose, 0);
+  action(VarSetValue, "~switchindex_choice~", 2);
+  action(ExecTrigger, @choose, 0);
+  action(VarSetValue, "~switchindex_next~", "#trigger*finish");
+  action(362, "~switchindex_next~", 0); // Switch execution to trigger ID in variable 'A'
+}
+
+// #trigger*hello, run by #trigger*setup
+function hello() {
+  if (helloDone == 1) { return; }
+  helloDone = 1;
+  action(VarSetValue, "~switchindex_sum~", 0);
+  say("switch by index", "#fff000");
+}
+
+// #trigger*chat, run by #trigger*setup
+function chat() {
+  action(VarSetValue, "~switchindex_pick~", "-skin 2");
+  action(123, "~switchindex_pick~", "-skin 2");
+  action(VarAddValue, "~switchindex_sum~", 10000);
+}
+
+// #trigger*choose, run by #trigger*setup
+function choose() {
+  action(VarSetVar, "~switchindex_pick~", "~switchindex_skins~");
+  action(350, "~switchindex_pick~", "~switchindex_choice~"); // Get index 'B' of variable 'A' and store into variable 'A'
+  action(362, "~switchindex_pick~", 0); // Switch execution to trigger ID in variable 'A'
+}

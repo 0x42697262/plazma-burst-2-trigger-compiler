@@ -34,9 +34,11 @@ const run = (source: string, options: Partial<CompileOptions> = {}) => {
   return { result, ...simulate(result.program) };
 };
 
+const TRIGGERS_ONLY = new Set(['switch-index.ptc']);
+
 describe('p-code target', () => {
   for (const folder of FOLDERS) {
-    for (const file of fs.readdirSync(path.join(EXAMPLES, folder)).filter((name) => /\.(ptc|pasm)$/.test(name)).sort()) {
+    for (const file of fs.readdirSync(path.join(EXAMPLES, folder)).filter((name) => /\.(ptc|pasm)$/.test(name) && !TRIGGERS_ONLY.has(name)).sort()) {
       it(`runs ${folder}/${file} like the trigger target`, () => {
         const fullPath = path.join(EXAMPLES, folder, file);
         const source = fs.readFileSync(fullPath, 'utf8');

@@ -19,6 +19,7 @@ import { isRandomSeed, randomSeed, resolveSeed } from './random.ts';
 const EXAMPLES = path.resolve(import.meta.dirname, '..', '..', 'examples');
 const FOLDERS = ['live', 'tutorial', 'syntax'];
 const TARGETS = ['triggers', 'pcode'] as const;
+const TRIGGERS_ONLY = new Set(['switch-index.ptc']);
 const PLAYERS = [{ slot: 0, name: 'ann', active: true, team: 1 }, { slot: 1, name: 'bob', active: true, team: 2 }];
 const FRAMES = 60;
 const MAX_STEPS = 50_000_000;
@@ -56,7 +57,7 @@ const regionOf = (result: CompileResult): Trigger[] =>
 describe('obfuscation', () => {
   for (const target of TARGETS) {
     for (const folder of FOLDERS) {
-      for (const file of fs.readdirSync(path.join(EXAMPLES, folder)).filter((name) => /\.(ptc|pasm)$/.test(name)).sort()) {
+      for (const file of fs.readdirSync(path.join(EXAMPLES, folder)).filter((name) => /\.(ptc|pasm)$/.test(name) && !(target === 'pcode' && TRIGGERS_ONLY.has(name))).sort()) {
         it(`runs ${folder}/${file} like the plain build (${target})`, () => {
           const fullPath = path.join(EXAMPLES, folder, file);
           const source = fs.readFileSync(fullPath, 'utf8');

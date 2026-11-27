@@ -7,6 +7,7 @@ import { attributeOf, parseMap, uidOf } from './map-file.ts';
 import type { MapAction, MapElement } from './map-file.ts';
 import { Namer } from './names.ts';
 import { convertedUids } from './uids.ts';
+import { unprovenSwitches } from './switch-index.ts';
 import {
   ARGUMENT_SEPARATOR, ATTRIBUTE_NAME, BOOL_KIND, CALLS_SUFFIX, DONE_SUFFIX, ESCAPES, FALSE_TEXT, IDENTIFIER, IN_FRONT_MODELS, IN_FRONT_VALUE, INDENT, LINE_END,
   NO_VALUE_KIND, NONE, ONCE, QUOTE, REFERENCE_ATTRIBUTES, STOPPING_DESCRIPTION, STYLE, TAG, TIMER_KIND, TRIGGER_KIND, TRUE_TEXT, UID_CHANGE, UID_MARK, UNLIMITED, UNREAD_ATTRIBUTES,
@@ -36,7 +37,7 @@ const opcodeKinds = (action: MapAction): readonly [string, string] => {
   const opcode = opcodeByNumber(action.type);
   return [opcode?.paramA ?? NO_VALUE_KIND, opcode?.paramB ?? NO_VALUE_KIND];
 };
-const stops = (action: MapAction): boolean => action.type === SWITCH_TO_TRIGGER || STOPPING_DESCRIPTION.test(opcodeByNumber(action.type)?.description ?? '');
+const stops = (action: MapAction): boolean => action.type === SWITCH_TO_TRIGGER || action.type === SWITCH_BY_INDEX || STOPPING_DESCRIPTION.test(opcodeByNumber(action.type)?.description ?? '');
 
 class Converter {
   private readonly elements: MapElement[];
@@ -88,9 +89,11 @@ class Converter {
   }
 
   private usesPositions(): boolean {
+    const switches = this.elements.reduce((count, element) => count + element.actions.filter((action) => action.type === SWITCH_BY_INDEX).length, 0);
+    if (unprovenSwitches(this.elements).length > 0) return true;
+    if (switches > 0) this.notes.push(TEXT.notes.provenSwitches(switches));
     for (const element of this.elements) {
       for (const action of element.actions) {
-        if (action.type === SWITCH_BY_INDEX) return true;
         const kinds = opcodeKinds(action);
         if ([action.targetA, action.targetB].some((value, side) => kinds[side] === TRIGGER_KIND && value !== NONE && !value.startsWith(UID_MARK))) return true;
       }
