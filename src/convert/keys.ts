@@ -21,7 +21,7 @@ export const NO_VALUE_KIND = 'nochange';
 export const REFERENCE_ATTRIBUTES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   region: ['use_target'], player: ['ondeath'], enemy: ['ondeath'], song: ['callback'], timer: ['target'],
 });
-export const UNREAD_ATTRIBUTES: Readonly<Record<string, readonly string[]>> = Object.freeze({ decor: ['at', 'addx', 'addy'] });
+export const UNREAD_ATTRIBUTES: Readonly<Record<string, readonly string[]>> = Object.freeze({ decor: ['at', 'addx', 'addy'], trigger: ['onserver'] });
 export const IN_FRONT_MODELS: ReadonlySet<string> = new Set([
   'back_lamp_vertical', 'back_lamp_horizontal', 'back_lamp_vertical_on', 'back_lamp_horizontal_on', 'text', 'text2', 'text3', 'pixel_teleport',
   'ditzy_flag_blue', 'ditzy_flag_red', 'ditzy_flag_dark', 'ditzy_flag_empty', 'darkstar_healing_kit', 'darkstar_holo_on', 'darkstar_holo_on_red',

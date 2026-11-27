@@ -75,6 +75,7 @@ describe('map conversion', () => {
       const trigger = `<trigger uid="#trigger*1" x="0" y="0" enabled="true" maxcalls="1" onserver="${onserver}" actions_1_type="42" actions_1_targetA="hi" actions_1_targetB="0" />`;
       assert.deepEqual(roundTrip(trigger).plans.map((plan) => plan.kind), ['function'], onserver);
       assert.deepEqual(roundTrip(trigger, true).plans.map((plan) => plan.kind), ['rawTrigger'], onserver);
+      assert.doesNotMatch(roundTrip(trigger, true).source, /onserver/, 'no note about an unknown attribute');
     }
   });
 

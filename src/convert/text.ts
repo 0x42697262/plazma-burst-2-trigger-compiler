@@ -19,7 +19,7 @@ export const TEXT = Object.freeze({
     unknownAttribute: (tag: string, attribute: string): string => `<${tag}> ${attribute} is not a known attribute and is left out.`,
   }),
   reasons: Object.freeze({
-    uidAdded: 'uid added', uidRenamed: 'repeated uid renamed', reference: 'trigger reference now names the function', unread: 'attribute the game never reads (F45)',
+    uidAdded: 'uid added', uidRenamed: 'repeated uid renamed', reference: 'trigger reference now names the function', unread: 'attribute the game never reads (F45, F58)',
     unknownAttribute: 'unknown attribute', unreadUid: 'uid of a wall, background, engine mark or image, which the game never reads', positionAdded: 'position written where the map left it out (only the editor shows it)',
     functionDropped: 'trigger nothing runs, left out as an unused function',
     functionMade: 'trigger became a function with the same actions', startTimer: 'start timer became on start', everyTimer: 'repeating timer became an every block', inFront: 'f written out: this model draws in front when f is missing', markRepeated: 'repeated engine mark',
