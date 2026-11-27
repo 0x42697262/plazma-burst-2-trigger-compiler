@@ -136,7 +136,7 @@ export function placeObjects(objects: readonly MapObject[], options: PlaceOption
     const mark = element.tag === ENGINE_MARK_TAG ? attributeOf(element, MARK_ARGUMENT) : undefined;
     if (mark !== undefined) marks.set(mark, [...(marks.get(mark) ?? []), element]);
   }
-  let pendingWalls = options.replacing ? [...options.previousWalls] : [];
+  const pendingWalls = options.replacing ? [...options.previousWalls] : [];
   const recordedWalls = pendingWalls.length === 0;
   const claims: Element[] = [];
   if (options.replacing) {

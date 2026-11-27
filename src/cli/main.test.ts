@@ -215,7 +215,7 @@ describe('compile CLI', () => {
       '<timer uid="#oldtimer" x="0" y="0" enabled="true" maxcalls="1" target="#old*1" delay="10" />',
       '',
     ].join('\n'));
-    fs.writeFileSync(source, 'map {\n  Trigger(\"#kept\") { action(42, \"kept\", \"#ffffff\"); }\n}\non start { say(\"new\"); }\n');
+    fs.writeFileSync(source, 'map {\n  Trigger("#kept") { action(42, "kept", "#ffffff"); }\n}\non start { say("new"); }\n');
     const { lines, output } = capture();
     assert.equal(main([source, '--prefix', 'p', '--out', folder, '--into', host, '--clean'], output), 0, lines.err.join('\n'));
     const merged = fs.readFileSync(path.join(folder, 'c-map.xml'), 'utf8');

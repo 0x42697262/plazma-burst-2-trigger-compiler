@@ -1,4 +1,4 @@
-import { MAP_ELEMENT, TRAILING_LINE_END, UID_ATTRIBUTE, UID_ATTRIBUTE_ONE, XML_LINE_END } from './keys.ts';
+import { ELEMENT_NAME, MAP_ELEMENT, TIMER_TAG, TRAILING_LINE_END, TRIGGER_TAG, UID_ATTRIBUTE, UID_ATTRIBUTE_ONE, XML_LINE_END } from './keys.ts';
 import { TEXT } from './text.ts';
 import { EmitError } from './check.ts';
 
@@ -18,12 +18,10 @@ export function removeOwned(mapXml: string, owns: (uid: string) => boolean): str
   });
 }
 
-const ELEMENT_NAME = /^<([A-Za-z][\w-]*)/;
-const CLEANED_ELEMENTS: ReadonlySet<string> = new Set(['trigger', 'timer']);
+const CLEANED_ELEMENTS: ReadonlySet<string> = new Set([TRIGGER_TAG, TIMER_TAG]);
 
 export type Cleaned = { xml: string; triggers: number; timers: number };
 
-/** Removes the map's triggers and timers whose uid is not in `keep` (the map { } block's uids). Elements without a uid stay. */
 export function removeUnlisted(mapXml: string, keep: ReadonlySet<string>): Cleaned {
   let triggers = 0;
   let timers = 0;
@@ -31,7 +29,7 @@ export function removeUnlisted(mapXml: string, keep: ReadonlySet<string>): Clean
     const name = ELEMENT_NAME.exec(element)?.[1];
     const uid = UID_ATTRIBUTE_ONE.exec(element)?.[1];
     if (name === undefined || !CLEANED_ELEMENTS.has(name) || uid === undefined || keep.has(uid)) return element;
-    if (name === 'trigger') triggers += 1;
+    if (name === TRIGGER_TAG) triggers += 1;
     else timers += 1;
     return '';
   });
