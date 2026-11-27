@@ -117,7 +117,7 @@ describe('map conversion', () => {
       '<decor uid="#decor*1" x="0" y="0" model="text" at="1" addx="3" text="a &lt;b&gt; &quot;c&quot;" />',
       '<lamp uid="#light*1" x="0" y="0" flare="0" />',
       '<widget uid="#w" />',
-      '<trigger uid="#trigger*1" enabled="true" maxcalls="1" actions_1_type="424" actions_1_targetA="1" actions_1_targetB="2" />',
+      '<trigger uid="#trigger*1" enabled="true" maxcalls="1" actions_1_type="412" actions_1_targetA="1" actions_1_targetB="2" />',
     ));
     assert.match(conversion.source, /Wall\(0, 0, "0", "-20"\);/);
     assert.match(conversion.source, /upg: "10"/);
@@ -126,7 +126,7 @@ describe('map conversion', () => {
     assert.match(conversion.source, /f: "1"/);
     assert.match(conversion.source, /flare: "0"/);
     assert.match(conversion.source, /\/\/ <widget> left out/);
-    assert.match(conversion.source, /Trigger\("#trigger\*1"\) \{\n {4}action\(424, 1, 2\);/);
+    assert.match(conversion.source, /Trigger\("#trigger\*1"\) \{\n {4}action\(412, 1, 2\);/);
   });
 
   it('reports differences the source does not explain', () => {

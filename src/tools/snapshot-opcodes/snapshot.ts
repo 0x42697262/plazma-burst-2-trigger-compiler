@@ -1,5 +1,5 @@
 import vm from 'node:vm';
-import { OPCODES_GLOBAL, RECTANGLE_SHAPE } from './keys.ts';
+import { GAME_ONLY_ACTIONS, OPCODES_GLOBAL, RECTANGLE_SHAPE } from './keys.ts';
 
 export type SnapshotAction = { alias?: string; a: string; b: string; desc: string };
 export type ValueTables = Record<string, Record<string, string>>;
@@ -68,8 +68,9 @@ export function tagRules(editor: EditorRules): Record<string, TagRules> {
 
 export function toSnapshot(table: RawTable, editor: EditorRules | null = null): Snapshot {
   const actions: Record<string, SnapshotAction> = {};
-  for (const key of Object.keys(table.actions).sort(byNumber)) {
-    const raw = table.actions[key];
+  const listed: Record<string, RawAction> = { ...GAME_ONLY_ACTIONS, ...table.actions };
+  for (const key of Object.keys(listed).sort(byNumber)) {
+    const raw = listed[key];
     if (!raw) continue;
     actions[key] = raw.alias ? { alias: raw.alias, a: raw.a, b: raw.b, desc: raw.desc } : { a: raw.a, b: raw.b, desc: raw.desc };
   }

@@ -2192,6 +2192,11 @@
    "b": "gun",
    "desc": "Character › Make Character 'A' drop Gun 'B'"
   },
+  "424": {
+   "a": "region",
+   "b": "string",
+   "desc": "Region › Move region 'A' to lower body of Character slot-value variable 'B'"
+  },
   "425": {
    "a": "string",
    "b": "character",
@@ -2811,11 +2816,6 @@
    "a": "nochange",
    "b": "nochange",
    "desc": "Do nothing"
-  },
-  "424": {
-   "a": "region",
-   "b": "string",
-   "desc": "Region › Move region 'A' to lower body of Character slot-value variable 'B'"
   }
  },
  "values": {
