@@ -100,7 +100,8 @@ broken.
   obfuscation nor the tamper check touches them. A map converted by `npm run convert` that picks
   triggers by position (action 362, F6) keeps every trigger raw, so building it obfuscated only
   adds the program's own start code; the map's triggers stay readable. Its notes say
-  `every trigger and timer stays raw`.
+  `every trigger and timer stays raw`. When its 362 jumps read trigger uids (F60), only their
+  target triggers stay raw ([convert.md](convert.md)).
 
 ## Checks
 

@@ -32,7 +32,13 @@ without converting it: Build then writes that map with the program in it, until 
   A timer whose target can stop itself (a "continue only if" action or 363) stays raw, so that it
   cannot cut the rest of `on start` short. Every other timer stays `Timer(...)`.
 - `--raw` keeps every trigger and timer raw. A map that picks triggers **by position** (action 362,
-  or a number where a trigger goes) is always converted this way (F6). Its `execute` triggers stay
+  or a number where a trigger goes) is always converted this way (F6).
+- A 362 does not count as picking by position when its variable is set from a trigger uid right
+  before it, in the same trigger: `100 V "#t"` then `362 V`, or `125 V list`, `350 V index`, then
+  `362 V`, where `list` is only ever made by `354` and `352 list "#t"` (F60). The game turns those
+  uids into trigger numbers at load, so the jumps stay right when triggers move; the targets keep
+  their uid and stay raw. `examples/convert/switch-index.xml` is such a map. A map that stores
+  into variables by a computed name (342) never gets this. Its `execute` triggers stay
   `Trigger(uid, execute: true)`, so the game runs them at start, once.
 - A trigger's `onserver` attribute is dropped: the game never reads it (F58).
 - Text is decoded once (`&quot;` → `"`), and the compiler encodes it again, so the game reads the
@@ -91,6 +97,8 @@ runs them when that folder exists). `examples/convert/convert-map.xml` is conver
 
 ## Limits
 
+- The 362 check follows variable names written in the map; a variable written through a name
+  built at run time (other than with 342) is not seen.
 - A trigger reached through a uid built at run time (`"#trigger*" + n` in a variable) is not seen;
   if that trigger became a function, the built uid no longer finds it. Use `--raw` for such maps.
 - `--check` compares structure, not behavior: two maps can match and still differ in timing
