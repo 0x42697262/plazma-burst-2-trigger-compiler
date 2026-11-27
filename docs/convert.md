@@ -5,9 +5,11 @@
 (default `out/`). The notes it prints are also at the top of the file.
 
 In the web page: **Map ▾ › Convert a map XML to .ptc…** opens the converted source in a new
-file (`<map>.ptc`, or `<map>-2.ptc` when that name is taken). **Map ▾ › Add the program to a map
-XML…** is the other choice: Build then writes that map with the program in it, until **Close the
-map** (or the × on the map's name).
+file (`<map>.ptc`, or `<map>-2.ptc` when that name is taken), opens the map as the one to build
+into, and turns on **Remove the map's converted triggers** (`--clean`, below): the Map tab then
+shows the map with the program put back. **Map ▾ › Add the program to a map XML…** opens a map
+without converting it: Build then writes that map with the program in it, until **Close the map**
+(or the × on the map's name).
 
 ## What the source looks like
 

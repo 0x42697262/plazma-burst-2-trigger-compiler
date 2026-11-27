@@ -96,6 +96,11 @@ broken.
 - A text that shows `<`, `>` or `"` keeps that part unencoded (the game only decodes them in the
   shown text, F41).
 - A secret written into a text is still reported (the compiler checks the decoded texts too).
+- Raw `Trigger(uid) { ... }` and `Timer(...)` blocks in `map { }` are written as they are: neither
+  obfuscation nor the tamper check touches them. A map converted by `npm run convert` that picks
+  triggers by position (action 362, F6) keeps every trigger raw, so building it obfuscated only
+  adds the program's own start code; the map's triggers stay readable. Its notes say
+  `every trigger and timer stays raw`.
 
 ## Checks
 

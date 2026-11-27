@@ -23,13 +23,14 @@ elsewhere.
   builtins, `Color.` values, actions inside `action(`, constructors and properties in `map { }`),
   docs on hover, F12 or Ctrl+B to go to a definition. The file whose editor was used last is the one
   Build and Run compile.
-- **Output:** Problems, XML, Trigger text, Map, Run. Copy and Download act on the shown tab. Build
-  and Run open the panel again if it was closed.
+- **Output:** Problems, XML, Trigger text, Map, Run. Copy and Download act on the shown tab, and
+  build first with the current source and settings. Build and Run open the panel again if it was
+  closed.
 - **Map ▾:** "Add the program to a map XML…" takes a map downloaded from the editor; the Map tab
   shows it with the program added (and the objects of `map { }` blocks added or updated; the
   changes are listed in Problems). The map's name shows next to the button; its `×`, or "Close the
-  map" in the menu, closes it. "Convert a map XML to .ptc…" opens a map as source in a new file
-  ([convert.md](convert.md)).
+  map" in the menu, closes it. "Convert a map XML to .ptc…" opens a map as source in a new file and
+  as the map to build into, with "Remove the map's converted triggers" on ([convert.md](convert.md)).
 - **Blueprint:** a drawing of the map: the objects of `map { }` blocks in the editor's colors, and
   the chosen map's own objects dimmed behind them. It starts as a small card in the bottom-right
   corner; a click expands it.
