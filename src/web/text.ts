@@ -6,7 +6,7 @@ export const TEXT = Object.freeze({
   compiled: (triggers: number, actions: number, timers: number): string => `${triggers} triggers, ${actions} actions, ${timers} timers`,
   noMap: 'No map is open. Map ▾ › Add the program to a map XML… to build the program into a map.',
   mapFailed: 'The map could not be built; see Problems.',
-  converted: (file: string, notes: number): string => `Converted to ${file}${notes > 0 ? ` (${notes} notes at the top)` : ''}`,
+  converted: (file: string, notes: number): string => `Converted to ${file}${notes > 0 ? ` (${notes} notes at the top)` : ''}; Build puts it back into the map, without the old triggers`,
   convertedName: (base: string, number: number): string => (number === 1 ? `${base}.ptc` : `${base}-${number}.ptc`),
   mapClosed: 'Map closed',
   hostMapChosen: (name: string): string => name,

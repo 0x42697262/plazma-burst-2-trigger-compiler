@@ -486,7 +486,12 @@ const convertChosenMap = (name: string, xml: string): void => {
   const file = freeConvertedName(name.replace(MAP_FILE_EXTENSION, '') || CONVERTED_FALLBACK);
   workspace.set(file, conversion.source);
   openFile(file);
+  useHostMap(name, xml);
+  cleanInput.checked = true;
+  optionChanged();
   compile();
+  show(OUTPUT.map);
+  scheduleBlueprint();
   say(TEXT.converted(shortName(file), conversion.notes.length));
 };
 
