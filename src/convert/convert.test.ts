@@ -70,6 +70,14 @@ describe('map conversion', () => {
     assert.equal(conversion.source.match(/"Started"/g)?.length, 1, 'the actions are in the map once');
   });
 
+  it('converts triggers with onserver and checks them again without a difference', () => {
+    for (const onserver of ['false', 'true']) {
+      const trigger = `<trigger uid="#trigger*1" x="0" y="0" enabled="true" maxcalls="1" onserver="${onserver}" actions_1_type="42" actions_1_targetA="hi" actions_1_targetB="0" />`;
+      assert.deepEqual(roundTrip(trigger).plans.map((plan) => plan.kind), ['function'], onserver);
+      assert.deepEqual(roundTrip(trigger, true).plans.map((plan) => plan.kind), ['rawTrigger'], onserver);
+    }
+  });
+
   it('keeps triggers raw when other triggers switch them, when disabled, and when a map picks triggers by position', () => {
     const switched = roundTrip(lines(
       '<trigger uid="#trigger*1" enabled="true" maxcalls="-1" actions_1_type="19" actions_1_targetA="#trigger*2" actions_1_targetB="0" />',

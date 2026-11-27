@@ -302,9 +302,6 @@ class Converter {
     for (const [name, raw] of element.attributes) {
       if (handled.has(name)) continue;
       handled.add(name);
-      // `onserver` is editor metadata on PB2 triggers, not a PTC trigger property.
-      // Ignore it without emitting an unknown-attribute warning.
-      if (element.tag === TAG.trigger && name === 'onserver') continue;
       if (unread.includes(name)) {
         this.expect(element, name, TEXT.reasons.unread);
         continue;
