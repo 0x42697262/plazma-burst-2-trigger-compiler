@@ -8,8 +8,7 @@ import type { Layout } from '../emit/xml-emitter.ts';
 import { DEFAULT_LAYOUT } from '../emit/constants.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
-import { appendToMap, removeOwned, removeUnlisted } from '../emit/merge.ts';
-import { withConvertedUids } from '../convert/uids.ts';
+import { appendToMap, prepareHost, removeOwned } from '../emit/merge.ts';
 import { checkHostNames, checkHostUses } from '../compiler/host.ts';
 import { createNames, describeLegend, seededPrefix } from '../compiler/names.ts';
 import { isRandomSeed, randomSeed, resolveSeed } from '../obfuscate/random.ts';
@@ -154,13 +153,12 @@ export function main(argumentsList: readonly string[], output: Output): number {
     const buildPath = base + OUTPUT.build;
     const recorded = replacing ? readBuildRecord(buildPath) : { uids: [], walls: [] };
     const recordedUids = new Set(recorded.uids);
-    const replacedHost = hostMap === null ? null : replacing ? removeOwned(hostMap, (uid) => recordedUids.has(uid) || names.ownsUid(uid)) : hostMap;
     const mapBlockUids = new Set(result.mapObjects.flatMap((object) => (object.uid === null ? [] : [object.uid])));
-    const renamed = replacedHost === null || !cleaning ? null : withConvertedUids(replacedHost);
-    if (renamed !== null && renamed.changed > 0) output.out(TEXT.cleanedUids(renamed.changed));
-    const cleaned = renamed === null ? null : removeUnlisted(renamed.xml, mapBlockUids);
-    if (cleaned !== null) output.out(TEXT.cleaned(cleaned.triggers, cleaned.timers));
-    const host = cleaned === null ? replacedHost : cleaned.xml;
+    const prepared = hostMap === null ? null : prepareHost(hostMap, {
+      replace: replacing, clean: cleaning, owns: (uid) => recordedUids.has(uid) || names.ownsUid(uid), keep: mapBlockUids,
+    });
+    for (const note of prepared?.notes ?? []) output.out(note);
+    const host = prepared?.host ?? null;
     const placement = placeObjects(result.mapObjects, {
       host, staging: (index) => stagingPosition(index, result.program, layout), previousWalls: recorded.walls, replacing,
     });

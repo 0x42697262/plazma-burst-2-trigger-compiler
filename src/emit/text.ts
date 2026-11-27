@@ -3,6 +3,8 @@ export const TEXT = Object.freeze({
   unknownOpcode: (uid: string, opcode: number): string => `Trigger ${uid} uses unknown action ${opcode}.`,
   duplicateUid: (uid: string): string => `The uid ${uid} is used twice.`,
   uidInMap: (uid: string): string => `The map already has an object with uid ${uid}.`,
+  cleanedUids: (count: number): string => `--clean gave ${count} object(s) the uid npm run convert gave them (a repeated uid or none)`,
+  cleaned: (triggers: number, timers: number): string => `--clean removed ${triggers} trigger(s) and ${timers} timer(s) whose uid the map { } block does not list`,
   notWritableAsText: (uid: string, position: number, value: string): string =>
     `Trigger ${uid}, action ${position}: the values ${JSON.stringify(value)} cannot be written as trigger text.`,
   xmlTrigger: (attributes: string): string => `<trigger ${attributes} />`,

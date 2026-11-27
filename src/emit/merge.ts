@@ -1,5 +1,6 @@
 import { ELEMENT_NAME, MAP_ELEMENT, TIMER_TAG, TRAILING_LINE_END, TRIGGER_TAG, UID_ATTRIBUTE, UID_ATTRIBUTE_ONE, XML_LINE_END } from './keys.ts';
 import { TEXT } from './text.ts';
+import { withConvertedUids } from '../convert/uids.ts';
 import { EmitError } from './check.ts';
 
 const uidsIn = (xml: string): Set<string> => new Set([...xml.matchAll(UID_ATTRIBUTE)].map((match) => match[1] ?? ''));
@@ -34,6 +35,17 @@ export function removeUnlisted(mapXml: string, keep: ReadonlySet<string>): Clean
     return '';
   });
   return { xml, triggers, timers };
+}
+
+export type HostOptions = { replace: boolean; clean: boolean; owns: (uid: string) => boolean; keep: ReadonlySet<string> };
+
+export function prepareHost(hostMap: string, options: HostOptions): { host: string; notes: string[] } {
+  const replaced = options.replace ? removeOwned(hostMap, options.owns) : hostMap;
+  if (!options.clean) return { host: replaced, notes: [] };
+  const renamed = withConvertedUids(replaced);
+  const cleaned = removeUnlisted(renamed.xml, options.keep);
+  const renamedNote = renamed.changed > 0 ? [TEXT.cleanedUids(renamed.changed)] : [];
+  return { host: cleaned.xml, notes: [...renamedNote, TEXT.cleaned(cleaned.triggers, cleaned.timers)] };
 }
 
 export function replaceInMap(mapXml: string, compiledXml: string, owns: (uid: string) => boolean): string {
