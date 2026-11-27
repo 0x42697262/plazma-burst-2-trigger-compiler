@@ -12,6 +12,12 @@ export const OPCODE = Object.freeze({
   resetTimer: 44,
   disableTimer: 26,
   executeTrigger: 99,
+  onGunFired: 81,
+  onMovableDamaged: 82,
+  chatReceiver: 156,
+  onKeyRelease: 289,
+  onGunReloaded: 324,
+  onVehicleDestroyed: 439,
   setVariable: 100,
   setIfUndefined: 101,
   addValue: 102,
@@ -134,6 +140,11 @@ export const TEMPLATE_REPLACED_A: ReadonlySet<number> = new Set([OPCODE.showText
 
 export const SKIPS_NEXT: ReadonlySet<number> = new Set([
   OPCODE.skipIfNotEqualValue, OPCODE.skipIfEqual, OPCODE.skipIfGreater, OPCODE.skipIfLess,
+]);
+
+export const CALLBACK_ACTIONS: ReadonlySet<number> = new Set([
+  OPCODE.onGunFired, OPCODE.onMovableDamaged, OPCODE.chatReceiver, OPCODE.onPlayerJoin, OPCODE.bindKey, OPCODE.onKeyRelease,
+  OPCODE.onGunReloaded, OPCODE.onVehicleDestroyed,
 ]);
 
 export const AVOIDED: ReadonlySet<number> = new Set([OPCODE.switchToTriggerIndex]);

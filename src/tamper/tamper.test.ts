@@ -188,6 +188,17 @@ describe('tamper check', () => {
     }
   });
 
+  it('lets the game run a function it calls back, but still finds one that an action only turns on run from outside', () => {
+    const source = 'var n = 0;\nfunction pressed() { n += 1; }\nfunction later() { n += 10; }\non start { action(288, @pressed, "e"); action(20, @later, 0); }';
+    const result = compile(source, { tamper: check('report', ['flow']) });
+    const simulation = simulate(result.program);
+    simulation.runUid(uidOf(result, '_pressed'));
+    assert.equal(findings(simulation, result), undefined, 'a key bind runs pressed from outside the program');
+    simulation.runUid(uidOf(result, '_later'));
+    assert.equal(findings(simulation, result), 1, 'turning a trigger on does not run it');
+    assert.equal(simulation.variables[result.tamper?.variables.last ?? ''], FINDING.flow);
+  });
+
   it('finds a protected value set from outside, also when obfuscated', () => {
     const source = 'protected var gold = 5;\non chat { gold += 1; say("gold {gold}"); }';
     for (const obfuscate of [null, { seed: SEED }]) {

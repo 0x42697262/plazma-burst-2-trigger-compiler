@@ -1,4 +1,4 @@
-import { OPCODE } from '../opcodes/constants.ts';
+import { CALLBACK_ACTIONS, OPCODE } from '../opcodes/constants.ts';
 import { opcodeByName, opcodeByNumber } from '../opcodes/table.ts';
 import { labelOperand, literal, textOperand, variable } from '../compiler/ir.ts';
 import type { Condition, ExportedVariable, Instruction, Module, ObjectDeclaration, Operand, SourceLocation, TimerSpec, Value } from '../compiler/ir.ts';
@@ -177,8 +177,6 @@ function terminates(statements: readonly Statement[]): boolean {
       return false;
   }
 }
-
-const OWN_FLOW_OPCODES: ReadonlySet<number> = new Set([OPCODE.executeTrigger, OPCODE.switchToTrigger]);
 
 export class Generator {
   private readonly names: Names;
@@ -1551,7 +1549,7 @@ export class Generator {
     if (expression.kind === 'reference') {
       if (!this.functions.has(expression.name)) fail(expression.location, TEXT.unknownFunction(expression.name));
       if (kind !== TRIGGER_KIND) fail(expression.location, TEXT.referenceNotTrigger(opcode.number, side, kind));
-      if (!OWN_FLOW_OPCODES.has(opcode.number)) this.callbackFunctions.add(expression.name);
+      if (CALLBACK_ACTIONS.has(opcode.number)) this.callbackFunctions.add(expression.name);
       return labelOperand(expression.name);
     }
     if (expression.kind === 'named' && expression.paramKind !== kind && (expectsObject || !LOOSE_VALUE_KINDS.has(kind))) {
