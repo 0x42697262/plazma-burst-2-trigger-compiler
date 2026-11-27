@@ -2,12 +2,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { Workspace } from './workspace.ts';
 import { build, parseEnvironment, prefixFor, simulate } from './pipeline.ts';
+import { convertMap } from '../convert/convert.ts';
 import { collectExamples, collectLibrary } from '../tools/build-web/build.ts';
 import path from 'node:path';
 import fs from 'node:fs';
 
 const examples = collectExamples(path.resolve(import.meta.dirname, '..', '..', 'examples'));
-const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '', tamper: 'off' as const, tamperSeed: '', tamperAnnounce: false };
+const OPTIONS = { prefix: '', guard: 100000, frames: 300, numberText: true, directIndex: false, target: 'triggers' as const, replace: false, nameSeed: '', obfuscate: false, obfuscateSeed: '', tamper: 'off' as const, tamperSeed: '', tamperAnnounce: false, clean: false };
 
 describe('web page logic', () => {
   it('bundles every example and loads one with its imports', () => {
@@ -81,6 +82,27 @@ describe('web page logic', () => {
     const order = [...second.map.matchAll(/<trigger uid="([^"]+)"/g)].map((match) => match[1]);
     assert.deepEqual(order, second.result!.program.triggers.map((trigger) => trigger.uid));
     assert.ok(second.notes.some((note) => note.includes('trigger order')));
+  });
+
+  it('puts a converted map back obfuscated and checked with clean, without the old triggers', () => {
+    const map = [
+      '<door uid="#door" x="0" y="0" />',
+      '<door uid="#door" x="50" y="0" />',
+      '<trigger uid="#trigger*hello" x="0" y="0" enabled="true" execute="true" maxcalls="1" actions_1_type="42" actions_1_targetA="hello there" actions_1_targetB="0" />',
+      '',
+    ].join('\n');
+    const workspace = new Workspace(null);
+    workspace.set('/work/paul.ptc', convertMap(map, { style: 'functions', label: 'paul.xml' }).source);
+    workspace.activate('/work/paul.ptc');
+    const options = { ...OPTIONS, obfuscate: true, obfuscateSeed: 'seed', tamper: 'enforce' as const };
+    const kept = build(workspace, '/work/paul.ptc', options, map);
+    assert.ok(kept.map.includes('#trigger*hello'), 'without clean the old trigger stays');
+    const cleaned = build(workspace, '/work/paul.ptc', { ...options, clean: true }, map);
+    assert.deepEqual(cleaned.problems, []);
+    assert.ok(!cleaned.map.includes('#trigger*hello') && !cleaned.map.includes('hello there'), 'the old trigger is gone and the text is encoded');
+    assert.equal(cleaned.map.match(/<door /g)?.length, 2);
+    assert.ok(cleaned.notes.some((note) => note.includes('--clean removed 1 trigger(s)')));
+    assert.notEqual(cleaned.result?.tamper, null);
   });
 
   it('adds the tamper check and checks protected values in the editor', () => {

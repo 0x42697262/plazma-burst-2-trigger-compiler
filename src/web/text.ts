@@ -12,7 +12,7 @@ export const TEXT = Object.freeze({
   hostMapChosen: (name: string): string => name,
   ready: 'Ready',
   chips: Object.freeze({
-    target: (target: string): string => target, obfuscate: 'obfuscated', directIndex: 'direct index', numberText: 'raw number text', replace: 'replace',
+    target: (target: string): string => target, obfuscate: 'obfuscated', directIndex: 'direct index', numberText: 'raw number text', replace: 'replace', clean: 'clean',
     prefix: (prefix: string): string => `prefix ${prefix}`, nameSeed: 'name seed', noGuard: 'no guard', guard: (guard: number): string => `guard ${guard}`,
     environment: (count: number): string => `env ${count}`, tamper: (mode: string): string => `tamper ${mode}`, announce: 'announce',
   }),
@@ -31,7 +31,7 @@ export const TEXT = Object.freeze({
     tamper: (mode: string): string => `Tamper check: ${mode}`,
   }),
   commandDetail: Object.freeze({ example: 'example', output: 'output', option: 'setting', action: '', file: 'file' }),
-  optionNames: Object.freeze({ tamperAnnounce: 'announce tamper findings in the match', obfuscate: 'obfuscate', directIndex: 'direct array index', numberText: 'protect text from the site editor', replace: 'replace the previous build' }),
+  optionNames: Object.freeze({ tamperAnnounce: 'announce tamper findings in the match', obfuscate: 'obfuscate', directIndex: 'direct array index', numberText: 'protect text from the site editor', replace: 'replace the previous build', clean: 'remove the map\'s converted triggers' }),
   noCommands: 'No matching command',
   nullJson: 'null',
   pixels: (value: number): string => `${value}px`,

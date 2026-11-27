@@ -24,6 +24,7 @@ export const ELEMENT = Object.freeze({
   mapConvert: 'map-convert',
   mapForget: 'map-forget',
   replace: 'replace',
+  clean: 'clean',
   nameSeed: 'name-seed',
   obfuscate: 'obfuscate',
   obfuscateSeed: 'obfuscate-seed',

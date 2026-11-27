@@ -60,6 +60,7 @@ const numberTextInput = element<HTMLInputElement>(ELEMENT.numberText);
 const directIndexInput = element<HTMLInputElement>(ELEMENT.directIndex);
 const targetSelect = element<HTMLSelectElement>(ELEMENT.target);
 const replaceInput = element<HTMLInputElement>(ELEMENT.replace);
+const cleanInput = element<HTMLInputElement>(ELEMENT.clean);
 const nameSeedInput = element<HTMLInputElement>(ELEMENT.nameSeed);
 const obfuscateInput = element<HTMLInputElement>(ELEMENT.obfuscate);
 const obfuscateSeedInput = element<HTMLInputElement>(ELEMENT.obfuscateSeed);
@@ -93,6 +94,7 @@ numberTextInput.checked = savedOptions.numberText ?? true;
 directIndexInput.checked = savedOptions.directIndex ?? false;
 targetSelect.value = savedOptions.target ?? DEFAULT_TARGET;
 replaceInput.checked = savedOptions.replace ?? false;
+cleanInput.checked = savedOptions.clean ?? false;
 nameSeedInput.value = savedOptions.nameSeed ?? '';
 obfuscateInput.checked = savedOptions.obfuscate ?? false;
 obfuscateSeedInput.value = savedOptions.obfuscateSeed ?? '';
@@ -120,7 +122,7 @@ const darkQuery = window.matchMedia(DARK_QUERY);
 
 const options = (): Options => {
   const value = { prefix: prefixInput.value.trim(), guard: Number(guardInput.value) || 0, frames: Math.max(1, Number(framesInput.value) || DEFAULT_FRAMES), numberText: numberTextInput.checked, directIndex: directIndexInput.checked, target: isTarget(targetSelect.value) ? targetSelect.value : DEFAULT_TARGET, replace: replaceInput.checked, nameSeed: nameSeedInput.value,
-    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value, tamper: tamperMode(), tamperSeed: tamperSeedInput.value, tamperAnnounce: tamperAnnounceInput.checked,
+    obfuscate: obfuscateInput.checked, obfuscateSeed: obfuscateSeedInput.value, tamper: tamperMode(), tamperSeed: tamperSeedInput.value, tamperAnnounce: tamperAnnounceInput.checked, clean: cleanInput.checked,
   };
   storage?.setItem(STORAGE.options, JSON.stringify(value));
   renderChips(value);
@@ -377,7 +379,7 @@ const optionChanged = (): void => {
   scheduleBlueprint();
 };
 environmentInput.addEventListener(EVENT.input, optionChanged);
-for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, obfuscateInput, tamperSelect, tamperAnnounceInput]) input.addEventListener(EVENT.change, optionChanged);
+for (const input of [numberTextInput, directIndexInput, targetSelect, replaceInput, cleanInput, obfuscateInput, tamperSelect, tamperAnnounceInput]) input.addEventListener(EVENT.change, optionChanged);
 for (const input of [nameSeedInput, obfuscateSeedInput, tamperSeedInput, prefixInput, guardInput, framesInput]) input.addEventListener(EVENT.input, optionChanged);
 const newSeed = (): void => {
   obfuscateSeedInput.value = randomSeed();
@@ -555,6 +557,7 @@ const commands = (): Command[] => {
     toggle(directIndexInput, TEXT.optionNames.directIndex),
     toggle(numberTextInput, TEXT.optionNames.numberText),
     toggle(replaceInput, TEXT.optionNames.replace),
+    toggle(cleanInput, TEXT.optionNames.clean),
     { title: TEXT.commands.newSeed, detail: TEXT.commandDetail.option, shortcut: '', run: newSeed },
     { title: TEXT.commands.vim, detail: TEXT.commandDetail.option, shortcut: '', run: () => setVim(!vimInput.checked) },
     { title: TEXT.commands.guide, detail: TEXT.commandDetail.action, shortcut: '', run: () => window.open(GUIDE_URL) },

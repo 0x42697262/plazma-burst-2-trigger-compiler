@@ -3,7 +3,7 @@ import { compileAssembly } from '../compiler/assemble.ts';
 import type { CompileOptions, CompileResult } from '../compiler/compile.ts';
 import { emitXml, stagingPosition } from '../emit/xml-emitter.ts';
 import { emitText, joinTextBlocks } from '../emit/trigger-text-emitter.ts';
-import { appendToMap, removeOwned } from '../emit/merge.ts';
+import { appendToMap, prepareHost, removeOwned } from '../emit/merge.ts';
 import { VAR_SYNC_IN_MAP } from '../emit/attributes.ts';
 import { checkObjects } from '../objects/objects.ts';
 import { missingHostObject } from '../objects/missing.ts';
@@ -27,7 +27,7 @@ import { tamperCheckOf } from '../tamper/options.ts';
 
 export type Options = {
   prefix: string; guard: number; frames: number; numberText: boolean; directIndex: boolean; target: Target; replace: boolean; nameSeed: string; obfuscate: boolean; obfuscateSeed: string;
-  tamper: TamperMode; tamperSeed: string; tamperAnnounce: boolean;
+  tamper: TamperMode; tamperSeed: string; tamperAnnounce: boolean; clean: boolean;
 };
 export type BuildRecord = { uids: readonly string[]; walls: readonly string[] };
 export const EMPTY_RECORD: BuildRecord = Object.freeze({ uids: [], walls: [] });
@@ -104,7 +104,12 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const objectProblems = [...(check?.problems ?? []), ...(check?.missing ?? []).map(missingHostObject)];
   const names = createNames(prefix);
   const recordedUids = new Set(recorded.uids);
-  const host = hostMap === null ? null : options.replace ? removeOwned(hostMap, (uid) => recordedUids.has(uid) || names.ownsUid(uid)) : hostMap;
+  const mapBlockUids = new Set(result.mapObjects.flatMap((object) => (object.uid === null ? [] : [object.uid])));
+  const prepared = hostMap === null ? null : prepareHost(hostMap, {
+    replace: options.replace, clean: options.clean, owns: (uid) => recordedUids.has(uid) || names.ownsUid(uid), keep: mapBlockUids,
+  });
+  notes.push(...(prepared?.notes ?? []));
+  const host = prepared?.host ?? null;
   const placement = placeObjects(result.mapObjects, {
     host, staging: (index) => stagingPosition(index, result.program), previousWalls: options.replace ? recorded.walls : [], replacing: options.replace,
   });
@@ -128,8 +133,7 @@ export function build(workspace: Workspace, file: string, options: Options, host
   const uids = [...result.program.triggers.map((trigger) => trigger.uid), ...result.program.timers.map((timer) => timer.uid)];
   notes.push(...blocking);
   if (placement.host !== null) {
-    const mapUids = new Set(result.mapObjects.flatMap((object) => (object.uid === null ? [] : [object.uid])));
-    const hostOnly = removeOwned(placement.host, (uid) => mapUids.has(uid));
+    const hostOnly = removeOwned(placement.host, (uid) => mapBlockUids.has(uid));
     notes.push(...checkHostNames(result.program, hostOnly), ...checkHostUses(hostOnly, names.ownsVariable, result.exports));
     try {
       if (blocking.length === 0) map = appendToMap(placement.host, xml);

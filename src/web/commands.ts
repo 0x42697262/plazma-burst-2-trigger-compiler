@@ -51,6 +51,7 @@ export function optionChips(options: Options, environmentCount: number): Chip[] 
     chip(options.directIndex, TEXT.chips.directIndex, ELEMENT.directIndex),
     chip(!options.numberText, TEXT.chips.numberText, ELEMENT.numberText),
     chip(options.replace, TEXT.chips.replace, ELEMENT.replace),
+    chip(options.clean, TEXT.chips.clean, ELEMENT.clean),
     chip(options.prefix !== '', TEXT.chips.prefix(options.prefix), ELEMENT.prefix),
     chip(options.nameSeed.trim() !== '', TEXT.chips.nameSeed, ELEMENT.nameSeed),
     chip(options.guard !== DEFAULT_GUARD, options.guard === 0 ? TEXT.chips.noGuard : TEXT.chips.guard(options.guard), ELEMENT.guard),
